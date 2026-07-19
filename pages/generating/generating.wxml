@@ -1,0 +1,20 @@
+<view class="page-container paper-texture generating-page">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="gen-stage">
+    <!-- 拍立得动画图标：旋转 + 缩放脉冲 -->
+    <view class="polaroid-anim">
+      <view class="polaroid-photo-area">
+        <view class="photo-shine"></view>
+      </view>
+      <view class="polaroid-bottom"></view>
+    </view>
+
+    <text class="gen-title">正在生成你的出逃记录</text>
+    <view class="dots">
+      <view class="dot"></view>
+      <view class="dot d2"></view>
+      <view class="dot d3"></view>
+    </view>
+    <text class="gen-sub">把这一刻收进相册里</text>
+  </view>
+</view>

@@ -1,0 +1,98 @@
+<view class="page-container executing-page paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">执行中</text>
+  </view>
+
+  <scroll-view scroll-y class="ex-scroll">
+    <!-- 计时卡：突出进度感 -->
+    <view class="timer-card">
+      <view class="timer-head">
+        <text class="timer-label">已探索</text>
+        <text class="timer-num font-mono">{{elapsedMinutes}}</text>
+        <text class="timer-unit">分钟</text>
+      </view>
+      <view class="progress-bar-bg">
+        <view class="progress-bar-fill" style="width: {{progressPct}}%; background: {{typeColor}};"></view>
+      </view>
+      <text class="timer-sub">预计还需 {{remainMin}} 分钟</text>
+    </view>
+
+    <!-- v3: 步数统计卡（漫步模式或时长 >= 30 分钟） -->
+    <view wx:if="{{showStepCount}}" class="step-count-card">
+      <view class="step-count-icon">
+        <image src="/assets/icons/footprints-coral.svg" mode="aspectFit"></image>
+      </view>
+      <view class="step-count-info">
+        <text class="step-count-label">步数统计</text>
+        <text class="step-count-num font-mono">约 {{stepCount}} 步</text>
+      </view>
+    </view>
+
+    <!-- 步骤卡：每步支持手动点击「完成」+ 进度条作参考 -->
+    <view class="step-card">
+      <text class="step-card-title">出逃步骤</text>
+      <view wx:for="{{steps}}" wx:key="id" class="step-row {{item.done ? 'finished' : ''}} {{!item.done && index === currentStep ? 'current' : ''}}">
+        <!-- 步骤编号：16rpx 圆角矩形，使用类型色 -->
+        <view class="step-mark" style="--step-color: {{typeColor}};">
+          <text wx:if="{{item.done}}" class="step-mark-check">✓</text>
+          <text wx:else class="step-mark-num">{{index + 1}}</text>
+        </view>
+        <view class="step-content">
+          <text class="step-label">第 {{index + 1}} 步</text>
+          <text class="step-text">{{item.text}}</text>
+        </view>
+        <!-- 完成按钮（当前进行中或待完成的步骤可点击） -->
+        <view wx:if="{{!item.done}}" class="step-finish-btn"
+              data-index="{{index}}"
+              catchtap="onStepTap">
+          <image class="step-finish-ico" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+          <text>完成</text>
+        </view>
+        <!-- 已完成态打勾（用 SVG） -->
+        <view wx:else class="step-done-mark">
+          <image src="/assets/icons/check-brand.svg" mode="aspectFit"></image>
+        </view>
+      </view>
+    </view>
+
+    <!-- 拍照记录 -->
+    <view class="photo-card">
+      <view class="photo-head">
+        <text class="photo-title">拍照记录</text>
+        <text class="photo-count font-mono">{{photos.length}} / 3</text>
+      </view>
+      <scroll-view scroll-x class="photo-list" enhanced show-scrollbar="{{false}}">
+        <view wx:for="{{photos}}" wx:key="*this" class="photo-thumb" data-index="{{index}}" bindtap="removePhoto">
+          <image src="{{item}}" mode="aspectFill"></image>
+        </view>
+        <view wx:if="{{photos.length < 3}}" class="photo-add" bindtap="takePhoto">
+          <image src="/assets/icons/camera-ink-soft.svg" mode="aspectFit"></image>
+          <text>拍照</text>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 小贴士 -->
+    <view class="tip-card">
+      <view class="tip-head">
+        <view class="tip-icon-dot"></view>
+        <text class="tip-label">小贴士</text>
+      </view>
+      <text class="tip-text">{{command.tip || '慢慢走，留意街边的细节。'}}</text>
+    </view>
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+
+  <!-- 完成按钮：底部安全区留白；未完成全部步骤时置灰 -->
+  <view class="ex-actions">
+    <view class="finish-btn {{allDone ? '' : 'disabled'}}" bindtap="finishCommand">
+      <image src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+      <text>{{allDone ? '完成出逃' : '还有 ' + (steps.length - doneCount) + ' 步待完成'}}</text>
+    </view>
+  </view>
+</view>

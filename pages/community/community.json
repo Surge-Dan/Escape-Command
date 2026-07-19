@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "指令社区",
+  "navigationStyle": "custom",
+  "navigationBarBackgroundColor": "#F5F3EF",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#F5F3EF",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

@@ -1,0 +1,335 @@
+.status-bar { flex-shrink: 0; }
+
+/* ===== Tab 切换栏 ===== */
+.tab-bar {
+  display: flex;
+  align-items: center;
+  height: 88rpx;
+  padding: 0 40rpx;
+  background: var(--canvas);
+  border-bottom: 1rpx solid var(--line);
+  gap: 16rpx;
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56rpx;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  transition: background 150ms var(--ease-standard);
+}
+
+.tab-item.active {
+  background: var(--brand-tint);
+}
+
+.tab-text {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.tab-item.active .tab-text {
+  color: var(--brand-dark);
+  font-weight: 700;
+}
+
+/* ===== 滚动区 ===== */
+.page-scroll {
+  padding: 0 32rpx;
+  box-sizing: border-box;
+}
+
+/* ===== Podium ===== */
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16rpx;
+  padding: 32rpx 0 16rpx;
+}
+
+.podium-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 150ms var(--ease-standard);
+}
+
+.podium-cell:active {
+  transform: scale(0.97);
+}
+
+.crown-ico {
+  width: 40rpx;
+  height: 40rpx;
+  margin-bottom: 4rpx;
+}
+
+.podium-medal {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8rpx;
+}
+
+.medal-num {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.gold {
+  background: linear-gradient(135deg, #FFE08A, var(--gold));
+  box-shadow: 0 2rpx 10rpx rgba(201, 176, 55, 0.4);
+}
+
+.silver {
+  background: linear-gradient(135deg, #E4E8EE, #B7BFCB);
+  box-shadow: 0 2rpx 10rpx rgba(154, 168, 186, 0.4);
+}
+
+.bronze {
+  background: linear-gradient(135deg, #F0C9A6, #C08856);
+  box-shadow: 0 2rpx 10rpx rgba(192, 136, 86, 0.4);
+}
+
+.podium-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: var(--brand-tint);
+  border: 3rpx solid var(--white);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 12rpx;
+}
+
+.avatar-first {
+  width: 120rpx;
+  height: 120rpx;
+  border: 4rpx solid var(--gold);
+}
+
+.podium-name {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--ink);
+  max-width: 180rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 4rpx;
+}
+
+.podium-count {
+  font-size: 22rpx;
+  color: var(--ink-soft);
+  margin-bottom: 12rpx;
+}
+
+.podium-bar {
+  width: 100%;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+}
+
+.bar-first {
+  height: 88rpx;
+  background: linear-gradient(180deg, var(--gold-tint), var(--white));
+}
+
+.bar-second {
+  height: 60rpx;
+  background: linear-gradient(180deg, #F0F2F5, var(--white));
+}
+
+.bar-third {
+  height: 44rpx;
+  background: linear-gradient(180deg, #F8E4D2, var(--white));
+}
+
+/* ===== 4-20 名列表 ===== */
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+  padding: 20rpx 24rpx;
+  transition: transform 150ms var(--ease-standard);
+}
+
+.rank-row:active {
+  transform: scale(0.97);
+}
+
+.rank-row.is-me {
+  background: var(--brand-tint);
+  border-color: var(--brand);
+}
+
+.rank-no {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: var(--canvas);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+
+.is-me .rank-no {
+  background: var(--brand);
+}
+
+.rank-no-text {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--ink-soft);
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+.is-me .rank-no-text {
+  color: var(--white);
+}
+
+.rank-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: var(--brand-tint);
+  margin-right: 16rpx;
+  flex-shrink: 0;
+  border: 2rpx solid var(--white);
+}
+
+.rank-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rank-name-row {
+  display: flex;
+  align-items: center;
+}
+
+.rank-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-right: 12rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 280rpx;
+}
+
+.mode-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.me-tag {
+  font-size: 18rpx;
+  color: var(--white);
+  background: var(--brand);
+  padding: 2rpx 10rpx;
+  border-radius: var(--radius-pill);
+  margin-left: 8rpx;
+  flex-shrink: 0;
+}
+
+.rank-count {
+  font-size: 26rpx;
+  color: var(--brand-dark);
+  font-weight: 600;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.bottom-spacer { height: 140rpx; }
+
+/* ===== 我的排名 sticky 卡片 ===== */
+.my-rank-card {
+  position: fixed;
+  left: 32rpx;
+  right: 32rpx;
+  bottom: calc(32rpx + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ink);
+  color: var(--white);
+  border-radius: var(--radius-xl);
+  padding: 24rpx 32rpx;
+  box-shadow: var(--shadow-popup);
+  transition: transform 150ms var(--ease-standard);
+}
+
+.my-rank-card:active {
+  transform: scale(0.97);
+}
+
+.my-rank-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.my-rank-label {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.my-rank-no {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--gold);
+  margin-top: 4rpx;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+.my-rank-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.my-rank-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--white);
+  max-width: 280rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-rank-count {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4rpx;
+}

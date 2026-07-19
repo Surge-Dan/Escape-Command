@@ -1,0 +1,76 @@
+<view class="page-container">
+  <view class="status-bar" style="height: {{statusBarHeight}}px; flex-shrink: 0;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">会员</text>
+  </view>
+
+  <view class="member-content">
+    <!-- 已开通会员 -->
+    <view wx:if="{{isMember}}" class="member-active-card">
+      <image class="crown-ico" src="/assets/icons/crown-lemon.svg" mode="aspectFit"></image>
+      <text class="member-active-title">你已是出逃会员</text>
+      <text class="member-active-sub">感谢你的支持，享受所有会员权益</text>
+    </view>
+
+    <!-- 未开通会员 -->
+    <view wx:if="{{!isMember}}" class="member-header">
+      <view class="member-badge">PRO</view>
+      <text class="member-header-title">成为出逃会员</text>
+      <text class="member-header-sub">解锁更多玩法，让出逃更有趣</text>
+    </view>
+
+    <!-- 权益列表 -->
+    <view class="benefits-list">
+      <view wx:for="{{benefits}}" wx:key="title" class="benefit-item">
+        <image class="benefit-ico" src="{{item.icon}}" mode="aspectFit"></image>
+        <view class="benefit-text">
+          <text class="benefit-title">{{item.title}}</text>
+          <text class="benefit-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 方案选择 -->
+    <view wx:if="{{!isMember}}" class="plans-section">
+      <text class="plans-label">选择方案</text>
+      <view class="plans-grid">
+        <view
+          wx:for="{{plans}}"
+          wx:key="id"
+          class="plan-card {{selectedPlan === item.id ? 'plan-selected' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="selectPlan"
+        >
+          <view wx:if="{{item.tag}}" class="plan-tag">{{item.tag}}</view>
+          <view class="plan-price">
+            <text class="price-symbol">¥</text>
+            <text class="price-num">{{item.price}}</text>
+            <text class="price-unit">{{item.unit}}</text>
+          </view>
+          <text wx:if="{{item.original}}" class="plan-original">¥{{item.original}}</text>
+          <text class="plan-desc">{{item.desc}}</text>
+          <view wx:if="{{selectedPlan === item.id}}" class="plan-check">
+            <image class="check-ico" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 开通按钮 -->
+    <view wx:if="{{!isMember}}" class="subscribe-section">
+      <view class="subscribe-btn" bindtap="subscribe">
+        <text class="subscribe-text">立即开通</text>
+      </view>
+      <text class="agreement-text" bindtap="viewAgreement">开通即视为同意《会员服务协议》</text>
+      <text class="restore-text" bindtap="restorePurchase">恢复购买</text>
+    </view>
+
+    <view wx:if="{{isMember}}" class="member-footer">
+      <text class="valid-info">有效期至 {{expireDate}}</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,206 @@
+.status-bar { flex-shrink: 0; }
+
+.page-scroll {
+  padding: 0 40rpx;
+}
+
+/* ===== 顶部介绍 ===== */
+.page-intro {
+  padding: 24rpx 8rpx 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.intro-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.intro-desc {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+}
+
+/* ===== 主题卡片 ===== */
+.theme-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  padding-top: 8rpx;
+}
+
+.theme-card {
+  border-radius: var(--radius-xl);
+  border: 2rpx solid;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: transform 200ms var(--ease-standard), box-shadow 200ms var(--ease-standard);
+}
+
+.theme-card:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-elevated);
+}
+
+.theme-card-current {
+  box-shadow: var(--shadow-elevated);
+}
+
+/* ===== 主题预览 ===== */
+.theme-preview {
+  height: 220rpx;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 36rpx;
+  overflow: hidden;
+}
+
+.preview-circle {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  border: 4rpx solid;
+  flex-shrink: 0;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+}
+
+.preview-bar {
+  flex: 1;
+  margin-left: 28rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.preview-bar-pill {
+  width: 160rpx;
+  height: 24rpx;
+  border-radius: 24rpx;
+}
+
+.preview-bar-line {
+  height: 12rpx;
+  border-radius: var(--radius-sm);
+  width: 80%;
+}
+
+.preview-bar-line.short {
+  width: 50%;
+}
+
+.preview-dot {
+  position: absolute;
+  top: 28rpx;
+  right: 28rpx;
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+}
+
+/* ===== 主题信息 ===== */
+.theme-info {
+  padding: 28rpx 32rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  background: var(--white);
+}
+
+.theme-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.theme-name {
+  font-size: 34rpx;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.theme-badge {
+  padding: 6rpx 18rpx;
+  border-radius: var(--radius-pill);
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.theme-desc {
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+/* ===== 色卡行 ===== */
+.swatch-row {
+  display: flex;
+  gap: 28rpx;
+  padding: 16rpx 0;
+  border-top: 1rpx solid var(--line);
+  border-bottom: 1rpx solid var(--line);
+  margin-top: 4rpx;
+}
+
+.swatch-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.swatch-circle {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  border: 2rpx solid;
+}
+
+.swatch-label {
+  font-size: 20rpx;
+}
+
+/* ===== 操作按钮 ===== */
+.theme-action {
+  height: 80rpx;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 600;
+  transition: transform 150ms var(--ease-standard);
+}
+
+.theme-action:active {
+  transform: scale(0.97);
+}
+
+.theme-action-current {
+  font-weight: 500;
+}
+
+/* ===== 底部说明 ===== */
+.bottom-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 40rpx 0 16rpx;
+  font-size: 24rpx;
+  color: var(--ink-faint);
+}
+
+.note-icon {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  opacity: 0.5;
+}
+
+.bottom-spacer {
+  height: 48rpx;
+}

@@ -1,0 +1,8 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {},
+  "navigationBarTitleText": "城市探索",
+  "navigationBarBackgroundColor": "#f5f7f8",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f5f3ef"
+}

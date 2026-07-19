@@ -1,0 +1,72 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">模式介绍</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 88rpx);">
+    <view wx:if="{{mode}}" class="intro-body">
+      <!-- 模式主视觉区：mode.color 软调底 + 模式图标 -->
+      <view class="hero" style="background: linear-gradient(150deg, {{mode.color}}, {{mode.color}}D9);">
+        <view class="hero-icon-wrap">
+          <image class="hero-icon" src="{{mode.icon}}" mode="aspectFit"></image>
+        </view>
+        <text class="hero-name h1">{{mode.name}}</text>
+        <text class="hero-desc">{{mode.desc}}</text>
+      </view>
+
+      <!-- 这个模式的性格 -->
+      <view class="section">
+        <text class="section-title h3">这个模式的性格</text>
+        <view class="personality-card solid-card">
+          <view wx:for="{{personality}}" wx:key="*this" class="personality-row">
+            <view class="personality-dot" style="background: {{mode.color}};"></view>
+            <text class="personality-text body-text">{{item}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 专属指令示例 -->
+      <view class="section">
+        <view class="section-head">
+          <text class="section-title h3">专属指令示例</text>
+          <text class="section-sub caption-text">共 {{samples.length}} 条预览</text>
+        </view>
+        <view wx:if="{{samples.length === 0}}" class="empty-card solid-card">
+          <text class="empty-text">这个模式还没有专属指令，先用通用池摇一个吧</text>
+        </view>
+        <view wx:for="{{samples}}" wx:key="id" class="sample-card solid-card">
+          <view class="sample-type" style="background: {{item.typeColor}}14; color: {{item.typeColor}};">
+            <image class="sample-type-ico" src="{{item.typeIcon}}" mode="aspectFit"></image>
+            <text>{{item.typeName}}</text>
+          </view>
+          <text class="sample-title">{{item.title}}</text>
+          <view class="sample-meta">
+            <view class="meta-item">
+              <image src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+              <text>约 {{item.duration}} 分钟</text>
+            </view>
+            <view class="meta-item">
+              <image src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+              <text>{{item.distance}}</text>
+            </view>
+            <view class="meta-item">
+              <image src="/assets/icons/user-brand.svg" mode="aspectFit"></image>
+              <text>{{item.people}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{mode}}" class="bottom-bar">
+    <view class="btn-primary try-btn" style="background: {{mode.color}};" bindtap="tryMode">
+      <text>试试这个模式</text>
+    </view>
+  </view>
+</view>

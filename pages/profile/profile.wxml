@@ -1,0 +1,86 @@
+<view class="profile-page paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <text class="nav-header-title">我的</text>
+    <view class="nav-header-divider"></view>
+  </view>
+
+  <scroll-view scroll-y class="profile-scroll" enhanced show-scrollbar="{{false}}">
+    <view class="profile-body">
+      <!-- 用户信息卡 -->
+      <view class="profile-card">
+        <view class="avatar-wrap">
+          <image class="avatar-img" src="{{avatarUrl}}" mode="aspectFill"></image>
+        </view>
+        <view class="user-text">
+          <text class="user-name">{{userName}}</text>
+          <text class="user-code">出逃名：{{escapeCode}}</text>
+        </view>
+        <view class="edit-btn" bindtap="goProfileEdit">
+          <image class="ico-pencil" src="/assets/icons/pencil-brand.svg" mode="aspectFit"></image>
+        </view>
+      </view>
+
+      <!-- 会员卡（非会员显示） -->
+      <view wx:if="{{!isMember}}" class="member-card" bindtap="goMember">
+        <view class="member-left">
+          <image class="member-icon" src="/assets/icons/crown-lemon.svg" mode="aspectFit"></image>
+          <view class="member-text">
+            <text class="member-title">出逃会员</text>
+            <text class="member-sub">解锁更多专属指令与徽章</text>
+          </view>
+        </view>
+        <view class="member-cta">了解 ›</view>
+      </view>
+
+      <!-- 数据统计：4 列 -->
+      <view class="stats-card">
+        <view class="stats-cell" wx:for="{{stats}}" wx:key="label">
+          <view class="stats-num-row">
+            <text class="stats-value font-mono">{{item.value}}</text>
+            <text class="stats-unit">{{item.unit}}</text>
+          </view>
+          <text class="stats-label">{{item.label}}</text>
+        </view>
+      </view>
+
+      <!-- 5 分类卡片 -->
+      <view class="categories-section">
+        <view wx:for="{{categories}}" wx:key="id" class="category-card" data-accent="{{item.accentColor}}">
+          <view class="category-head">
+            <view class="category-icon-wrap">
+              <image class="category-icon" src="{{item.icon}}" mode="aspectFit"></image>
+            </view>
+            <view class="category-text">
+              <text class="category-title">{{item.title}}</text>
+              <text class="category-sub">{{item.subtitle}}</text>
+            </view>
+          </view>
+          <view class="category-items">
+            <view
+              wx:for="{{item.items}}"
+              wx:for-item="child"
+              wx:key="path"
+              class="cat-item"
+              data-path="{{child.path}}"
+              bindtap="onCategoryItemTap"
+            >
+              <view class="cat-item-icon-wrap">
+                <image class="cat-item-icon" src="{{child.icon}}" mode="aspectFit"></image>
+              </view>
+              <text class="cat-item-label">{{child.label}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <view class="tabbar-placeholder"></view>
+
+  <!-- 自定义 TabBar -->
+  <custom-tab-bar selected="{{2}}"></custom-tab-bar>
+</view>

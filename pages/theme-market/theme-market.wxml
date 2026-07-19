@@ -1,0 +1,82 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">主题市集</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+    <view class="page-intro">
+      <text class="intro-title">挑选你喜欢的色调</text>
+      <text class="intro-desc">每个主题都会改变整个 App 的氛围</text>
+    </view>
+
+    <view class="theme-list">
+      <view
+        wx:for="{{themes}}"
+        wx:key="id"
+        class="theme-card {{item.isCurrent ? 'theme-card-current' : ''}}"
+        style="background: {{item.vars['--canvas']}}; border-color: {{item.vars['--brand']}}33;"
+        bindtap="previewTheme"
+        data-id="{{item.id}}"
+      >
+        <!-- 主题预览区：用主题自己的颜色渲染一个小场景 -->
+        <view class="theme-preview" style="background: {{item.vars['--brand-tint']}};">
+          <view class="preview-circle" style="background: {{item.vars['--white'] || '#FFFFFF'}}; border-color: {{item.vars['--brand']}};"></view>
+          <view class="preview-bar">
+            <view class="preview-bar-pill" style="background: {{item.vars['--brand']}};"></view>
+            <view class="preview-bar-line" style="background: {{item.vars['--brand-dark']}}66;"></view>
+            <view class="preview-bar-line short" style="background: {{item.vars['--brand-dark']}}33;"></view>
+          </view>
+          <view class="preview-dot" style="background: {{item.vars['--brand-dark']}};"></view>
+        </view>
+
+        <!-- 主题信息 -->
+        <view class="theme-info">
+          <view class="theme-header-row">
+            <text class="theme-name" style="color: {{item.vars['--brand-dark']}};">{{item.name}}</text>
+            <view wx:if="{{item.isCurrent}}" class="theme-badge" style="background: {{item.vars['--brand']}}; color: #fff;">使用中</view>
+          </view>
+          <text class="theme-desc" style="color: {{item.vars['--brand-dark']}}; opacity: 0.7;">{{item.desc}}</text>
+
+          <!-- 色卡行 -->
+          <view class="swatch-row">
+            <view
+              wx:for="{{item.swatches}}"
+              wx:key="label"
+              wx:for-item="sw"
+              class="swatch-item"
+            >
+              <view class="swatch-circle" style="background: {{sw.color}}; border-color: {{item.vars['--brand']}}22;"></view>
+              <text class="swatch-label" style="color: {{item.vars['--brand-dark']}}; opacity: 0.6;">{{sw.label}}</text>
+            </view>
+          </view>
+
+          <!-- 操作按钮 -->
+          <view
+            wx:if="{{!item.isCurrent}}"
+            class="theme-action"
+            style="background: {{item.vars['--brand']}}; color: #fff;"
+            catchtap="switchTheme"
+            data-id="{{item.id}}"
+          >切换主题</view>
+          <view
+            wx:else
+            class="theme-action theme-action-current"
+            style="background: {{item.vars['--brand-tint']}}; color: {{item.vars['--brand-dark']}};"
+          >当前主题</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="bottom-note">
+      <view class="note-icon"></view>
+      <text>主题将在下次打开时完全生效</text>
+    </view>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+</view>

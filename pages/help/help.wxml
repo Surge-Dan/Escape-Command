@@ -1,0 +1,100 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">帮助</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+    <view class="help-body">
+
+      <!-- 新手引导 -->
+      <view class="section-label">新手引导</view>
+      <view class="accordion solid-card">
+        <view
+          wx:for="{{guide}}"
+          wx:key="index"
+          class="acc-item {{item.open ? 'open' : ''}} {{index === guide.length - 1 ? 'last' : ''}}"
+        >
+          <view class="acc-head" data-group="guide" data-index="{{index}}" bindtap="toggle">
+            <text class="acc-q">{{item.q}}</text>
+            <view class="acc-chev">
+              <image src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <view class="acc-panel">
+            <view class="acc-panel-inner">
+              <!-- 第二项展开后展示 6 个模式 -->
+              <block wx:if="{{index === 1}}">
+                <view
+                  wx:for="{{modes}}"
+                  wx:for-item="mode"
+                  wx:key="id"
+                  class="mode-row"
+                >
+                  <view class="mode-ico" style="background: {{mode.color}}1A;">
+                    <image src="{{mode.icon}}" mode="aspectFit"></image>
+                  </view>
+                  <view class="mode-text">
+                    <text class="mode-name">{{mode.name}}</text>
+                    <text class="mode-desc">{{mode.desc}}</text>
+                  </view>
+                </view>
+              </block>
+              <text wx:else class="acc-a">{{item.a}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 常见问题 -->
+      <view class="section-label">常见问题</view>
+      <view class="accordion solid-card">
+        <view
+          wx:for="{{faq}}"
+          wx:key="index"
+          class="acc-item {{item.open ? 'open' : ''}} {{index === faq.length - 1 ? 'last' : ''}}"
+        >
+          <view class="acc-head" data-group="faq" data-index="{{index}}" bindtap="toggle">
+            <text class="acc-q">{{item.q}}</text>
+            <view class="acc-chev">
+              <image src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <view class="acc-panel">
+            <view class="acc-panel-inner">
+              <text class="acc-a">{{item.a}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 使用技巧 -->
+      <view class="section-label">使用技巧</view>
+      <view class="tips-grid">
+        <view
+          wx:for="{{tips}}"
+          wx:key="index"
+          class="tip-card solid-card"
+        >
+          <view class="tip-ico" style="background: {{item.tint}};">
+            <image src="{{item.icon}}" mode="aspectFit"></image>
+          </view>
+          <text class="tip-title">{{item.title}}</text>
+          <text class="tip-desc">{{item.desc}}</text>
+        </view>
+      </view>
+
+      <!-- 反馈建议 -->
+      <view class="feedback-btn btn-secondary" bindtap="openFeedback">
+        <image class="feedback-ico" src="/assets/icons/sparkles.svg" mode="aspectFit"></image>
+        <text>告诉我们你的想法</text>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+</view>

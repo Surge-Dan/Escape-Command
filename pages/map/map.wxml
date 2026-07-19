@@ -1,0 +1,123 @@
+<view class="map-page paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <text class="nav-header-title">出逃地图</text>
+    <view class="nav-header-divider"></view>
+  </view>
+
+  <!-- 简洁主题区：v13 移除 navHeaderStyle，主题区在导航栏下方无需避让胶囊按钮 -->
+  <view class="map-theme">
+    <view class="map-theme-text">
+      <text class="map-theme-title">城市记忆</text>
+      <text class="map-theme-sub">你走过的角落</text>
+    </view>
+    <view class="map-city-pill" bindtap="openCitySelect">
+      <image class="city-ico" src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+      <text class="city-name">{{currentCity}}</text>
+      <image class="city-arrow" src="/assets/icons/chevron-down-ink.svg" mode="aspectFit"></image>
+    </view>
+  </view>
+
+  <!-- 原生地图：悬浮 UI 必须用 cover-view / cover-image -->
+  <map
+    id="escapeMap"
+    class="map-native"
+    latitude="{{mapCenter.latitude}}"
+    longitude="{{mapCenter.longitude}}"
+    scale="{{mapScale}}"
+    markers="{{mapMarkers}}"
+    polyline="{{mapPolyline}}"
+    enable-satellite="{{activeTab === 'satellite'}}"
+    show-location
+    enable-zoom
+    enable-scroll
+    bindmarkertap="onMarkerTap"
+    bindtap="closePopup"
+    style="width: 100%; height: {{mapHeight}}px;"
+  >
+    <!-- 顶部模式 tab + 时间筛选 -->
+    <cover-view class="map-controls">
+      <cover-view class="map-tabs">
+        <cover-view
+          wx:for="{{mapTabs}}"
+          wx:key="key"
+          class="map-tab {{activeTab === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onTabTap"
+        >
+          <cover-view class="map-tab-text">{{item.name}}</cover-view>
+        </cover-view>
+      </cover-view>
+      <cover-view class="time-chips">
+        <cover-view
+          wx:for="{{timeFilters}}"
+          wx:key="key"
+          class="time-chip {{activeTime === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onTimeTap"
+        >
+          <cover-view class="time-chip-text">{{item.name}}</cover-view>
+        </cover-view>
+      </cover-view>
+    </cover-view>
+
+    <!-- v13: 定位按钮 —— CSS 绘制图标，不依赖 cover-image + SVG -->
+    <cover-view class="map-locate-btn" bindtap="locate">
+      <cover-view class="locate-icon">
+        <cover-view class="locate-ring"></cover-view>
+        <cover-view class="locate-center"></cover-view>
+      </cover-view>
+    </cover-view>
+
+    <!-- v13: 添加/编辑出发点按钮 —— CSS 绘制加号 -->
+    <cover-view class="map-home-btn" bindtap="setHomePoint">
+      <cover-view class="plus-icon">
+        <cover-view class="plus-h"></cover-view>
+        <cover-view class="plus-v"></cover-view>
+      </cover-view>
+    </cover-view>
+
+    <!-- 底部统计条 -->
+    <cover-view class="map-stats-bar">
+      <cover-view class="stat-item">
+        <cover-view class="stat-num">{{totalCount}}</cover-view>
+        <cover-view class="stat-label">总出逃</cover-view>
+      </cover-view>
+      <cover-view class="stat-item">
+        <cover-view class="stat-num">{{uniquePlaces}}</cover-view>
+        <cover-view class="stat-label">地点</cover-view>
+      </cover-view>
+      <cover-view class="stat-item">
+        <cover-view class="stat-num">{{totalDistance}}</cover-view>
+        <cover-view class="stat-label">公里</cover-view>
+      </cover-view>
+      <cover-view class="stat-item">
+        <cover-view class="stat-num">{{cityCount}}</cover-view>
+        <cover-view class="stat-label">城市</cover-view>
+      </cover-view>
+    </cover-view>
+
+    <!-- 空状态 -->
+    <cover-view wx:if="{{totalCount === 0}}" class="map-empty">
+      <cover-image class="empty-illust" src="/assets/icons/empty-map.svg"></cover-image>
+      <cover-view class="empty-text">还没有出逃记忆</cover-view>
+      <cover-view class="empty-sub">完成第一次出逃，这里会留下你的足迹</cover-view>
+      <cover-view class="empty-cta" catchtap="goEscape">去出逃</cover-view>
+    </cover-view>
+
+    <!-- 标记弹窗 -->
+    <cover-view wx:if="{{popupRecord}}" class="map-popup" catchtap="closePopup">
+      <cover-view class="popup-inner">
+        <cover-view class="popup-type" style="color: {{popupRecord.typeColor}};">{{popupRecord.typeName}}</cover-view>
+        <cover-view class="popup-title">{{popupRecord.commandTitle}}</cover-view>
+        <cover-view class="popup-date">{{popupRecord.dateText}}</cover-view>
+      </cover-view>
+    </cover-view>
+  </map>
+
+  <view class="tabbar-placeholder"></view>
+
+  <!-- 自定义 TabBar -->
+  <custom-tab-bar selected="{{1}}"></custom-tab-bar>
+</view>

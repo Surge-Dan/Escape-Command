@@ -1,0 +1,101 @@
+/* ===== 记录生成中过渡页（全屏，无 nav-header） ===== */
+.generating-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.status-bar { width: 100%; flex-shrink: 0; }
+
+.gen-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 80rpx;
+}
+
+/* 拍立得动画 */
+.polaroid-anim {
+  width: 320rpx;
+  padding: 24rpx 24rpx 0;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popup);
+  border: var(--border);
+  transform: rotate(-3deg);
+  animation: polaroidPulse 1.2s var(--ease-bounce) infinite;
+}
+
+@keyframes polaroidPulse {
+  0%, 100% { transform: rotate(-4deg) scale(0.94); }
+  50% { transform: rotate(4deg) scale(1.06); }
+}
+
+.polaroid-photo-area {
+  position: relative;
+  width: 100%;
+  height: 300rpx;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--brand-tint), var(--accent-tint));
+  overflow: hidden;
+}
+
+.photo-shine {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 60%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  transform: rotate(20deg);
+  animation: shine 1.5s var(--ease-standard) infinite;
+}
+
+@keyframes shine {
+  0% { left: -60%; }
+  100% { left: 120%; }
+}
+
+.polaroid-bottom {
+  width: 100%;
+  height: 64rpx;
+}
+
+/* 文案 */
+.gen-title {
+  margin-top: 64rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 1rpx;
+}
+
+.dots {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 28rpx;
+  height: 16rpx;
+}
+.dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: var(--brand);
+  opacity: 0.3;
+  animation: dotBlink 1.2s var(--ease-standard) infinite;
+}
+.d2 { animation-delay: 0.2s; }
+.d3 { animation-delay: 0.4s; }
+
+@keyframes dotBlink {
+  0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+  30% { opacity: 1; transform: scale(1.1); }
+}
+
+.gen-sub {
+  margin-top: 24rpx;
+  font-size: 24rpx;
+  color: var(--ink-faint);
+}

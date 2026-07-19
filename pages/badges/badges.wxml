@@ -1,0 +1,46 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">徽章墙</text>
+  </view>
+
+  <scroll-view scroll-y class="badges-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+    <!-- 进度概览 -->
+    <view class="badges-progress">
+      <view class="progress-text">已解锁 <text class="num num-display">{{unlockedCount}}</text> / {{totalCount}}</view>
+      <view class="progress-bar-wrap">
+        <view class="progress-bar" style="width: {{totalCount ? unlockedCount / totalCount * 100 : 0}}%;"></view>
+      </view>
+    </view>
+
+    <!-- 分组展示 -->
+    <view wx:for="{{sections}}" wx:key="key" class="badge-section">
+      <view class="section-head">
+        <text class="section-title">{{item.title}}</text>
+        <text class="section-count">{{item.badges.length}}</text>
+      </view>
+      <view class="badge-grid">
+        <view
+          wx:for="{{item.badges}}"
+          wx:for-item="badge"
+          wx:key="id"
+          class="badge-item {{badge.unlocked ? 'unlocked' : 'locked'}}"
+          bindtap="onBadgeTap"
+          data-id="{{badge.id}}"
+        >
+          <view class="badge-icon-wrap" style="background: {{badge.unlocked ? badge.gradient : ''}};">
+            <image class="badge-icon" src="{{badge.unlocked ? badge.icon : '/assets/icons/lock.svg'}}" mode="aspectFit"></image>
+          </view>
+          <text class="badge-name">{{badge.name}}</text>
+          <text class="badge-date" wx:if="{{badge.unlocked}}">{{badge.dateText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+</view>

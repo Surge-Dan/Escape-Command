@@ -1,0 +1,110 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">数据导出</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+    <view class="export-body">
+
+      <!-- 空状态 -->
+      <view wx:if="{{records.length === 0}}" class="empty-state">
+        <image class="empty-illust" src="/assets/icons/empty-collection.svg" mode="aspectFit"></image>
+        <text class="empty-title">还没有出逃记录可以导出</text>
+        <text class="empty-desc">先去完成几次出逃，再回来把它们打包带走</text>
+        <view class="empty-btn btn-secondary" bindtap="goHome">去出逃</view>
+      </view>
+
+      <block wx:if="{{records.length > 0}}">
+        <!-- 导出预览 -->
+        <view class="section-label">导出预览</view>
+        <view class="preview-card solid-card">
+          <view class="preview-head">
+            <view class="preview-logo">
+              <image src="/assets/icons/dice-5-brand-strong.svg" mode="aspectFit"></image>
+            </view>
+            <view class="preview-title-block">
+              <text class="preview-title">我的出逃记录</text>
+              <text class="preview-sub">出逃指令 · {{records.length}} 次城市漫游</text>
+            </view>
+          </view>
+
+          <view class="preview-stats">
+            <view class="ps-cell">
+              <text class="ps-num font-mono">{{stats.total}}</text>
+              <text class="ps-label">出逃次数</text>
+            </view>
+            <view class="ps-cell">
+              <text class="ps-num font-mono">{{stats.durationText}}</text>
+              <text class="ps-label">探索时长</text>
+            </view>
+            <view class="ps-cell">
+              <text class="ps-num font-mono">{{stats.badges}}</text>
+              <text class="ps-label">解锁徽章</text>
+            </view>
+            <view class="ps-cell">
+              <text class="ps-num font-mono">{{stats.collected}}</text>
+              <text class="ps-label">收藏指令</text>
+            </view>
+          </view>
+
+          <view class="preview-polaroids">
+            <view
+              wx:for="{{recent}}"
+              wx:key="id"
+              class="mini-polaroid"
+              style="transform: rotate({{item.rotation}}deg);"
+            >
+              <image class="mp-photo" src="{{item.thumb}}" mode="aspectFill"></image>
+              <text class="mp-cap">{{item.date}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 数据统计 -->
+        <view class="section-label">数据统计</view>
+        <view class="stats-card solid-card">
+          <view class="stats-row">
+            <text class="stats-key">总出逃次数</text>
+            <text class="stats-val font-mono">{{stats.total}} 次</text>
+          </view>
+          <view class="stats-div"></view>
+          <view class="stats-row">
+            <text class="stats-key">总探索时长</text>
+            <text class="stats-val font-mono">{{stats.durationText}}</text>
+          </view>
+          <view class="stats-div"></view>
+          <view class="stats-row">
+            <text class="stats-key">解锁徽章</text>
+            <text class="stats-val font-mono">{{stats.badges}} / {{stats.badgeTotal}}</text>
+          </view>
+          <view class="stats-div"></view>
+          <view class="stats-row">
+            <text class="stats-key">收藏指令</text>
+            <text class="stats-val font-mono">{{stats.collected}} 条</text>
+          </view>
+        </view>
+
+        <!-- 导出操作 -->
+        <view class="section-label">导出</view>
+        <view class="export-btn btn-primary" bindtap="exportImage">
+          <image class="export-ico" src="/assets/icons/camera-ink-soft.svg" mode="aspectFit"></image>
+          <text>{{exportingImage ? '生成中...' : '导出为长图'}}</text>
+        </view>
+        <view class="export-btn btn-secondary" bindtap="exportText">
+          <image class="export-ico" src="/assets/icons/share-2-ink-soft.svg" mode="aspectFit"></image>
+          <text>导出为文本</text>
+        </view>
+
+        <view class="bottom-spacer"></view>
+      </block>
+    </view>
+  </scroll-view>
+
+  <!-- 离屏画布，用于生成长图 -->
+  <canvas id="exportCanvas" type="2d" class="offscreen-canvas"></canvas>
+</view>

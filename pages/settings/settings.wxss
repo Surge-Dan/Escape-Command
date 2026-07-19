@@ -1,0 +1,212 @@
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: transparent;
+}
+
+.status-bar { flex-shrink: 0; }
+.settings-page .nav-header { flex-shrink: 0; }
+
+.settings-scroll {
+  flex: 1;
+  height: 0;
+  padding: 0 40rpx;
+}
+
+.settings-section {
+  margin-bottom: 48rpx;
+}
+
+.section-label {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 400;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  margin-bottom: 16rpx;
+  padding-left: 16rpx;
+}
+
+.setting-group {
+  background: var(--white);
+  border-radius: 28rpx;
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx;
+  min-height: 96rpx;
+}
+
+.setting-item.active {
+  background: var(--brand-tint);
+}
+
+.setting-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.setting-desc {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  margin-top: 8rpx;
+  line-height: 1.3;
+}
+
+.setting-divider {
+  margin: 0 28rpx;
+  height: 1rpx;
+  background: var(--line);
+}
+
+.danger-item {
+  background: var(--danger-tint);
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
+.check-ico {
+  width: 40rpx;
+  height: 40rpx;
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  border-radius: 50%;
+  padding: 10rpx;
+  flex-shrink: 0;
+}
+
+.arrow-ico {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+}
+
+.version-info {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  margin-top: 40rpx;
+}
+
+.bottom-spacer {
+  height: 48rpx;
+}
+
+/* ===== 通知偏好行：时间选择器 + 开关 ===== */
+.notification-item {
+  align-items: center;
+}
+
+.notification-controls {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  flex-shrink: 0;
+}
+
+.time-picker {
+  background: var(--brand-tint);
+  border-radius: 999rpx;
+  padding: 8rpx 20rpx;
+}
+
+.time-display {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--brand-dark);
+  line-height: 1.4;
+}
+
+/* ===== 主题卡片 ===== */
+.theme-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.theme-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+  padding: 24rpx;
+  transition: all 0.2s ease;
+}
+
+.theme-card.active {
+  border: 2rpx solid var(--brand);
+  background: var(--brand-tint);
+}
+
+.theme-preview {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2rpx solid rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 0 0 4rpx rgba(255, 255, 255, 0.6);
+}
+
+.theme-card-body {
+  flex: 1;
+  min-width: 0;
+  margin-left: 24rpx;
+}
+
+.theme-card-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.theme-card-desc {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  margin-top: 6rpx;
+  line-height: 1.3;
+}
+
+.theme-check {
+  width: 40rpx;
+  height: 40rpx;
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  border-radius: 50%;
+  padding: 10rpx;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.theme-check image {
+  width: 100%;
+  height: 100%;
+}
+
+/* ===== 缓存管理行（desc 显示尺寸，tap 触发清理） ===== */
+.setting-item .setting-desc.cache-desc {
+  color: var(--brand-dark);
+  font-weight: 500;
+}

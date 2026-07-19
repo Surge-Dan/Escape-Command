@@ -1,0 +1,81 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">编辑资料</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+    <view class="edit-body">
+
+      <!-- 头像 -->
+      <view class="section-label">头像</view>
+      <view class="avatar-card solid-card" bindtap="chooseAvatar">
+        <view class="avatar-wrap">
+          <image class="avatar-img" src="{{avatarUrl}}" mode="aspectFill"></image>
+          <view class="avatar-mask">
+            <image class="avatar-cam" src="/assets/icons/camera-ink-soft.svg" mode="aspectFit"></image>
+          </view>
+        </view>
+        <view class="avatar-hint">
+          <text class="avatar-title">点击更换头像</text>
+          <text class="avatar-desc">从相册选一张你喜欢的</text>
+        </view>
+        <image class="avatar-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+      </view>
+
+      <!-- 出逃代号 -->
+      <view class="section-label">出逃代号</view>
+      <view class="field-card solid-card">
+        <view class="field-row">
+          <input
+            class="field-input"
+            type="text"
+            maxlength="12"
+            value="{{escapeName}}"
+            placeholder="给自己取一个名字"
+            placeholder-class="field-placeholder"
+            bindinput="onNameInput"
+          />
+          <view class="random-btn" catchtap="randomName">
+            <image class="random-ico" src="/assets/icons/refresh-cw-ink-soft.svg" mode="aspectFit"></image>
+            <text>随机</text>
+          </view>
+        </view>
+        <view class="field-meta">
+          <text class="field-tip">名字会出现在你的拍立得和分享卡上</text>
+          <text class="field-count font-mono">{{nameCount}}/12</text>
+        </view>
+      </view>
+
+      <!-- 个性签名 -->
+      <view class="section-label">个性签名</view>
+      <view class="field-card solid-card">
+        <textarea
+          class="field-textarea"
+          maxlength="30"
+          value="{{escapeCode}}"
+          placeholder="写一句属于你的出逃宣言"
+          placeholder-class="field-placeholder"
+          auto-height
+          bindinput="onCodeInput"
+        />
+        <view class="field-meta">
+          <text class="field-tip">一句话，给今天的城市留个注脚</text>
+          <text class="field-count font-mono">{{codeCount}}/30</text>
+        </view>
+      </view>
+
+      <!-- 保存按钮 -->
+      <view class="save-btn btn-primary" bindtap="save">
+        <image class="save-ico" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+        <text>保存</text>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+</view>

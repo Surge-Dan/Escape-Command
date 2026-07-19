@@ -1,0 +1,350 @@
+.status-bar { flex-shrink: 0; }
+
+/* ===== 顶部 Tabs ===== */
+.comm-tabs {
+  display: flex;
+  align-items: center;
+  height: 96rpx;
+  padding: 0 40rpx;
+  border-bottom: 1rpx solid var(--line);
+  background: var(--canvas);
+}
+
+.comm-tab {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 28rpx;
+  color: var(--ink-soft);
+  transition: color 200ms var(--ease-standard);
+}
+
+.comm-tab.active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.comm-tab-underline {
+  position: absolute;
+  bottom: 14rpx;
+  width: 48rpx;
+  height: 6rpx;
+  border-radius: 6rpx;
+  background: var(--brand);
+  animation: tabSlide 220ms var(--ease-bounce);
+}
+
+@keyframes tabSlide {
+  from { transform: scaleX(0.2); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+/* ===== 滚动区 ===== */
+.page-scroll {
+  padding: 0 32rpx;
+}
+
+/* ===== Feed 卡片 ===== */
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  padding-top: 20rpx;
+}
+
+.feed-card {
+  position: relative;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+  padding: 28rpx 28rpx 20rpx;
+  transition: transform 150ms var(--ease-standard);
+}
+
+.feed-card:active {
+  transform: scale(0.99);
+}
+
+.feed-card-featured {
+  border: 2rpx solid rgba(201, 176, 55, 0.25);
+  box-shadow: 0 4rpx 24rpx rgba(201, 176, 55, 0.08);
+}
+
+/* 精选标签 */
+.featured-flag {
+  position: absolute;
+  top: 0;
+  right: 28rpx;
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx 14rpx 6rpx 10rpx;
+  background: linear-gradient(135deg, var(--gold-tint), #FFFBEC);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  font-size: 20rpx;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.featured-flag image {
+  width: 22rpx;
+  height: 22rpx;
+}
+
+/* 作者行 */
+.feed-author {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.author-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: var(--canvas);
+  flex-shrink: 0;
+}
+
+.author-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  min-width: 0;
+}
+
+.author-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.author-meta {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+.type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx 14rpx;
+  border-radius: var(--radius-sm);
+  font-size: 22rpx;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.type-tag image {
+  width: 22rpx;
+  height: 22rpx;
+}
+
+/* 正文 */
+.feed-content {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.55;
+  margin-bottom: 16rpx;
+}
+
+/* 标签 */
+.feed-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.feed-tag {
+  font-size: 22rpx;
+  color: var(--brand-dark);
+  background: var(--brand-weak);
+  padding: 4rpx 14rpx;
+  border-radius: var(--radius-pill);
+}
+
+/* 时长 */
+.feed-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 12rpx 0;
+  border-top: 1rpx solid var(--line);
+  margin-bottom: 8rpx;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 22rpx;
+  color: var(--ink-soft);
+}
+
+.meta-item image {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+/* 互动行 */
+.feed-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding-top: 4rpx;
+}
+
+.action-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  height: 64rpx;
+  border-radius: var(--radius-md);
+  background: var(--canvas);
+  transition: transform 150ms var(--ease-standard), background 150ms var(--ease-standard);
+}
+
+.action-item:active {
+  transform: scale(0.96);
+}
+
+.action-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.action-count {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+/* 点赞态 */
+.like-action.liked {
+  background: var(--heal-tint);
+}
+
+.like-action.liked .action-count {
+  color: #9B7BB8;
+  font-weight: 600;
+}
+
+.heart-wrap {
+  width: 32rpx;
+  height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 280ms var(--ease-bounce);
+}
+
+.heart-wrap.heart-on {
+  animation: heartPop 420ms var(--ease-bounce);
+}
+
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.45); }
+  60% { transform: scale(0.85); }
+  100% { transform: scale(1); }
+}
+
+/* 收藏态 */
+.action-item.collected {
+  background: var(--brand-tint);
+}
+
+.action-item.collected .action-count {
+  color: var(--brand-dark);
+  font-weight: 600;
+}
+
+/* ===== 列表底部 ===== */
+.feed-end {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 32rpx 0 8rpx;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+.feed-end-line {
+  flex: 1;
+  height: 1rpx;
+  background: var(--line);
+}
+
+/* ===== 空态 ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 0 40rpx;
+  text-align: center;
+}
+
+.empty-illust {
+  width: 140rpx;
+  height: 140rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.35;
+  animation: floatSoft 3s var(--ease-standard) infinite;
+}
+
+@keyframes floatSoft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12rpx); }
+}
+
+.empty-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  margin-top: 12rpx;
+  line-height: 1.5;
+}
+
+.empty-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 48rpx;
+  padding: 20rpx 56rpx;
+  min-height: 88rpx;
+  background: var(--brand);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  font-size: 28rpx;
+  font-weight: 600;
+  transition: transform 150ms var(--ease-standard);
+}
+
+.empty-btn:active {
+  transform: scale(0.97);
+  background: var(--brand-dark);
+}
+
+.bottom-spacer {
+  height: 48rpx;
+}

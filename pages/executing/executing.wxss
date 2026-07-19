@@ -1,0 +1,368 @@
+/* v4 重构：步骤改手动完成 + 必须 4 步全完才能跳；圆角统一收紧 */
+.executing-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.status-bar { flex-shrink: 0; }
+
+.ex-scroll {
+  flex: 1;
+  height: 0;
+  padding-left: 40rpx;
+  padding-right: 40rpx;
+}
+
+/* 卡片通用 */
+.timer-card,
+.step-card,
+.photo-card,
+.tip-card,
+.step-count-card {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 32rpx 40rpx;
+  margin-bottom: 20rpx;
+}
+
+/* 计时卡 */
+.timer-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+}
+
+.timer-label {
+  font-size: 28rpx;
+  color: var(--ink-soft);
+}
+
+.timer-num {
+  font-size: 60rpx;
+  font-weight: 700;
+  color: var(--brand);
+  line-height: 1.1;
+}
+
+.timer-unit {
+  font-size: 28rpx;
+  color: var(--ink-soft);
+}
+
+.progress-bar-bg {
+  margin-top: 20rpx;
+  height: 20rpx;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--line);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  transition: width 500ms var(--ease-standard);
+}
+
+.timer-sub {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: var(--ink-soft);
+}
+
+/* v3: 步数统计卡 */
+.step-count-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.step-count-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: var(--radius-md);
+  background: var(--brand-tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-count-icon image { width: 40rpx; height: 40rpx; }
+
+.step-count-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.step-count-label {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+}
+
+.step-count-num {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+/* 步骤卡 */
+.step-card-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 20rpx;
+}
+
+.step-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 24rpx 12rpx;
+  position: relative;
+  transition: all 250ms var(--ease-standard);
+}
+
+.step-row + .step-row { border-top: 2rpx solid var(--line); }
+
+/* v4: 步骤编号 —— 16rpx 圆角矩形 */
+.step-mark {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--canvas);
+  color: var(--ink-faint);
+  border: 2rpx solid var(--line);
+  transition: all 250ms var(--ease-standard);
+}
+
+.step-mark-num {
+  font-size: 24rpx;
+  font-weight: 700;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  line-height: 1;
+}
+
+.step-mark-check {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1;
+}
+
+/* 已完成态：类型色底 + 白字 */
+.step-row.finished .step-mark {
+  background: var(--step-color, var(--brand));
+  border-color: var(--step-color, var(--brand));
+  color: var(--white);
+}
+
+/* 进行中态：脉冲 + 类型色描边 */
+.step-row.current .step-mark {
+  background: var(--white);
+  border-color: var(--step-color, var(--brand));
+  color: var(--step-color, var(--brand));
+  animation: stepPulse 1400ms ease-in-out infinite;
+}
+
+.step-row.current {
+  background: var(--brand-tint);
+  border-radius: var(--radius-md);
+  margin: 0 -12rpx;
+  padding: 20rpx 12rpx;
+}
+
+@keyframes stepPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--step-color, rgba(200, 149, 110, 0.4)); }
+  50% { box-shadow: 0 0 0 12rpx rgba(200, 149, 110, 0); }
+}
+
+/* 步骤内容 */
+.step-content { flex: 1; display: flex; flex-direction: column; gap: 4rpx; min-width: 0; }
+.step-label { font-size: 22rpx; color: var(--ink-faint); }
+.step-text { font-size: 28rpx; color: var(--ink); line-height: 1.5; }
+.step-row.current .step-text { color: var(--brand-dark); font-weight: 600; }
+.step-row.finished .step-text { color: var(--ink-soft); text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+
+/* v4: 完成按钮（步骤行右侧） */
+.step-finish-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  height: 56rpx;
+  padding: 0 24rpx;
+  background: var(--brand);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  font-size: 24rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+  transition: all 200ms var(--ease-standard);
+  box-shadow: 0 2rpx 8rpx rgba(200, 149, 110, 0.32);
+}
+
+.step-finish-ico {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+.step-finish-arrow {
+  font-size: 24rpx;
+  line-height: 1;
+}
+
+.step-finish-btn:active {
+  background: var(--brand-dark);
+  transform: scale(0.94);
+  box-shadow: 0 1rpx 4rpx rgba(200, 149, 110, 0.24);
+}
+
+/* v4: 已完成右侧勾标 */
+.step-done-mark {
+  width: 40rpx;
+  height: 40rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-done-mark image {
+  width: 100%;
+  height: 100%;
+}
+
+/* 拍照卡 */
+.photo-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.photo-title { font-size: 30rpx; font-weight: 600; color: var(--ink); }
+.photo-count { font-size: 24rpx; color: var(--ink-soft); }
+
+/* v3: 横向滚动缩略图条 */
+.photo-list {
+  margin-top: 20rpx;
+  white-space: nowrap;
+}
+
+.photo-thumb, .photo-add {
+  display: inline-block;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--canvas);
+  vertical-align: top;
+  margin-right: 12rpx;
+}
+
+.photo-thumb {
+  box-shadow: var(--shadow-card);
+  transition: transform 150ms var(--ease-standard);
+}
+
+.photo-thumb:active { transform: scale(0.95); }
+.photo-thumb image { width: 100%; height: 100%; }
+
+.photo-add {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  color: var(--ink-soft);
+  font-size: 22rpx;
+  border: 4rpx dashed var(--ink-faint);
+  opacity: 0.4;
+  transition: all 200ms var(--ease-standard);
+}
+
+.photo-add:active {
+  background: var(--brand-tint);
+  border-color: var(--brand);
+  opacity: 1;
+  transform: scale(0.97);
+}
+
+.photo-add image { width: 48rpx; height: 48rpx; }
+
+/* 小贴士 */
+.tip-card { background: var(--brand-weak); }
+
+.tip-head {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.tip-icon-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+.tip-label { font-size: 22rpx; font-weight: 400; color: var(--brand-dark); }
+.tip-text { display: block; margin-top: 8rpx; font-size: 28rpx; color: var(--ink-soft); line-height: 1.5; }
+
+/* 完成按钮：底部安全区 */
+.ex-actions {
+  padding: 24rpx 40rpx calc(var(--safe-bottom, 0px) + var(--tabbar-floating-height) + var(--tabbar-bottom-gap));
+  background: var(--canvas);
+  box-shadow: 0 -4rpx 16rpx rgba(46, 47, 51, 0.04);
+}
+
+.finish-btn {
+  width: 100%;
+  height: 104rpx;
+  border-radius: var(--radius-md);
+  background: var(--brand);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+  transition: all 200ms var(--ease-standard);
+  box-shadow: var(--shadow-button);
+}
+
+.finish-btn:active {
+  background: var(--brand-dark);
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 8rpx rgba(200, 149, 110, 0.24);
+}
+
+.finish-btn.disabled {
+  background: var(--line);
+  color: var(--ink-faint);
+  box-shadow: none;
+}
+
+.finish-btn.disabled:active {
+  background: var(--line);
+  transform: none;
+  box-shadow: none;
+}
+
+.finish-btn image { width: 36rpx; height: 36rpx; }
+.bottom-spacer { height: 24rpx; }

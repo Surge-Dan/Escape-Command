@@ -1,0 +1,77 @@
+/* v9.1: TabBar 大厂标准风格 —— 激活用品牌色图标+文字，背景仅极浅蒙版 */
+.custom-tabbar {
+  position: fixed;
+  bottom: calc(var(--tabbar-bottom-gap) + env(safe-area-inset-bottom, 0px));
+  left: 32rpx;
+  right: 32rpx;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(60px) saturate(2);
+  -webkit-backdrop-filter: blur(60px) saturate(2);
+  border-radius: 32rpx;
+  padding: 12rpx 20rpx;
+  box-shadow: 0 8rpx 40rpx rgba(46, 47, 51, 0.12), 0 2rpx 8rpx rgba(46, 47, 51, 0.06);
+  border: var(--border);
+}
+
+.tabbar-item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  padding: 6rpx 4rpx;
+  border-radius: 24rpx;
+  transition: all 0.25s var(--ease-standard);
+  min-height: 88rpx;
+}
+
+/* v9.1: 激活态仅极浅灰蒙版 + 品牌色图标文字，大厂标准做法 */
+.tabbar-item.active {
+  background: rgba(46, 47, 51, 0.05);
+}
+
+.tabbar-item:active {
+  transform: scale(0.96);
+}
+
+.tabbar-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  transition: all 0.25s var(--ease-standard);
+}
+
+.tabbar-icon {
+  width: 40rpx;
+  height: 40rpx;
+  opacity: 0.85;
+  transition: opacity 0.25s var(--ease-standard);
+}
+
+.tabbar-item.active .tabbar-icon {
+  opacity: 1;
+}
+
+.tabbar-label {
+  font-size: 20rpx;
+  font-weight: 500;
+  color: var(--ink-faint);
+  letter-spacing: 0.5rpx;
+  transition: all 0.25s var(--ease-standard);
+}
+
+.tabbar-item.active .tabbar-label {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.tabbar-placeholder {
+  height: calc(var(--tabbar-floating-height) + var(--tabbar-bottom-gap) + env(safe-area-inset-bottom, 0px));
+}

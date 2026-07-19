@@ -1,0 +1,79 @@
+<view class="page-container onb-page">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <!-- v7: nav-header + 跳过按钮 -->
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <text class="onb-header-title">出逃指令</text>
+    <view class="onb-skip" catchtap="skipOnboarding">
+      <text>跳过</text>
+    </view>
+  </view>
+
+  <swiper class="onb-swiper"
+          current="{{current}}"
+          bindchange="swiperChange"
+          indicator-dots="{{true}}"
+          indicator-color="rgba(92, 191, 158, 0.3)"
+          indicator-active-color="#5CBF9E"
+          autoplay="{{false}}"
+          duration="350"
+          circular="{{false}}">
+
+    <!-- Screen 1: 产品哲学 -->
+    <swiper-item class="onb-screen">
+      <view class="onb-screen-content">
+        <view class="onb-illust-wrap">
+          <image class="onb-illust" src="/assets/icons/dice-5-brand-strong.svg" mode="aspectFit"></image>
+        </view>
+        <text class="onb-title">出逃指令</text>
+        <text class="onb-subtitle">给城市一个随机出口</text>
+        <view class="onb-desc">
+          <text class="onb-desc-line">不是逃避，是换一种方式在场</text>
+          <text class="onb-desc-line">给自己 15 分钟</text>
+          <text class="onb-desc-line">让算法替你做一个决定</text>
+        </view>
+        <view class="onb-cta" bindtap="goNext">
+          <text>开始探索</text>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- Screen 2: 6 种模式介绍 -->
+    <swiper-item class="onb-screen">
+      <view class="onb-screen-content">
+        <text class="onb-screen-title">6 种出逃模式</text>
+        <view class="onb-mode-grid">
+          <view wx:for="{{modeList}}" wx:key="id" class="onb-mode-card">
+            <view class="onb-mode-icon" style="background: {{item.color}}1A;">
+              <image src="{{item.icon}}" mode="aspectFit"></image>
+            </view>
+            <text class="onb-mode-name">{{item.name}}</text>
+            <text class="onb-mode-desc">{{item.desc}}</text>
+          </view>
+        </view>
+        <view class="onb-cta" bindtap="goNext">
+          <text>了解完啦</text>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- Screen 3: 首次出逃指引 -->
+    <swiper-item class="onb-screen">
+      <view class="onb-screen-content">
+        <text class="onb-screen-title">第一次出逃</text>
+        <text class="onb-guide-text">点击中间的卡片，开始你的第一次出逃</text>
+        <view class="onb-mock-card">
+          <view class="onb-mock-card-inner">
+            <image class="onb-mock-icon" src="/assets/icons/dice-5-brand-strong.svg" mode="aspectFit"></image>
+            <text class="onb-mock-text">点击卡片</text>
+            <text class="onb-mock-sub">生成你的出逃指令</text>
+          </view>
+        </view>
+        <view class="onb-cta primary" bindtap="startEscape">
+          <text>立即体验</text>
+        </view>
+      </view>
+    </swiper-item>
+
+  </swiper>
+</view>

@@ -1,0 +1,94 @@
+<view class="page-container about-page paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">关于 · 隐私</text>
+  </view>
+
+  <scroll-view scroll-y class="about-scroll">
+    <!-- 应用简介 -->
+    <view class="about-hero">
+      <text class="hero-title">出逃指令</text>
+      <text class="hero-version">v{{version}}</text>
+      <text class="hero-tagline">给周末一个出口\n用随机的小冒险，填满城市里的空白时光</text>
+    </view>
+
+    <!-- 版本记录 -->
+    <view class="about-section">
+      <text class="section-label">版本记录</text>
+      <view class="section-card">
+        <view wx:for="{{changelog}}" wx:key="version" class="changelog-row">
+          <view class="changelog-head">
+            <text class="changelog-version">{{item.version}}</text>
+            <text class="changelog-date">{{item.date}}</text>
+          </view>
+          <text class="changelog-note">{{item.note}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 隐私说明 -->
+    <view class="about-section">
+      <text class="section-label">隐私说明</text>
+      <view class="section-card">
+        <view class="bullet-row">
+          <text class="bullet-dot">·</text>
+          <text class="bullet-text">数据存储：你的出逃记录、照片、徽章和偏好全部使用微信小程序本地存储（wx.setStorageSync），不会上传到任何服务器，仅存在你的设备上。</text>
+        </view>
+        <view class="bullet-row">
+          <text class="bullet-dot">·</text>
+          <text class="bullet-text">位置信息：定位仅用于推荐附近的出逃指令和记录足迹坐标，可在设置中切换「模糊定位」或随时关闭。</text>
+        </view>
+        <view class="bullet-row">
+          <text class="bullet-dot">·</text>
+          <text class="bullet-text">天气数据：通过和风天气 API 仅查询当前天气用于指令匹配，不存储任何天气历史数据。</text>
+        </view>
+        <view class="bullet-row">
+          <text class="bullet-dot">·</text>
+          <text class="bullet-text">权限说明：位置、相册/相机、通知等权限均按需请求，可在微信设置中随时撤销。</text>
+        </view>
+        <view class="bullet-row">
+          <text class="bullet-dot">·</text>
+          <text class="bullet-text">用户控制：你可以在「设置 - 缓存管理」清理临时缓存，或「设置 - 清空所有数据」彻底重置，随时清除所有数据。</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 联系与反馈 -->
+    <view class="about-section">
+      <text class="section-label">联系与反馈</text>
+      <view class="setting-group">
+        <view class="setting-item" bindtap="copyEmail">
+          <view class="setting-text">
+            <text class="setting-name">邮箱</text>
+            <text class="setting-desc">{{email}}</text>
+          </view>
+          <text class="copy-hint">复制</text>
+        </view>
+        <view class="setting-divider"></view>
+        <view class="setting-item" bindtap="copyWechat">
+          <view class="setting-text">
+            <text class="setting-name">公众号</text>
+            <text class="setting-desc">{{wechat}}</text>
+          </view>
+          <text class="copy-hint">复制</text>
+        </view>
+        <view class="setting-divider"></view>
+        <view class="setting-item" bindtap="openFeedback">
+          <view class="setting-text">
+            <text class="setting-name">反馈建议</text>
+            <text class="setting-desc">说说你想看到什么，或哪里不够好</text>
+          </view>
+          <image class="arrow-ico" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+        </view>
+      </view>
+    </view>
+
+    <text class="footer-note">Made with care · 本地优先 · 隐私至上</text>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+</view>

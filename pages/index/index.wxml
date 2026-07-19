@@ -1,0 +1,193 @@
+<view class="page-container home-page paper-texture {{fontLoaded ? 'font-loaded' : ''}}">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <!-- v7: 统一导航栏，与 map/profile 一致，避开胶囊按钮 -->
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <text class="nav-header-title">出逃指令</text>
+    <view class="nav-header-divider"></view>
+  </view>
+  <scroll-view scroll-y class="home-scroll" enhanced show-scrollbar="{{false}}">
+    <!-- v9: hero 区精简——Pill 改淡灰色 + 真实日期 -->
+    <view class="hero-warm">
+      <view class="hero-pill">
+        <view class="hero-pill-dot"></view>
+        <text class="hero-pill-text">{{dateText}}</text>
+      </view>
+      <view class="hero-title-wrap">
+        <text class="hero-title-line">{{greetingText}},</text>
+        <text class="hero-title-line hero-title-second">
+          <text class="hero-italic">{{heroEmphasis}}</text>
+          <text>{{heroTail}}</text>
+        </text>
+      </view>
+      <text class="hero-sub">用 15 分钟，给城市一个随机出口</text>
+    </view>
+
+    <!-- 空闲态：核心出逃卡片（v9 精简：高度收紧） -->
+    <view wx:if="{{!selectedCommand}}" class="shake-card" bindtap="rollCommand">
+      <view class="pulse-ring"></view>
+      <view class="pulse-ring pulse-ring-delay"></view>
+
+      <!-- v9.1: 模式 Tag — 去掉副标题，保持简洁 -->
+      <view class="mode-tag" catchtap="onModeTagTap">
+        <image class="mode-tag-ico" src="{{currentModeMeta.icon}}" mode="aspectFit"></image>
+        <text class="mode-tag-text">{{currentModeMeta.name}}</text>
+        <image class="mode-tag-arrow {{showModeSheet ? 'up' : ''}}" src="/assets/icons/chevron-down-ink.svg" mode="aspectFit"></image>
+      </view>
+
+      <view class="dice-box {{isBouncing ? 'dice-bounce' : ''}}">
+        <image class="dice-ico" src="/assets/icons/dice-5-white.svg" mode="aspectFit"></image>
+      </view>
+      <text class="shake-title">出逃一下</text>
+      <text class="shake-sub">点击卡片，开始出逃</text>
+      <view class="remain-row">
+        <text>今日剩余 </text>
+        <text class="remain-num font-mono">{{remainCount}}</text>
+        <text> 次 · 次日 0 点刷新</text>
+      </view>
+    </view>
+
+    <!-- v9: 收藏入口——0 条时改为极简一行 -->
+    <view wx:if="{{!selectedCommand && collectedCount === 0}}" class="collect-entry-mini" bindtap="goCollection">
+      <image class="collect-mini-ico" src="/assets/icons/bookmark.svg" mode="aspectFit"></image>
+      <text class="collect-mini-text">还没有收藏，去看看</text>
+      <image class="collect-mini-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+    </view>
+    <view wx:if="{{!selectedCommand && collectedCount > 0}}" class="collect-entry-card" bindtap="goCollection">
+      <view class="collect-entry-icon-wrap">
+        <image class="collect-entry-ico" src="/assets/icons/bookmark-brand.svg" mode="aspectFit"></image>
+      </view>
+      <view class="collect-entry-text">
+        <text class="collect-entry-title">我的收藏</text>
+        <text class="collect-entry-sub">{{collectedCount}} 条指令</text>
+      </view>
+      <image class="collect-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+    </view>
+
+    <!-- 每日推荐（v9：进入首屏） -->
+    <view wx:if="{{!selectedCommand && dailyRecommend.length}}" class="daily-section">
+      <view class="section-header">
+        <text class="section-title">今日推荐</text>
+        <text class="section-sub">基于天气和时间</text>
+      </view>
+      <scroll-view scroll-x class="daily-scroll" enhanced show-scrollbar="{{false}}">
+        <view wx:for="{{dailyRecommend}}" wx:key="id" class="daily-card" data-id="{{item.id}}" bindtap="goCommandDetail">
+          <view class="daily-type" style="background: {{item.typeColor}}14; color: {{item.typeColor}};">
+            <text>{{item.typeName}}</text>
+          </view>
+          <text class="daily-title">{{item.title}}</text>
+          <text class="daily-meta">约 {{item.duration}} 分钟</text>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 指令详情卡 -->
+    <view wx:if="{{selectedCommand}}" class="command-sheet">
+      <view class="cmd-card">
+        <!-- v12: 关闭按钮左上角，收藏按钮右上角，分别绝对定位 -->
+        <view class="cmd-close" catchtap="closeCommand">
+          <image src="/assets/icons/x-ink-faint.svg" mode="aspectFit"></image>
+        </view>
+        <view class="favorite-toggle {{collected ? 'active' : ''}}" catchtap="collectCmd">
+          <image src="{{collected ? '/assets/icons/bookmark-brand.svg' : '/assets/icons/bookmark.svg'}}" mode="aspectFit"></image>
+        </view>
+        <!-- 类型标签 -->
+        <view class="cmd-type-row">
+          <view class="cmd-type" style="background: {{selectedCommand.typeColor}}14; color: {{selectedCommand.typeColor}};">
+            <image class="type-ico" src="{{selectedCommand.typeIcon}}" mode="aspectFit"></image>
+            <text>{{selectedCommand.typeName}}</text>
+          </view>
+        </view>
+
+        <!-- 标题 -->
+        <view wx:if="{{invitedByFriend}}" class="invite-tag">
+          <text>来自朋友的邀请</text>
+        </view>
+        <text class="cmd-title">{{selectedCommand.title}}</text>
+
+        <!-- 场景插画 -->
+        <view class="cmd-image-wrap">
+          <view class="cmd-image-bg" style="background: linear-gradient(135deg, {{selectedCommand.typeColor}}40, {{selectedCommand.typeColor}}10);">
+            <image class="cmd-image-icon" src="{{selectedCommand.typeIcon}}" mode="aspectFit"></image>
+          </view>
+          <image class="cmd-image" src="{{selectedCommand.illustration}}" mode="aspectFill" wx:if="{{selectedCommand.illustration}}"></image>
+          <view class="cmd-image-badge" style="background: {{selectedCommand.typeColor}};">
+            <image class="badge-mini-ico" src="{{selectedCommand.typeIcon}}" mode="aspectFit"></image>
+          </view>
+        </view>
+
+        <!-- 元信息 -->
+        <view class="cmd-meta">
+          <view class="meta-item">
+            <image src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+            <text>约 {{selectedCommand.duration}} 分钟</text>
+          </view>
+          <view class="meta-item">
+            <image src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+            <text>{{selectedCommand.distance}}</text>
+          </view>
+          <view class="meta-item">
+            <image src="/assets/icons/user-brand.svg" mode="aspectFit"></image>
+            <text>{{selectedCommand.people}}</text>
+          </view>
+        </view>
+
+        <!-- 小贴士 -->
+        <view class="tip-box">
+          <view class="tip-head">
+            <view class="tip-icon-dot"></view>
+            <text class="tip-label">小贴士</text>
+          </view>
+          <text class="tip-text">{{selectedCommand.tip || '慢慢走，留意街边的细节。'}}</text>
+        </view>
+      </view>
+
+      <!-- 操作区：邀请朋友 + 重摇 + 接受指令 -->
+      <view class="cmd-actions">
+        <button wx:if="{{selectedCommand.double || selectedCommand.social}}" class="invite-btn" open-type="share">
+          <image src="/assets/icons/users-white.svg" mode="aspectFit"></image>
+          <text>邀请朋友</text>
+        </button>
+        <view class="action-btn secondary" catchtap="reroll">
+          <image src="/assets/icons/refresh-cw-ink-soft.svg" mode="aspectFit"></image>
+        </view>
+        <view class="action-btn primary" catchtap="startCommand">
+          <image src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+          <text>接受指令</text>
+        </view>
+      </view>
+      <view wx:if="{{remainCount === 0}}" class="reroll-hint">
+        <text>次数用完，可自定义</text>
+      </view>
+    </view>
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+
+  <!-- 自定义 TabBar -->
+  <custom-tab-bar selected="{{0}}"></custom-tab-bar>
+
+  <!-- v4: 模式选择 Sheet（底部弹层） -->
+  <view wx:if="{{showModeSheet}}" class="mode-sheet-mask" bindtap="closeModeSheet">
+    <view class="mode-sheet" catchtap="">
+      <view class="mode-sheet-handle"></view>
+      <text class="mode-sheet-title">选择出逃模式</text>
+      <view class="mode-sheet-list">
+        <view wx:for="{{sheetModes}}" wx:key="id"
+              class="mode-option {{selectedMode === item.id ? 'active' : ''}}"
+              data-id="{{item.id}}"
+              bindtap="onModeOptionTap">
+          <view class="mode-option-ico-wrap" style="background: {{item.color}}1A;">
+            <image class="mode-option-ico" src="{{item.icon}}" mode="aspectFit"></image>
+          </view>
+          <view class="mode-option-text">
+            <text class="mode-option-name">{{item.name}}</text>
+            <text class="mode-option-desc">{{item.desc}}</text>
+          </view>
+          <view wx:if="{{selectedMode === item.id}}" class="mode-option-check">
+            <image src="/assets/icons/check-brand.svg" mode="aspectFit"></image>
+          </view>
+        </view>
+      </view>
+      <view class="mode-sheet-cancel" bindtap="closeModeSheet">取消</view>
+    </view>
+  </view>
+</view>

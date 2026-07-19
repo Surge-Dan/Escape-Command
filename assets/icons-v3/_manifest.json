@@ -1,0 +1,424 @@
+{
+  "generatedAt": "2026-07-11T10:55:47.727Z",
+  "total": 104,
+  "success": 104,
+  "fail": 0,
+  "icons": [
+    {
+      "name": "tab-escape.svg",
+      "status": "success"
+    },
+    {
+      "name": "tab-escape-active.svg",
+      "status": "success"
+    },
+    {
+      "name": "tab-map.svg",
+      "status": "success"
+    },
+    {
+      "name": "tab-map-active.svg",
+      "status": "success"
+    },
+    {
+      "name": "tab-profile.svg",
+      "status": "success"
+    },
+    {
+      "name": "tab-profile-active.svg",
+      "status": "success"
+    },
+    {
+      "name": "chevron-left-ink.svg",
+      "status": "success"
+    },
+    {
+      "name": "chevron-right-faint.svg",
+      "status": "success"
+    },
+    {
+      "name": "check-white.svg",
+      "status": "success"
+    },
+    {
+      "name": "x-ink-faint.svg",
+      "status": "success"
+    },
+    {
+      "name": "refresh-cw-ink-soft.svg",
+      "status": "success"
+    },
+    {
+      "name": "more-horizontal-ink.svg",
+      "status": "success"
+    },
+    {
+      "name": "target-ink.svg",
+      "status": "success"
+    },
+    {
+      "name": "settings-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "pencil-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "camera-ink-soft.svg",
+      "status": "success"
+    },
+    {
+      "name": "navigation-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "map-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "map-pin-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "clock-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "user-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "bookmark.svg",
+      "status": "success"
+    },
+    {
+      "name": "bookmark-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "lock-coral.svg",
+      "status": "success"
+    },
+    {
+      "name": "droplet.svg",
+      "status": "success"
+    },
+    {
+      "name": "footprints-coral.svg",
+      "status": "success"
+    },
+    {
+      "name": "sparkles.svg",
+      "status": "success"
+    },
+    {
+      "name": "coffee.svg",
+      "status": "success"
+    },
+    {
+      "name": "compass-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "dice-5-brand-strong.svg",
+      "status": "success"
+    },
+    {
+      "name": "dice-5-white.svg",
+      "status": "success"
+    },
+    {
+      "name": "sprout-brand-strong.svg",
+      "status": "success"
+    },
+    {
+      "name": "sprout-white.svg",
+      "status": "success"
+    },
+    {
+      "name": "footprints-white.svg",
+      "status": "success"
+    },
+    {
+      "name": "sun-lemon-fg.svg",
+      "status": "success"
+    },
+    {
+      "name": "cloud-rain-sky-fg.svg",
+      "status": "success"
+    },
+    {
+      "name": "zap-coral.svg",
+      "status": "success"
+    },
+    {
+      "name": "smile-lemon.svg",
+      "status": "success"
+    },
+    {
+      "name": "meh-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "sparkles-coral.svg",
+      "status": "success"
+    },
+    {
+      "name": "heart-lavender.svg",
+      "status": "success"
+    },
+    {
+      "name": "laugh-sky.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-first-escape.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-seven-streak.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-thirty-streak.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-color-hunter.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-night-walker.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-rainy-walker.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-market-regular.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-city-detective.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-member-pro.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-culture-lover.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-micro-master.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-walk-master.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-double-master.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-night-master.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-rainy-master.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-social-master.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-collector.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-explorer.svg",
+      "status": "success"
+    },
+    {
+      "name": "badge-challenge-king.svg",
+      "status": "success"
+    },
+    {
+      "name": "pin-color.svg",
+      "status": "success"
+    },
+    {
+      "name": "pin-walk.svg",
+      "status": "success"
+    },
+    {
+      "name": "pin-sense.svg",
+      "status": "success"
+    },
+    {
+      "name": "pin-collect.svg",
+      "status": "success"
+    },
+    {
+      "name": "pin-food.svg",
+      "status": "success"
+    },
+    {
+      "name": "pin-culture.svg",
+      "status": "success"
+    },
+    {
+      "name": "step-leave.svg",
+      "status": "success"
+    },
+    {
+      "name": "step-explore.svg",
+      "status": "success"
+    },
+    {
+      "name": "step-discover.svg",
+      "status": "success"
+    },
+    {
+      "name": "step-record.svg",
+      "status": "success"
+    },
+    {
+      "name": "users-lavender.svg",
+      "status": "success"
+    },
+    {
+      "name": "award-lemon.svg",
+      "status": "success"
+    },
+    {
+      "name": "cloud-rain-sky.svg",
+      "status": "success"
+    },
+    {
+      "name": "empty-collection.svg",
+      "status": "success"
+    },
+    {
+      "name": "empty-map.svg",
+      "status": "success"
+    },
+    {
+      "name": "check-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "chevron-right-brand.svg",
+      "status": "success"
+    },
+    {
+      "name": "chevron-down-ink.svg",
+      "status": "success"
+    },
+    {
+      "name": "avatar.svg",
+      "status": "success"
+    },
+    {
+      "name": "paper-texture.svg",
+      "status": "success"
+    },
+    {
+      "name": "empty-collection-large.svg",
+      "status": "success"
+    },
+    {
+      "name": "award.svg",
+      "status": "success"
+    },
+    {
+      "name": "lock.svg",
+      "status": "success"
+    },
+    {
+      "name": "share-2.svg",
+      "status": "success"
+    },
+    {
+      "name": "share-2-ink-soft.svg",
+      "status": "success"
+    },
+    {
+      "name": "star-lemon.svg",
+      "status": "success"
+    },
+    {
+      "name": "target.svg",
+      "status": "success"
+    },
+    {
+      "name": "award-brand-strong.svg",
+      "status": "success"
+    },
+    {
+      "name": "crown-lemon.svg",
+      "status": "success"
+    },
+    {
+      "name": "sun-lemon.svg",
+      "status": "success"
+    },
+    {
+      "name": "sun.svg",
+      "status": "success"
+    },
+    {
+      "name": "moon-gray.svg",
+      "status": "success"
+    },
+    {
+      "name": "moon-white.svg",
+      "status": "success"
+    },
+    {
+      "name": "layers.svg",
+      "status": "success"
+    },
+    {
+      "name": "layers-ink-soft.svg",
+      "status": "success"
+    },
+    {
+      "name": "compass.svg",
+      "status": "success"
+    },
+    {
+      "name": "compass-ink-faint.svg",
+      "status": "success"
+    },
+    {
+      "name": "clock.svg",
+      "status": "success"
+    },
+    {
+      "name": "footprints.svg",
+      "status": "success"
+    },
+    {
+      "name": "map-pin.svg",
+      "status": "success"
+    },
+    {
+      "name": "send.svg",
+      "status": "success"
+    },
+    {
+      "name": "users-white.svg",
+      "status": "success"
+    },
+    {
+      "name": "cloud-rain-white.svg",
+      "status": "success"
+    }
+  ]
+}

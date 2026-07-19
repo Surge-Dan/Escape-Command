@@ -1,0 +1,89 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">排行榜</text>
+  </view>
+
+  <!-- Tab 切换栏 -->
+  <view class="tab-bar">
+    <view wx:for="{{tabs}}" wx:key="id" class="tab-item {{activeTab === item.id ? 'active' : ''}}" bindtap="switchTab" data-id="{{item.id}}">
+      <text class="tab-text">{{item.name}}</text>
+    </view>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx - 88rpx);">
+
+    <!-- Podium -->
+    <view class="podium">
+      <!-- 第二名（左） -->
+      <view class="podium-cell podium-second" wx:if="{{podium.second}}" bindtap="tapRow">
+        <view class="podium-medal silver">
+          <text class="medal-num">2</text>
+        </view>
+        <image class="podium-avatar" src="{{podium.second.avatar}}" mode="aspectFit"></image>
+        <text class="podium-name">{{podium.second.name}}</text>
+        <text class="podium-count">{{podium.second.count}} 次</text>
+        <view class="podium-bar bar-second"></view>
+      </view>
+
+      <!-- 第一名（中，更高 + 皇冠） -->
+      <view class="podium-cell podium-first" wx:if="{{podium.first}}" bindtap="tapRow">
+        <image class="crown-ico" src="/assets/icons/crown-lemon.svg" mode="aspectFit"></image>
+        <view class="podium-medal gold">
+          <text class="medal-num">1</text>
+        </view>
+        <image class="podium-avatar avatar-first" src="{{podium.first.avatar}}" mode="aspectFit"></image>
+        <text class="podium-name">{{podium.first.name}}</text>
+        <text class="podium-count">{{podium.first.count}} 次</text>
+        <view class="podium-bar bar-first"></view>
+      </view>
+
+      <!-- 第三名（右） -->
+      <view class="podium-cell podium-third" wx:if="{{podium.third}}" bindtap="tapRow">
+        <view class="podium-medal bronze">
+          <text class="medal-num">3</text>
+        </view>
+        <image class="podium-avatar" src="{{podium.third.avatar}}" mode="aspectFit"></image>
+        <text class="podium-name">{{podium.third.name}}</text>
+        <text class="podium-count">{{podium.third.count}} 次</text>
+        <view class="podium-bar bar-third"></view>
+      </view>
+    </view>
+
+    <!-- 4-20 名列表 -->
+    <view class="rank-list">
+      <view wx:for="{{rest}}" wx:key="rank" class="rank-row {{item.isMe ? 'is-me' : ''}}" bindtap="tapRow">
+        <view class="rank-no">
+          <text class="rank-no-text">{{item.rank}}</text>
+        </view>
+        <image class="rank-avatar" src="{{item.avatar}}" mode="aspectFit"></image>
+        <view class="rank-info">
+          <view class="rank-name-row">
+            <text class="rank-name">{{item.name}}</text>
+            <view class="mode-dot" style="background: {{item.modeColor}};"></view>
+            <text class="me-tag" wx:if="{{item.isMe}}">我</text>
+          </view>
+        </view>
+        <text class="rank-count">{{item.count}} 次</text>
+      </view>
+    </view>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+
+  <!-- 我的排名（底部 sticky） -->
+  <view class="my-rank-card" bindtap="scrollToMe">
+    <view class="my-rank-left">
+      <text class="my-rank-label">我的排名</text>
+      <text class="my-rank-no">#{{myRank}}</text>
+    </view>
+    <view class="my-rank-right">
+      <text class="my-rank-name">{{myName}}</text>
+      <text class="my-rank-count">{{myCount}} 次出逃</text>
+    </view>
+  </view>
+</view>

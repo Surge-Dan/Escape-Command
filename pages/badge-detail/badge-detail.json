@@ -1,0 +1,8 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "徽章详情",
+  "navigationBarBackgroundColor": "#F5F3EF",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#F5F3EF",
+  "usingComponents": {}
+}

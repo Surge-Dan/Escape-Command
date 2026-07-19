@@ -1,0 +1,102 @@
+<view class="page-container city-select-page paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">切换城市</text>
+    <view class="nav-header-divider"></view>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" enhanced show-scrollbar="{{false}}" style="height: calc(100vh - {{statusBarHeight}}px - 80rpx);">
+    <view class="city-body">
+
+      <!-- 当前城市卡 -->
+      <view class="current-card">
+        <view class="current-head">
+          <view class="current-loc-dot"></view>
+          <text class="current-label">当前定位</text>
+        </view>
+        <view class="current-name-row">
+          <text class="current-emoji">{{currentCity.emoji}}</text>
+          <text class="current-name">{{currentCity.name}}</text>
+        </view>
+        <text class="current-sub">{{currentCity.desc}}</text>
+      </view>
+
+      <!-- 热门推荐 -->
+      <view class="section-title-row">
+        <text class="section-title">热门推荐</text>
+        <text class="section-sub">轻点查看专属指令</text>
+      </view>
+
+      <view class="city-grid-large">
+        <view
+          wx:for="{{hotCities}}"
+          wx:key="id"
+          class="city-card-large {{selectedCity.id === item.id ? 'selected' : ''}} {{currentCity.id === item.id ? 'is-current' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="selectCity"
+        >
+          <view class="city-emoji-wrap-large">{{item.emoji}}</view>
+          <text class="city-name-large">{{item.name}}</text>
+          <text class="city-count-large font-mono">{{item.count}} 条专属指令</text>
+          <text wx:if="{{currentCity.id === item.id}}" class="city-current-tag">当前</text>
+        </view>
+      </view>
+
+      <!-- 按省份选择 -->
+      <view class="section-title-row">
+        <text class="section-title">按省份选择</text>
+        <text class="section-sub">找到你的城市</text>
+      </view>
+
+      <view wx:for="{{provinceGroups}}" wx:key="province" class="province-section">
+        <view class="province-header">{{item.province}}</view>
+        <view class="city-grid-small">
+          <view
+            wx:for="{{item.cities}}"
+            wx:key="id"
+            wx:for-item="city"
+            class="city-chip {{selectedCity.id === city.id ? 'selected' : ''}} {{currentCity.id === city.id ? 'is-current' : ''}}"
+            data-id="{{city.id}}"
+            bindtap="selectCity"
+          >
+            <text class="city-chip-name">{{city.name}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 城市专属指令 -->
+      <view wx:if="{{selectedCity}}" class="commands-card">
+        <view class="section-head">
+          <view class="section-dot" style="background: var(--brand);"></view>
+          <text class="section-label">{{selectedCity.name}}专属指令</text>
+        </view>
+        <view class="cmd-list">
+          <view wx:for="{{cityCommands}}" wx:key="index" class="cmd-item">
+            <view class="cmd-num font-mono">{{index + 1}}</view>
+            <view class="cmd-content">
+              <text class="cmd-text">{{item}}</text>
+              <text class="cmd-tag">{{selectedCity.name}}专属</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 确认切换 -->
+      <view wx:if="{{selectedCity}}" class="confirm-btn btn-primary" bindtap="confirmSwitch">
+        <text>切换到 {{selectedCity.name}}</text>
+      </view>
+
+      <!-- 说明 -->
+      <view class="desc-block">
+        <view class="desc-dot"></view>
+        <text class="desc-text">切换城市后，出逃指令将优先推荐该城市的专属探索任务</text>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+</view>

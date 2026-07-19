@@ -1,0 +1,142 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">数据统计</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" enhanced show-scrollbar="{{false}}" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+
+    <!-- 空状态：记录太少 -->
+    <view wx:if="{{isEmpty}}" class="empty-state">
+      <view class="empty-circle">
+        <image src="/assets/icons/sparkles-coral.svg" mode="aspectFit"></image>
+      </view>
+      <text class="empty-title">记录太少</text>
+      <text class="empty-sub">再出逃几次来看看你的数据吧</text>
+      <view class="empty-back btn-secondary" bindtap="goBack">去出逃</view>
+    </view>
+
+    <view wx:else class="stats-body">
+
+      <!-- 顶部总览 -->
+      <view class="summary-card">
+        <text class="summary-eyebrow">你的出逃数据</text>
+        <view class="summary-row">
+          <text class="summary-big font-mono">{{totalEscapes}}</text>
+          <text class="summary-mid">次出逃</text>
+        </view>
+        <text class="summary-sub">累计 {{totalHours}} 小时 {{totalMinutes}} 分钟 · 走过 {{totalLocations}} 个角落</text>
+      </view>
+
+      <!-- 1. 时长分布 -->
+      <view class="chart-card">
+        <view class="chart-head">
+          <text class="chart-title">时长分布</text>
+          <text class="chart-meta">单位：次</text>
+        </view>
+        <view class="hbar-list">
+          <view wx:for="{{durationBuckets}}" wx:key="label" class="hbar-row">
+            <text class="hbar-label">{{item.label}}</text>
+            <view class="hbar-track">
+              <view class="hbar-fill" style="width: {{item.percent}}%; background: {{item.color}};"></view>
+            </view>
+            <text class="hbar-count font-mono">{{item.count}}</text>
+          </view>
+        </view>
+        <view class="chart-legend">
+          <view class="legend-dot" style="background: var(--brand);"></view>
+          <text class="legend-text">每次出逃的持续时间分布</text>
+        </view>
+      </view>
+
+      <!-- 2. 类型偏好 -->
+      <view class="chart-card">
+        <view class="chart-head">
+          <text class="chart-title">类型偏好</text>
+          <text class="chart-meta">共 {{totalEscapes}} 次</text>
+        </view>
+        <view class="vbar-chart">
+          <view class="vbar-yaxis">
+            <text class="vbar-y-label font-mono">{{typeMaxCount}}</text>
+            <text class="vbar-y-label font-mono">{{typeMidCount}}</text>
+            <text class="vbar-y-label font-mono">0</text>
+          </view>
+          <view class="vbar-area">
+            <view class="vbar-grid"></view>
+            <view wx:for="{{typeBars}}" wx:key="id" class="vbar-col">
+              <view class="vbar-bar-wrap">
+                <text class="vbar-bar-count font-mono">{{item.count}}</text>
+                <view class="vbar-bar" style="height: {{item.height}}%; background: {{item.color}};"></view>
+              </view>
+              <text class="vbar-x-label">{{item.name}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 3. 月度趋势 -->
+      <view class="chart-card">
+        <view class="chart-head">
+          <text class="chart-title">月度趋势</text>
+          <text class="chart-meta">今年 12 个月</text>
+        </view>
+        <view class="vbar-chart month-chart">
+          <view class="vbar-yaxis">
+            <text class="vbar-y-label font-mono">{{monthMaxCount}}</text>
+            <text class="vbar-y-label font-mono">{{monthMidCount}}</text>
+            <text class="vbar-y-label font-mono">0</text>
+          </view>
+          <view class="vbar-area">
+            <view class="vbar-grid"></view>
+            <view wx:for="{{monthBars}}" wx:key="month" class="vbar-col {{item.current ? 'current' : ''}}">
+              <view class="vbar-bar-wrap">
+                <text class="vbar-bar-count font-mono">{{item.count}}</text>
+                <view class="vbar-bar" style="height: {{item.height}}%; background: {{item.current ? 'var(--brand-strong)' : 'var(--brand-tint)'}};"></view>
+              </view>
+              <text class="vbar-x-label">{{item.label}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="chart-legend">
+          <view class="legend-dot" style="background: var(--brand-strong);"></view>
+          <text class="legend-text">当前月份</text>
+          <view class="legend-dot ghost" style="background: var(--brand-tint);"></view>
+          <text class="legend-text">历史月份</text>
+        </view>
+      </view>
+
+      <!-- 4. 热力日历 -->
+      <view class="chart-card">
+        <view class="chart-head">
+          <text class="chart-title">热力日历</text>
+          <text class="chart-meta">最近 12 周</text>
+        </view>
+        <view class="heatmap-wrap">
+          <view class="heatmap-day-labels">
+            <text class="heat-day-label">日</text>
+            <text class="heat-day-label">二</text>
+            <text class="heat-day-label">四</text>
+            <text class="heat-day-label">六</text>
+          </view>
+          <view class="heatmap-grid" style="grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(7, 1fr);">
+            <view wx:for="{{heatmap}}" wx:key="key" class="heat-cell heat-level-{{item.level}}"></view>
+          </view>
+        </view>
+        <view class="chart-legend">
+          <text class="legend-text">少</text>
+          <view class="legend-dot heat-level-0"></view>
+          <view class="legend-dot heat-level-1"></view>
+          <view class="legend-dot heat-level-2"></view>
+          <view class="legend-dot heat-level-3"></view>
+          <text class="legend-text">多</text>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+</view>

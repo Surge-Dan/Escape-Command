@@ -1,0 +1,8 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "成就系统",
+  "navigationBarBackgroundColor": "#F5F3EF",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#F5F3EF",
+  "usingComponents": {}
+}

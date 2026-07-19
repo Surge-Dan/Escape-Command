@@ -1,0 +1,125 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">每日挑战</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+    <view class="page-intro">
+      <text class="intro-date">{{todayDate}}</text>
+      <text class="intro-title">今天，给自己一个小目标</text>
+    </view>
+
+    <!-- 当日挑战 Hero -->
+    <view wx:if="{{todayChallenge}}" class="hero-card {{isCompleted ? 'hero-card-done' : ''}}">
+      <view class="hero-top">
+        <view class="hero-badge">
+          <image src="/assets/icons/target.svg" mode="aspectFit"></image>
+          <text>今日挑战</text>
+        </view>
+        <view class="hero-status {{isCompleted ? 'status-done' : 'status-todo'}}">
+          <text>{{isCompleted ? '已完成' : '未完成'}}</text>
+        </view>
+      </view>
+
+      <text class="hero-title">{{todayChallenge.title}}</text>
+      <text class="hero-desc">{{todayChallenge.desc}}</text>
+
+      <view class="hero-meta-row">
+        <view class="hero-meta-item">
+          <text class="meta-label">难度</text>
+          <view class="stars">
+            <text wx:for="{{difficultyStars}}" wx:key="*this" wx:for-item="s" class="star {{s ? 'on' : ''}}">★</text>
+          </view>
+        </view>
+        <view class="hero-meta-divider"></view>
+        <view class="hero-meta-item">
+          <text class="meta-label">奖励</text>
+          <text class="meta-value">{{todayChallenge.rewardDesc}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{!isCompleted}}" class="hero-action" bindtap="startChallenge">
+        <image src="/assets/icons/zap-coral.svg" mode="aspectFit"></image>
+        <text>开始挑战</text>
+      </view>
+      <view wx:else class="hero-celebrate">
+        <image src="/assets/icons/award-brand-strong.svg" mode="aspectFit"></image>
+        <text>恭喜完成今日挑战</text>
+      </view>
+    </view>
+
+    <!-- 挑战规则 -->
+    <view class="info-card">
+      <view class="info-header">
+        <view class="info-dot"></view>
+        <text class="info-title">挑战规则</text>
+      </view>
+      <view class="info-body">
+        <view class="rule-line">
+          <text class="rule-num">1</text>
+          <text>每天 0 点解锁一个新挑战，与你的出逃指令绑定</text>
+        </view>
+        <view class="rule-line">
+          <text class="rule-num">2</text>
+          <text>点击「开始挑战」会自动挑一条匹配的指令</text>
+        </view>
+        <view class="rule-line">
+          <text class="rule-num">3</text>
+          <text>完成指令即视作完成挑战，进度计入挑战王徽章</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 历史挑战 -->
+    <view class="info-card">
+      <view class="info-header">
+        <view class="info-dot"></view>
+        <text class="info-title">最近 7 天</text>
+        <text class="info-sub">完成 {{completedCount}} / 7</text>
+      </view>
+      <view class="history-list">
+        <view
+          wx:for="{{historyChallenges}}"
+          wx:key="date"
+          class="history-item {{item.completed ? 'done' : 'missed'}}"
+        >
+          <view class="history-check">
+            <image wx:if="{{item.completed}}" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+          </view>
+          <view class="history-content">
+            <view class="history-top">
+              <text class="history-day">{{item.dayLabel}}</text>
+              <text class="history-diff">{{item.difficulty}}星</text>
+            </view>
+            <text class="history-title">{{item.title}}</text>
+            <text class="history-desc">{{item.desc}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 奖励说明 -->
+    <view class="reward-card">
+      <view class="reward-top">
+        <image class="reward-icon" src="/assets/icons/crown-lemon.svg" mode="aspectFit"></image>
+        <view class="reward-text">
+          <text class="reward-title">挑战王徽章</text>
+          <text class="reward-desc">完成 7 个每日挑战即可解锁</text>
+        </view>
+        <text class="reward-count">{{progressToBadge}} / 7</text>
+      </view>
+      <view class="reward-bar-wrap">
+        <view class="reward-bar" style="width: {{progressToBadge / 7 * 100}}%;"></view>
+      </view>
+      <text wx:if="{{progressToBadge >= 7}}" class="reward-unlocked">已解锁！继续保持每日出逃</text>
+      <text wx:else class="reward-hint">还差 {{7 - progressToBadge}} 个，坚持就是胜利</text>
+    </view>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+</view>

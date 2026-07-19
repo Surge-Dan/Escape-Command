@@ -1,0 +1,32 @@
+// community.js — 24 条社区指令（其他用户分享的指令）
+// 用于社区 Feed 展示，内容风格与 commands.js 保持一致：具体、温暖、可执行
+// typeColor 与 utils/constants.js 的 TYPE_META 对齐
+
+const community = [
+  { id: 'uc001', content: '在地铁站台找一个陌生人，默默祝福TA今天好运', type: 'sense', typeColor: '#9B7BB8', duration: 5, author: '迷路的散步家', authorAvatar: '/assets/images/avatar.webp', likes: 142, collects: 38, tags: ['治愈', '通勤'], createdAt: '2026-07-01', featured: true },
+  { id: 'uc002', content: '找到一栋老居民楼，数一数阳台上晾了多少件红衣服', type: 'color', typeColor: '#5B8FB9', duration: 15, author: '摘云的漫步者', authorAvatar: '/assets/images/avatar.webp', likes: 89, collects: 22, tags: ['色彩', '散步'], createdAt: '2026-07-02', featured: false },
+  { id: 'uc003', content: '下雨天去便利店买一根热玉米，站在门口看着雨吃完', type: 'food', typeColor: '#A67C52', duration: 15, author: '雨天不撑伞', authorAvatar: '/assets/images/avatar.webp', likes: 203, collects: 67, tags: ['雨天', '美食', '治愈'], createdAt: '2026-07-03', featured: true },
+  { id: 'uc004', content: '找一条梧桐树最多的路，闭眼走 20 步，再睁眼看光影', type: 'walk', typeColor: '#D98A5C', duration: 20, author: '踩影子的猫', authorAvatar: '/assets/images/avatar.webp', likes: 156, collects: 41, tags: ['散步', '拍照'], createdAt: '2026-07-03', featured: false },
+  { id: 'uc005', content: '在公园长椅坐下，给十年前的自己写一段话，写在备忘录里', type: 'collect', typeColor: '#C9B037', duration: 15, author: '长椅上的思考者', authorAvatar: '/assets/images/avatar.webp', likes: 312, collects: 124, tags: ['治愈', '周末'], createdAt: '2026-07-04', featured: true },
+  { id: 'uc006', content: '去老城区找一家没有招牌的小店，吃一碗面，问老板开了多少年', type: 'food', typeColor: '#A67C52', duration: 30, author: '菜市场的哲学家', authorAvatar: '/assets/images/avatar.webp', likes: 278, collects: 89, tags: ['美食', '散步'], createdAt: '2026-07-04', featured: true },
+  { id: 'uc007', content: '深夜 11 点出门，找一盏最暖的路灯，在灯下站 1 分钟', type: 'sense', typeColor: '#9B7BB8', duration: 10, author: '凌晨四点的城市', authorAvatar: '/assets/images/avatar.webp', likes: 198, collects: 73, tags: ['深夜', '治愈'], createdAt: '2026-07-05', featured: false },
+  { id: 'uc008', content: '找一个有雕花的旧窗框，从窗框里拍一张外面的风景', type: 'color', typeColor: '#5B8FB9', duration: 15, author: '老巷子里的光', authorAvatar: '/assets/images/avatar.webp', likes: 167, collects: 52, tags: ['色彩', '拍照'], createdAt: '2026-07-05', featured: false },
+  { id: 'uc009', content: '去博物馆挑一件没人围观的展品，给它写一段「假如它会说话」的独白', type: 'culture', typeColor: '#5CBF9E', duration: 30, author: '追风的记录人', authorAvatar: '/assets/images/avatar.webp', likes: 245, collects: 96, tags: ['周末', '拍照'], createdAt: '2026-07-06', featured: true },
+  { id: 'uc010', content: '捡 5 片不同颜色的落叶，在路边摆成一条小彩虹', type: 'collect', typeColor: '#C9B037', duration: 20, author: '收集黄昏的人', authorAvatar: '/assets/images/avatar.webp', likes: 134, collects: 47, tags: ['色彩', '周末'], createdAt: '2026-07-06', featured: false },
+  { id: 'uc011', content: '找一辆正在等红灯的公交车，数车窗里有几个人在低头看手机', type: 'sense', typeColor: '#9B7BB8', duration: 5, author: '数窗户的小孩', authorAvatar: '/assets/images/avatar.webp', likes: 76, collects: 18, tags: ['通勤', '治愈'], createdAt: '2026-07-07', featured: false },
+  { id: 'uc012', content: '骑共享单车绕小区一圈，不刹车，感受下坡时风吹过耳朵', type: 'walk', typeColor: '#D98A5C', duration: 15, author: '骑单车的风向标', authorAvatar: '/assets/images/avatar.webp', likes: 121, collects: 34, tags: ['散步', '周末'], createdAt: '2026-07-07', featured: false },
+  { id: 'uc013', content: '去菜市场买一种你叫不出名字的菜，回家查它是什么', type: 'food', typeColor: '#A67C52', duration: 25, author: '菜市场的哲学家', authorAvatar: '/assets/images/avatar.webp', likes: 189, collects: 58, tags: ['美食', '周末'], createdAt: '2026-07-08', featured: true },
+  { id: 'uc014', content: '找一个天桥，站在中间看来往的车流 5 分钟，给每辆车编一个目的地', type: 'walk', typeColor: '#D98A5C', duration: 10, author: '桥下听风', authorAvatar: '/assets/images/avatar.webp', likes: 145, collects: 44, tags: ['深夜', '散步'], createdAt: '2026-07-08', featured: false },
+  { id: 'uc015', content: '在书店挑一本诗集，翻到任意一页，把那一页的诗拍下来发给一个朋友', type: 'culture', typeColor: '#5CBF9E', duration: 25, author: '路灯下的诗人', authorAvatar: '/assets/images/avatar.webp', likes: 267, collects: 102, tags: ['社交', '治愈'], createdAt: '2026-07-09', featured: true },
+  { id: 'uc016', content: '找一个有水洼的地方，拍下水洼里倒映的天空', type: 'color', typeColor: '#5B8FB9', duration: 10, author: '追彩虹的人', authorAvatar: '/assets/images/avatar.webp', likes: 112, collects: 39, tags: ['雨天', '拍照', '色彩'], createdAt: '2026-07-09', featured: false },
+  { id: 'uc017', content: '出门不带手机（只带钥匙和现金），走 15 分钟再回来', type: 'walk', typeColor: '#D98A5C', duration: 20, author: '不带手机的散步', authorAvatar: '/assets/images/avatar.webp', likes: 356, collects: 187, tags: ['散步', '治愈'], createdAt: '2026-07-10', featured: true },
+  { id: 'uc018', content: '找一个公交站台，把站牌上最好听的一个站名抄在本子上', type: 'collect', typeColor: '#C9B037', duration: 10, author: '找回声的旅人', authorAvatar: '/assets/images/avatar.webp', likes: 98, collects: 31, tags: ['通勤', '散步'], createdAt: '2026-07-10', featured: false },
+  { id: 'uc019', content: '去一家独立咖啡馆，点一杯手冲，跟咖啡师聊两句豆子的故事', type: 'food', typeColor: '#A67C52', duration: 30, author: '慢半拍的脚步', authorAvatar: '/assets/images/avatar.webp', likes: 234, collects: 81, tags: ['美食', '社交', '周末'], createdAt: '2026-07-11', featured: true },
+  { id: 'uc020', content: '找一个能看到月亮的位置，给月亮拍一张「证件照」', type: 'sense', typeColor: '#9B7BB8', duration: 5, author: '数云朵的人', authorAvatar: '/assets/images/avatar.webp', likes: 187, collects: 62, tags: ['深夜', '拍照'], createdAt: '2026-07-11', featured: false },
+  { id: 'uc021', content: '在小区里找一只流浪猫，蹲下来跟它对视 30 秒，看谁先眨眼', type: 'sense', typeColor: '#9B7BB8', duration: 10, author: '走错路的向导', authorAvatar: '/assets/images/avatar.webp', likes: 421, collects: 153, tags: ['治愈', '周末'], createdAt: '2026-07-12', featured: true },
+  { id: 'uc022', content: '找一面红砖墙，把自己的影子拍成「靠在墙上」的样子', type: 'color', typeColor: '#5B8FB9', duration: 10, author: '踩影子的猫', authorAvatar: '/assets/images/avatar.webp', likes: 143, collects: 48, tags: ['色彩', '拍照'], createdAt: '2026-07-12', featured: false },
+  { id: 'uc023', content: '去老街找一个修鞋/修表/配钥匙的摊位，跟师傅聊 5 分钟他这行的故事', type: 'culture', typeColor: '#5CBF9E', duration: 20, author: '巷尾的观察员', authorAvatar: '/assets/images/avatar.webp', likes: 298, collects: 114, tags: ['散步', '周末', '社交'], createdAt: '2026-07-13', featured: true },
+  { id: 'uc024', content: '雨停后立刻出门，找一片最大的水洼，跳进去踩 3 下，然后笑着回家', type: 'walk', typeColor: '#D98A5C', duration: 10, author: '雨天不撑伞', authorAvatar: '/assets/images/avatar.webp', likes: 487, collects: 213, tags: ['雨天', '治愈'], createdAt: '2026-07-13', featured: true }
+]
+
+module.exports = community

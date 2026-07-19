@@ -1,0 +1,444 @@
+.status-bar { flex-shrink: 0; }
+
+.page-scroll {
+  padding: 0 40rpx;
+}
+
+/* ===== 顶部介绍 ===== */
+.page-intro {
+  padding: 24rpx 8rpx 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.intro-date {
+  font-size: 24rpx;
+  color: var(--ink-faint);
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+.intro-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ===== Hero 卡片 ===== */
+.hero-card {
+  position: relative;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-elevated);
+  padding: 36rpx 32rpx 32rpx;
+  margin: 16rpx 0 24rpx;
+  overflow: hidden;
+  transition: transform 200ms var(--ease-standard);
+}
+
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8rpx;
+  background: linear-gradient(90deg, var(--brand), var(--accent));
+}
+
+.hero-card-done::before {
+  background: linear-gradient(90deg, var(--brand), var(--gold));
+}
+
+.hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  background: var(--brand-tint);
+  border-radius: var(--radius-pill);
+  font-size: 22rpx;
+  color: var(--brand-dark);
+  font-weight: 600;
+}
+
+.hero-badge image {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+.hero-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 8rpx 20rpx;
+  border-radius: var(--radius-pill);
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.status-todo {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.status-done {
+  background: var(--brand-tint);
+  color: var(--brand-dark);
+}
+
+.hero-title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.25;
+  margin-bottom: 12rpx;
+}
+
+.hero-desc {
+  display: block;
+  font-size: 28rpx;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin-bottom: 28rpx;
+}
+
+.hero-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 20rpx 0;
+  border-top: 1rpx solid var(--line);
+  border-bottom: 1rpx solid var(--line);
+  margin-bottom: 28rpx;
+}
+
+.hero-meta-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.hero-meta-divider {
+  width: 1rpx;
+  height: 56rpx;
+  background: var(--line);
+}
+
+.meta-label {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+.meta-value {
+  font-size: 26rpx;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.stars {
+  display: flex;
+  gap: 4rpx;
+  font-size: 28rpx;
+}
+
+.star {
+  color: var(--ink-faint);
+  opacity: 0.4;
+}
+
+.star.on {
+  color: var(--gold);
+  opacity: 1;
+}
+
+.hero-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  height: 96rpx;
+  background: var(--brand);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  font-size: 30rpx;
+  font-weight: 600;
+  transition: transform 150ms var(--ease-standard), background 150ms var(--ease-standard);
+}
+
+.hero-action image {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.hero-action:active {
+  transform: scale(0.97);
+  background: var(--brand-dark);
+}
+
+.hero-celebrate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  height: 96rpx;
+  background: var(--gold-tint);
+  color: var(--gold);
+  border-radius: var(--radius-pill);
+  font-size: 28rpx;
+  font-weight: 600;
+  animation: celebratePulse 1.6s var(--ease-standard) infinite;
+}
+
+.hero-celebrate image {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+@keyframes celebratePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* ===== 通用信息卡 ===== */
+.info-card {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+
+.info-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.info-dot {
+  width: 8rpx;
+  height: 24rpx;
+  background: var(--brand);
+  border-radius: 4rpx;
+}
+
+.info-title {
+  flex: 1;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.info-sub {
+  font-size: 24rpx;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.info-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.rule-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.rule-num {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: var(--brand-tint);
+  color: var(--brand-dark);
+  font-size: 22rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2rpx;
+}
+
+/* ===== 历史挑战列表 ===== */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.history-item {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx;
+  background: var(--canvas);
+  border-radius: var(--radius-md);
+  transition: transform 150ms var(--ease-standard);
+}
+
+.history-item:active {
+  transform: scale(0.98);
+}
+
+.history-check {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 4rpx;
+}
+
+.history-item.missed .history-check {
+  background: var(--line);
+}
+
+.history-check image {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+.history-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.history-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4rpx;
+}
+
+.history-day {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.history-diff {
+  font-size: 22rpx;
+  color: var(--gold);
+  background: var(--gold-tint);
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-pill);
+}
+
+.history-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.history-desc {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.history-item.missed .history-title {
+  color: var(--ink-soft);
+}
+
+.history-item.missed .history-desc {
+  opacity: 0.6;
+}
+
+/* ===== 奖励卡片 ===== */
+.reward-card {
+  background: linear-gradient(135deg, var(--gold-tint), #FFFBEC);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+
+.reward-top {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.reward-icon {
+  width: 56rpx;
+  height: 56rpx;
+}
+
+.reward-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.reward-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.reward-desc {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+}
+
+.reward-count {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--gold);
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+.reward-bar-wrap {
+  width: 100%;
+  height: 16rpx;
+  background: rgba(201, 176, 55, 0.15);
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 12rpx;
+}
+
+.reward-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #E0C050);
+  border-radius: 16rpx;
+  transition: width 600ms var(--ease-standard);
+}
+
+.reward-hint {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+}
+
+.reward-unlocked {
+  font-size: 24rpx;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.bottom-spacer {
+  height: 64rpx;
+}

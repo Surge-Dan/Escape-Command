@@ -1,0 +1,130 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">路线回顾</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" enhanced show-scrollbar="{{false}}" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+
+    <!-- 空状态 -->
+    <view wx:if="{{!record}}" class="empty-state">
+      <view class="empty-circle">
+        <image src="/assets/icons/empty-map.svg" mode="aspectFit"></image>
+      </view>
+      <text class="empty-title">记录不存在</text>
+      <text class="empty-sub">这条出逃路线可能已被回收，回地图再看看</text>
+      <view class="empty-back btn-secondary" bindtap="goBack">返回地图</view>
+    </view>
+
+    <view wx:else class="route-body">
+
+      <!-- 路线地图：CSS 网格 + 彩色路点 + 虚线连线 -->
+      <view class="map-card">
+        <view class="map-canvas">
+          <!-- 模拟地图网格 -->
+          <view class="grid-layer">
+            <view wx:for="{{gridH}}" wx:key="*this" class="grid-line-h" style="top: {{item}}%;"></view>
+            <view wx:for="{{gridV}}" wx:key="*this" class="grid-line-v" style="left: {{item}}%;"></view>
+          </view>
+          <!-- 地图浮印：城市名 + 日期 -->
+          <view class="map-watermark">
+            <text class="wm-city">{{record.locationName || '城市记忆地图'}}</text>
+            <text class="wm-date font-mono">{{record.date}} · {{record.time}}</text>
+          </view>
+          <!-- 路线连线 -->
+          <view wx:for="{{lines}}" wx:key="index" class="route-line" style="top: {{item.y1}}%; left: {{item.x1}}%; width: {{item.length}}%; transform: rotate({{item.angle}}deg);"></view>
+          <!-- 路点 -->
+          <view wx:for="{{waypoints}}" wx:key="index" class="waypoint wp-{{item.role}}" style="top: {{item.y}}%; left: {{item.x}}%; background: {{item.color}};">
+            <text wx:if="{{item.label}}" class="wp-label">{{item.label}}</text>
+            <view wx:else class="wp-pulse" style="background: {{item.color}};"></view>
+          </view>
+          <!-- 起点/终点图例 -->
+          <view class="map-legend">
+            <view class="legend-item">
+              <view class="legend-dot" style="background: #5CBF9E;"></view>
+              <text class="legend-text">起点</text>
+            </view>
+            <view class="legend-item">
+              <view class="legend-dot" style="background: #E05555;"></view>
+              <text class="legend-text">终点</text>
+            </view>
+            <view class="legend-item">
+              <view class="legend-dot" style="background: {{record.typeColor}};"></view>
+              <text class="legend-text">{{record.commandType || '探索'}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 时间轴 -->
+      <view class="section-card">
+        <view class="section-head">
+          <view class="section-dot" style="background: var(--brand);"></view>
+          <text class="section-label">时间轴</text>
+        </view>
+        <view class="timeline">
+          <view wx:for="{{timeline}}" wx:key="index" class="tl-item">
+            <view class="tl-marker">
+              <view class="tl-dot" style="background: {{item.color}};"></view>
+              <view wx:if="{{index < timeline.length - 1}}" class="tl-tail"></view>
+            </view>
+            <view class="tl-content">
+              <text class="tl-time font-mono">{{item.time}}</text>
+              <text class="tl-title">{{item.title}}</text>
+              <text wx:if="{{item.sub}}" class="tl-sub">{{item.sub}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 路线统计 -->
+      <view class="section-card">
+        <view class="section-head">
+          <view class="section-dot" style="background: var(--accent);"></view>
+          <text class="section-label">路线统计</text>
+        </view>
+        <view class="stats-grid">
+          <view class="stats-cell">
+            <view class="stats-num-row">
+              <text class="stats-value font-mono">{{stats.distance}}</text>
+              <text class="stats-unit">km</text>
+            </view>
+            <text class="stats-label">总距离</text>
+          </view>
+          <view class="stats-cell">
+            <view class="stats-num-row">
+              <text class="stats-value font-mono">{{stats.duration}}</text>
+              <text class="stats-unit">分</text>
+            </view>
+            <text class="stats-label">用时</text>
+          </view>
+          <view class="stats-cell">
+            <view class="stats-num-row">
+              <text class="stats-value font-mono">{{stats.steps}}</text>
+              <text class="stats-unit">步</text>
+            </view>
+            <text class="stats-label">步数</text>
+          </view>
+          <view class="stats-cell">
+            <view class="stats-num-row">
+              <text class="stats-value font-mono">{{stats.photos}}</text>
+              <text class="stats-unit">张</text>
+            </view>
+            <text class="stats-label">照片</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 记录详情按钮 -->
+      <view class="detail-btn btn-primary" bindtap="goDetail">
+        <text>查看记录详情</text>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+</view>

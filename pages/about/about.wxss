@@ -1,0 +1,218 @@
+.about-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.status-bar { flex-shrink: 0; }
+.about-page .nav-header { flex-shrink: 0; }
+
+.about-scroll {
+  flex: 1;
+  height: 0;
+  padding: 0 40rpx;
+}
+
+/* ===== Hero 区 ===== */
+.about-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24rpx 0 48rpx;
+}
+
+.hero-title {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 2rpx;
+}
+
+.hero-version {
+  font-size: 24rpx;
+  margin-top: 12rpx;
+  background: var(--brand-tint);
+  padding: 4rpx 20rpx;
+  border-radius: 999rpx;
+  color: var(--brand-dark);
+}
+
+.hero-tagline {
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink-faint);
+  margin-top: 24rpx;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* ===== 段落 ===== */
+.about-section {
+  margin-bottom: 40rpx;
+}
+
+.section-label {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 400;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  margin-bottom: 16rpx;
+  padding-left: 16rpx;
+}
+
+.section-card {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+  padding: 32rpx 28rpx;
+}
+
+.section-body {
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+/* ===== 项目符号行 ===== */
+.bullet-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.bullet-row:last-child {
+  margin-bottom: 0;
+}
+
+.bullet-dot {
+  font-size: 32rpx;
+  color: var(--brand);
+  line-height: 1.4;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+
+.bullet-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+/* ===== 版本记录 ===== */
+.changelog-row {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.changelog-row:first-child {
+  padding-top: 0;
+}
+
+.changelog-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.changelog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.changelog-version {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--brand-dark);
+}
+
+.changelog-date {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+.changelog-note {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+/* ===== 联系与反馈（复用 setting-group 视觉） ===== */
+.setting-group {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx;
+  min-height: 96rpx;
+}
+
+.setting-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.setting-desc {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  margin-top: 8rpx;
+  line-height: 1.3;
+}
+
+.setting-divider {
+  margin: 0 28rpx;
+  height: 1rpx;
+  background: var(--line);
+}
+
+.arrow-ico {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+}
+
+.copy-hint {
+  font-size: 24rpx;
+  color: var(--brand);
+  background: var(--brand-tint);
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
+/* ===== 页脚 ===== */
+.footer-note {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  margin-top: 16rpx;
+  letter-spacing: 1rpx;
+}
+
+.bottom-spacer {
+  height: 64rpx;
+}

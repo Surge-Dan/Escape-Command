@@ -1,0 +1,162 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">出逃时间线</text>
+    <view class="nav-header-right">
+      <text class="nav-header-count">{{totalCount}} 条</text>
+    </view>
+  </view>
+
+  <!-- 顶部筛选条 -->
+  <view class="filter-bar">
+    <view
+      wx:for="{{filterChips}}"
+      wx:key="id"
+      class="filter-chip {{activeFilter === item.id ? 'active' : ''}}"
+      bindtap="onFilterTap"
+      data-id="{{item.id}}"
+    >
+      <text>{{item.label}}</text>
+      <view wx:if="{{activeFilter === item.id && item.id !== 'all'}}" class="chip-caret"></view>
+    </view>
+  </view>
+
+  <!-- 二级筛选面板 -->
+  <view wx:if="{{subPanelOpen}}" class="sub-filter-mask" bindtap="closeSubPanel"></view>
+  <view wx:if="{{subPanelOpen}}" class="sub-filter-panel">
+    <view class="sub-filter-track">
+      <view
+        class="sub-chip {{activeSubFilter === '' ? 'active' : ''}}"
+        bindtap="onSubFilterTap"
+        data-id=""
+      >
+        <text>全部</text>
+      </view>
+      <view
+        wx:for="{{subFilters}}"
+        wx:key="id"
+        class="sub-chip {{activeSubFilter === item.id ? 'active' : ''}}"
+        style="{{activeSubFilter === item.id ? 'background: ' + item.color + '14; color: ' + item.color + '; border-color: ' + item.color + '40;' : ''}}"
+        bindtap="onSubFilterTap"
+        data-id="{{item.id}}"
+      >
+        <view wx:if="{{item.color}}" class="sub-chip-dot" style="background: {{item.color}};"></view>
+        <text>{{item.label}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 内容滚动区 -->
+  <scroll-view
+    scroll-y
+    class="page-scroll"
+    style="height: calc(100vh - {{statusBarHeight}}px - 72rpx - 96rpx);"
+    enhanced
+    show-scrollbar="{{false}}"
+  >
+    <!-- 空状态 -->
+    <view wx:if="{{isEmpty}}" class="empty-state">
+      <view class="empty-illust-wrap">
+        <view class="empty-polaroid">
+          <view class="empty-photo-bg"></view>
+        </view>
+      </view>
+      <text class="empty-title">还没有出逃记录</text>
+      <text class="empty-desc">出门走走，把第一次出逃留在这里</text>
+      <view class="empty-btn" bindtap="goHome">去首页开始出逃</view>
+    </view>
+
+    <!-- 时间线分组 -->
+    <block wx:if="{{!isEmpty}}">
+      <view class="timeline-body">
+        <view
+          wx:for="{{dateGroups}}"
+          wx:for-item="group"
+          wx:key="date"
+          class="date-group"
+        >
+          <!-- 日期头 -->
+          <view class="date-header">
+            <view class="date-dot-row">
+              <view class="date-dot"></view>
+              <view class="date-line"></view>
+            </view>
+            <view class="date-info">
+              <text class="date-text">{{group.dateLabel}}</text>
+              <view class="date-tag-row">
+                <text wx:if="{{group.relLabel}}" class="date-tag">{{group.relLabel}}</text>
+                <text class="date-count">{{group.count}} 条记录</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 该日期下的记录卡片 -->
+          <view class="record-list">
+            <view
+              wx:for="{{group.records}}"
+              wx:for-item="record"
+              wx:key="id"
+              class="record-card"
+              bindtap="onRecordTap"
+              data-id="{{record.id}}"
+            >
+              <!-- 拍立得缩略图 -->
+              <view
+                class="polaroid"
+                style="transform: rotate({{record.rotationStr}});"
+              >
+                <block wx:if="{{record.coverPhoto}}">
+                  <image class="polaroid-photo" src="{{record.coverPhoto}}" mode="aspectFill"></image>
+                </block>
+                <block wx:else>
+                  <view class="polaroid-placeholder" style="background: {{record.typeColor}}1A;">
+                    <view class="placeholder-type-dot" style="background: {{record.typeColor}};"></view>
+                  </view>
+                </block>
+                <view class="polaroid-tape" style="background: {{record.typeColor}}33;"></view>
+              </view>
+
+              <!-- 右侧信息 -->
+              <view class="record-info">
+                <view class="record-type-row">
+                  <view class="type-pill" style="background: {{record.typeColor}}14; color: {{record.typeColor}};">
+                    <text>{{record.typeName}}</text>
+                  </view>
+                  <text class="record-time">{{record.time}}</text>
+                </view>
+                <text class="record-title">{{record.commandTitle}}</text>
+                <view class="record-meta-row">
+                  <view class="meta-pill">
+                    <image class="meta-ico" src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+                    <text>{{record.duration}} 分钟</text>
+                  </view>
+                  <view class="meta-pill" style="background: {{record.moodTint}}; color: {{record.moodFg}};">
+                    <text class="mood-emoji">{{record.moodEmoji}}</text>
+                    <text>{{record.moodName}}</text>
+                  </view>
+                </view>
+              </view>
+
+              <!-- 右侧箭头 -->
+              <view class="record-arrow">
+                <image src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 底部回声 -->
+        <view class="timeline-footer">
+          <view class="footer-line"></view>
+          <text class="footer-text">继续出逃，把故事写得更长一点</text>
+        </view>
+      </view>
+    </block>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+</view>

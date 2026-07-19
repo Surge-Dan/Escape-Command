@@ -1,0 +1,199 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">心情日记</text>
+  </view>
+
+  <scroll-view
+    scroll-y
+    class="page-scroll"
+    style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);"
+    enhanced
+    show-scrollbar="{{false}}"
+  >
+    <!-- 空状态 -->
+    <view wx:if="{{isEmpty}}" class="empty-state">
+      <view class="empty-illust-wrap">
+        <view class="empty-mood-circle">
+          <text class="empty-mood-emoji">🙂</text>
+        </view>
+      </view>
+      <text class="empty-title">还没有心情被记录</text>
+      <text class="empty-desc">下次出逃时选一个心情，留在这里</text>
+      <view class="empty-btn" bindtap="goHome">去首页开始出逃</view>
+    </view>
+
+    <block wx:if="{{!isEmpty}}">
+      <view class="journal-body">
+        <!-- 心情趋势 -->
+        <view class="chart-card solid-card">
+          <view class="card-head">
+            <view class="card-head-left">
+              <text class="card-title">心情趋势</text>
+              <text class="card-sub">最近 14 天</text>
+            </view>
+            <view class="trend-summary">
+              <text class="trend-avg">{{trendStats.avg}}</text>
+              <text class="trend-avg-label">平均</text>
+            </view>
+          </view>
+
+          <!-- 折线图 -->
+          <view wx:if="{{trendHasData}}" class="trend-chart">
+            <!-- y 轴标尺 -->
+            <view class="trend-y-axis">
+              <view class="y-tick">5</view>
+              <view class="y-tick">4</view>
+              <view class="y-tick">3</view>
+              <view class="y-tick">2</view>
+              <view class="y-tick">1</view>
+            </view>
+            <!-- 图表区 -->
+            <view class="trend-plot">
+              <!-- 横向网格线 -->
+              <view class="grid-line" style="top: 4%;"></view>
+              <view class="grid-line" style="top: 25%;"></view>
+              <view class="grid-line" style="top: 46%;"></view>
+              <view class="grid-line" style="top: 67%;"></view>
+              <view class="grid-line" style="top: 88%;"></view>
+
+              <!-- 连线段 -->
+              <view
+                wx:for="{{trendSegments}}"
+                wx:key="index"
+                class="trend-segment"
+                style="left: {{item.x1}}%; top: {{item.y1}}%; width: {{item.len}}%; transform: rotate({{item.angle}}deg);"
+              ></view>
+
+              <!-- 数据点 -->
+              <view
+                wx:for="{{trendPoints}}"
+                wx:key="date"
+                wx:if="{{item.hasData}}"
+                class="trend-dot-wrap"
+                style="left: {{item.x}}%; top: {{item.y}}%;"
+              >
+                <view class="trend-dot {{item.isToday ? 'today' : ''}}">
+                  <text class="trend-dot-emoji">{{item.emoji}}</text>
+                </view>
+              </view>
+            </view>
+            <!-- x 轴 -->
+            <view class="trend-x-axis">
+              <view
+                wx:for="{{trendPoints}}"
+                wx:key="date"
+                class="x-tick {{item.isToday ? 'today' : ''}}"
+              >
+                <text>{{item.dayLabel}}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 无数据 -->
+          <view wx:else class="trend-empty">
+            <text class="trend-empty-text">最近 14 天还没有出逃记录</text>
+            <text class="trend-empty-sub">出门走走，让心情出现在折线里</text>
+          </view>
+
+          <!-- 趋势摘要 -->
+          <view wx:if="{{trendHasData}}" class="trend-meta-row">
+            <view class="trend-meta-cell">
+              <text class="meta-num">{{trendStats.days}}</text>
+              <text class="meta-label">出逃天数</text>
+            </view>
+            <view class="trend-meta-cell">
+              <text class="meta-num">{{trendStats.bestEmoji}} {{trendStats.best}}</text>
+              <text class="meta-label">最常心情</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 心情统计 -->
+        <view class="chart-card solid-card">
+          <view class="card-head">
+            <view class="card-head-left">
+              <text class="card-title">心情统计</text>
+              <text class="card-sub">每一次出逃的情绪切片</text>
+            </view>
+          </view>
+          <view class="mood-stat-grid">
+            <view
+              wx:for="{{moodStats}}"
+              wx:key="id"
+              class="mood-stat-card"
+              style="background: {{item.tint}}; border-color: {{item.color}}33;"
+            >
+              <view class="mood-stat-emoji" style="color: {{item.color}};">{{item.emoji}}</view>
+              <view class="mood-stat-info">
+                <text class="mood-stat-name">{{item.name}}</text>
+                <text class="mood-stat-count">{{item.count}} 次</text>
+              </view>
+              <text class="mood-stat-percent" style="color: {{item.color}};">{{item.percent}}%</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 心情关联指令 -->
+        <view class="chart-card solid-card">
+          <view class="card-head">
+            <view class="card-head-left">
+              <text class="card-title">心情关联指令</text>
+              <text class="card-sub">每种心情下的出逃片段</text>
+            </view>
+          </view>
+
+          <view class="mood-groups">
+            <view
+              wx:for="{{moodGroups}}"
+              wx:key="id"
+              class="mood-group"
+            >
+              <!-- 分组头 -->
+              <view class="mood-group-head" style="background: {{item.tint}};">
+                <view class="group-emoji" style="color: {{item.color}};">{{item.emoji}}</view>
+                <view class="group-meta">
+                  <text class="group-name" style="color: {{item.color}};">{{item.name}}</text>
+                  <text class="group-count">{{item.count}} 条记录</text>
+                </view>
+                <view class="group-bar-mini" style="background: {{item.color}};"></view>
+              </view>
+
+              <!-- 记录列表 -->
+              <view class="group-records">
+                <view
+                  wx:for="{{item.records}}"
+                  wx:for-item="rec"
+                  wx:key="id"
+                  class="group-record"
+                  bindtap="onRecordTap"
+                  data-id="{{rec.id}}"
+                >
+                  <view class="rec-type-bar" style="background: {{rec.typeColor}};"></view>
+                  <view class="rec-info">
+                    <text class="rec-title">{{rec.title}}</text>
+                    <view class="rec-meta-row">
+                      <view class="rec-type-pill" style="background: {{rec.typeColor}}14; color: {{rec.typeColor}};">
+                        <text>{{rec.typeName}}</text>
+                      </view>
+                      <text class="rec-date">{{rec.date}} · {{rec.time}}</text>
+                      <text class="rec-duration">{{rec.duration}}分钟</text>
+                    </view>
+                    <text wx:if="{{rec.feeling}}" class="rec-feeling">「{{rec.feeling}}」</text>
+                  </view>
+                  <image class="rec-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view class="bottom-spacer"></view>
+      </view>
+    </block>
+  </scroll-view>
+</view>

@@ -1,0 +1,261 @@
+/* ===== 出逃准备页 ===== */
+.page-scroll { width: 100%; }
+.prep-body { padding: 32rpx 40rpx 0; }
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 160rpx 80rpx;
+  text-align: center;
+}
+.empty-illust { width: 160rpx; height: 160rpx; margin-bottom: 32rpx; }
+.empty-title { font-size: 30rpx; font-weight: 600; color: var(--ink); }
+.empty-desc { margin-top: 12rpx; font-size: 26rpx; color: var(--ink-soft); line-height: 1.5; }
+.empty-btn { margin-top: 32rpx; min-width: 200rpx; }
+
+/* 指令简述卡 */
+.brief-card { padding: 28rpx; }
+.brief-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 6rpx 18rpx;
+  border-radius: var(--radius-pill);
+  font-size: 22rpx;
+  font-weight: 600;
+}
+.brief-type-ico { width: 28rpx; height: 28rpx; }
+.brief-title {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.brief-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  margin-top: 14rpx;
+}
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 22rpx;
+  color: var(--ink-soft);
+}
+.meta-item image { width: 24rpx; height: 24rpx; }
+
+/* 区块 */
+.section { margin-top: 40rpx; }
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+.section-title {
+  display: block;
+  margin-bottom: 20rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.section-head .section-title { margin-bottom: 0; }
+.section-sub { color: var(--ink-faint); }
+
+/* 天气卡 */
+.weather-card { padding: 28rpx; }
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+.weather-icon-wrap {
+  flex-shrink: 0;
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.weather-icon { width: 64rpx; height: 64rpx; }
+.weather-text { flex: 1; }
+.weather-temp-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6rpx;
+}
+.weather-temp {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+}
+.weather-unit {
+  font-size: 28rpx;
+  color: var(--ink-soft);
+}
+.weather-desc {
+  margin-left: 12rpx;
+  font-size: 28rpx;
+  color: var(--ink);
+}
+.weather-suggestion {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+/* 物品清单卡 */
+.checklist-card { padding: 12rpx 28rpx; }
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 0;
+}
+.check-row + .check-row { border-top: 1rpx solid var(--line); }
+.check-row:active { opacity: 0.6; }
+.check-box {
+  flex-shrink: 0;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  border: 3rpx solid var(--ink-faint);
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 200ms var(--ease-standard);
+}
+.check-box.on {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+.check-ico { width: 28rpx; height: 28rpx; }
+.check-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--ink);
+  line-height: 1.5;
+  transition: all 200ms var(--ease-standard);
+}
+.check-text.on { color: var(--ink-faint); text-decoration: line-through; }
+
+/* 路线预览卡 */
+.route-card { padding: 0; overflow: hidden; }
+.route-illus {
+  position: relative;
+  width: 100%;
+  height: 280rpx;
+  background: var(--canvas);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 56rpx;
+}
+.route-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+}
+.route-pin {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+.pin-dot {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  background: var(--brand);
+  border: 6rpx solid var(--white);
+  box-shadow: var(--shadow-float);
+}
+.pin-label {
+  font-size: 20rpx;
+  color: var(--ink-soft);
+  background: var(--white);
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-sm);
+}
+.pin-ico { width: 56rpx; height: 56rpx; }
+.route-dash {
+  flex: 1;
+  height: 0;
+  border-top: 4rpx dashed var(--brand);
+  margin: 0 24rpx;
+  position: relative;
+  z-index: 2;
+  opacity: 0.7;
+}
+.route-text-row {
+  display: flex;
+  align-items: center;
+  padding: 28rpx;
+}
+.route-end-point {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.route-end-point:last-child { align-items: flex-end; }
+.route-label {
+  font-size: 20rpx;
+  color: var(--ink-faint);
+}
+.route-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+.route-arrow {
+  width: 32rpx;
+  height: 32rpx;
+  margin: 0 24rpx;
+}
+.route-tip {
+  display: block;
+  padding: 0 28rpx 24rpx;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+.bottom-spacer { height: 180rpx; }
+
+/* 底部出发按钮 */
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20rpx 40rpx calc(40rpx + env(safe-area-inset-bottom));
+  background: var(--canvas);
+  border-top: 1rpx solid var(--line);
+}
+.depart-btn {
+  width: 100%;
+  min-height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  font-size: 30rpx;
+}
+.depart-btn:active { transform: scale(0.97); }
+.depart-btn image { width: 32rpx; height: 32rpx; }

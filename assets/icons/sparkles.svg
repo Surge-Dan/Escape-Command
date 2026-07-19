@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  
+  <defs>
+    <!-- 纸张纹理 -->
+    <filter id="paper" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" seed="2" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.93  0 0 0 0 0.91  0 0 0 0 0.85  0 0 0 0.08 0"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <!-- 水彩晕染 -->
+    <filter id="watercolor" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="3" seed="5" result="turb"/>
+      <feDisplacementMap in="SourceGraphic" in2="turb" scale="2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <!-- 柔和投影 -->
+    <filter id="dropShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="1.5"/>
+      <feOffset dx="0.5" dy="1.5" result="shadow"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- 内高光 -->
+    <filter id="innerGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.5"/>
+      <feOffset dx="0" dy="-0.5" result="glow"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- 水彩边缘不规则 -->
+    <filter id="handDrawn" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="2" seed="3" result="t"/>
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="0.8"/>
+    </filter>
+  </defs>
+  
+    <!-- 容器底色 -->
+    <rect x="2" y="2" width="44" height="44" rx="10" ry="10" fill="#F4EFE3" stroke="#E8DFC9" stroke-width="1"/>
+    <!-- 纸张纹理叠加 -->
+    <rect x="2" y="2" width="44" height="44" rx="10" ry="10" fill="#E8DFC9" opacity="0.15" filter="url(#paper)"/>
+    <!-- 容器底部阴影 -->
+    <ellipse cx="24" cy="44" rx="16" ry="1.5" fill="#000000" opacity="0.06"/>
+  <g>
+    <g transform="translate(10,38)"><path d="M0,-1.5 L0.4,-0.4 L1.5,0 L0.4,0.4 L0,1.5 L-0.4,0.4 L-1.5,0 L-0.4,-0.4 Z" fill="#DBC664" opacity="0.7"/></g>
+    <circle cx="36" cy="36" r="1.2" fill="none" stroke="#A67C52" stroke-width="0.5" opacity="0.5"/>
+    <circle cx="40" cy="24" r="1" fill="#8FB5D1" opacity="0.6"/>
+  </g>
+  <g>
+    
+    <g filter="url(#dropShadow)">
+      <!-- 大星 -->
+      <path d="M24,10 L26,20 L36,24 L26,28 L24,38 L22,28 L12,24 L22,20 Z" fill="#9B7BB8" stroke="#BFA5D1" stroke-width="0.5" opacity="0.85"/>
+      <ellipse cx="22" cy="18" rx="2" ry="3" fill="#FFFFFF" opacity="0.4"/>
+      <!-- 小星 1 -->
+      <path d="M14,14 L14.8,17 L18,14.8 L15.2,17.2 L14,20 L13,17.2 L10,14.8 L13,17 Z" fill="#F5C28A" opacity="0.7"/>
+      <!-- 小星 2 -->
+      <path d="M34,34 L34.8,37 L38,34.8 L35.2,37.2 L34,40 L33,37.2 L30,34.8 L33,37 Z" fill="#DBC664" opacity="0.7"/>
+    </g>
+  </g>
+</svg>

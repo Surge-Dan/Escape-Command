@@ -1,0 +1,3294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#C8956E" />
+<title>出逃指令 · 给城市一个随机出口</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   出逃指令 v17 完整版 HTML Demo
+   36 页全覆盖 · localStorage 持久化 · SPA hash 路由
+   美学：Editorial Magazine + Organic Natural · 暖棕褐主题
+   ============================================================ */
+
+:root {
+  /* 暖棕褐主题（v15 统一色系）*/
+  --brand: #C8956E;
+  --brand-dark: #A87B52;
+  --brand-strong: #A87B52;
+  --brand-tint: #F5E6D8;
+  --brand-weak: #FAF3ED;
+  --accent: #D48A5A;
+  --accent-warm: #E0A268;
+  --gold: #C9B037;
+
+  --canvas: #F5F3EF;
+  --white: #FFFFFF;
+  --ink: #2E2F33;
+  --ink-soft: #6B7280;
+  --ink-faint: #A8ADB5;
+  --line: rgba(46,47,51,0.06);
+  --line-strong: rgba(46,47,51,0.1);
+
+  --shadow-card: 0 1px 8px rgba(46,47,51,0.04);
+  --shadow-pop: 0 4px 24px rgba(46,47,51,0.12);
+  --shadow-tabbar: 0 -2px 20px rgba(46,47,51,0.06);
+  --shadow-btn: 0 4px 14px rgba(200,149,110,0.3);
+  --shadow-btn-strong: 0 6px 20px rgba(200,149,110,0.35);
+
+  --serif: "Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  --sans: -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Segoe UI",sans-serif;
+  --mono: "SF Mono","Menlo","Consolas",monospace;
+
+  /* 圆角规范 */
+  --r-sm: 6px;
+  --r-tag: 10px;
+  --r-btn: 16px;
+  --r-card: 20px;
+  --r-lg: 24px;
+  --r-pill: 100px;
+
+  --ease: cubic-bezier(0.16,1,0.3,1);
+  --ease-out: cubic-bezier(0.16,1.4,0.5,1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: #E8E2D9; font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow: hidden; font-size: 14px; line-height: 1.5; }
+body { display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 10% 10%, #F0E6D6 0%, transparent 40%), radial-gradient(circle at 90% 90%, #E5D9C4 0%, transparent 40%), linear-gradient(135deg, #E8E2D9 0%, #D9CFBE 100%); }
+
+/* ---------- Phone Frame ---------- */
+.phone-frame { width: 375px; height: 812px; background: var(--canvas); border-radius: 44px; box-shadow: 0 0 0 11px #1a1a1a, 0 0 0 12px #2a2a2a, 0 30px 60px -10px rgba(46,47,51,0.4), 0 60px 120px -20px rgba(46,47,51,0.3); overflow: hidden; position: relative; isolation: isolate; }
+.phone-frame::before { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 150px; height: 26px; background: #1a1a1a; border-radius: 0 0 18px 18px; z-index: 1000; pointer-events: none; }
+.screen { position: relative; width: 100%; height: 100%; background: var(--canvas); overflow: hidden; }
+
+/* ---------- Status Bar ---------- */
+.statusbar { position: absolute; top: 0; left: 0; right: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px 0 28px; font-size: 13px; font-weight: 600; color: var(--ink); z-index: 50; pointer-events: none; }
+.statusbar .time { font-feature-settings: "tnum"; }
+.statusbar .icons { display: flex; gap: 5px; align-items: center; }
+.statusbar .icons svg { width: 14px; height: 10px; }
+
+/* ---------- Page System ---------- */
+.page { position: absolute; inset: 0; display: none; flex-direction: column; background: var(--canvas); }
+.page.active { display: flex; animation: pageIn 0.35s var(--ease); }
+@keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInR { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+
+.page-body { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-top: 44px; }
+.page.has-nav .page-body { padding-top: 0; }
+.page-body::-webkit-scrollbar { width: 0; display: none; }
+.no-tabbar .tabbar { display: none; }
+.bottom-spacer { height: 100px; flex-shrink: 0; }
+
+/* ---------- Nav Header (shared) ---------- */
+.nav-header { display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 12px; height: 44px; background: transparent; position: relative; z-index: 5; margin-top: 44px; }
+.nav-header.transparent { background: transparent; }
+.nav-back { width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(255,255,255,0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: transform 0.18s var(--ease); }
+.nav-back:active { transform: scale(0.9); }
+.nav-back svg { width: 16px; height: 16px; color: var(--ink); }
+.nav-title { font-family: var(--serif); font-weight: 700; font-size: 16px; color: var(--ink); letter-spacing: 0.02em; flex: 1; }
+.nav-title.center { text-align: center; }
+.nav-right { display: flex; gap: 8px; align-items: center; }
+
+/* ---------- Buttons ---------- */
+.btn { padding: 14px; border-radius: var(--r-btn); border: none; font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer; transition: transform 0.18s var(--ease); display: flex; align-items: center; justify-content: center; gap: 6px; letter-spacing: 0.05em; }
+.btn:active { transform: scale(0.97); }
+.btn svg { width: 14px; height: 14px; }
+.btn-primary { background: var(--brand); color: #fff; box-shadow: var(--shadow-btn); }
+.btn-secondary { background: var(--brand-weak); color: var(--brand-dark); }
+.btn-ghost { background: transparent; color: var(--ink-soft); }
+.btn-block { width: 100%; }
+.btn-sm { padding: 8px 16px; font-size: 12px; border-radius: var(--r-tag); }
+
+/* ---------- Pills / Tags ---------- */
+.pill { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.7); backdrop-filter: blur(6px); border: 1px solid rgba(200,149,110,0.18); color: var(--brand-dark); font-size: 11px; padding: 5px 12px; border-radius: var(--r-pill); font-weight: 500; }
+.pill svg { width: 11px; height: 11px; }
+.type-pill { font-size: 10px; padding: 3px 8px; border-radius: var(--r-tag); color: #fff; font-weight: 500; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px; }
+.tag-sm { font-size: 10px; padding: 3px 8px; border-radius: var(--r-tag); font-weight: 500; }
+
+/* ---------- Cards ---------- */
+.card { background: var(--white); border-radius: var(--r-card); padding: 16px; box-shadow: var(--shadow-card); }
+.card-pad { padding: 20px; }
+
+/* ---------- Section ---------- */
+.section-title { display: flex; align-items: baseline; justify-content: space-between; padding: 0 24px; margin: 4px 0 14px; }
+.section-title h3 { font-family: var(--serif); font-weight: 700; font-size: 18px; color: var(--ink); letter-spacing: 0.02em; }
+.section-title .more { font-size: 11px; color: var(--ink-soft); cursor: pointer; }
+
+/* ---------- Icon Button ---------- */
+.icon-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--brand-weak); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.18s var(--ease); flex-shrink: 0; }
+.icon-btn:active { transform: scale(0.9); }
+.icon-btn svg { width: 14px; height: 14px; color: var(--ink); }
+.icon-btn.fav.active { background: var(--brand); }
+.icon-btn.fav.active svg { color: #fff; }
+
+/* ---------- Sheet ---------- */
+.sheet-overlay { position: absolute; inset: 0; background: rgba(46,47,51,0.45); backdrop-filter: blur(2px); z-index: 300; display: none; align-items: flex-end; opacity: 0; transition: opacity 0.25s ease; }
+.sheet-overlay.show { display: flex; opacity: 1; }
+.sheet { width: 100%; background: var(--white); border-radius: var(--r-lg) var(--r-lg) 0 0; padding: 18px 22px 32px; transform: translateY(100%); transition: transform 0.32s var(--ease); position: relative; max-height: 88%; overflow-y: auto; }
+.sheet-overlay.show .sheet { transform: translateY(0); }
+.sheet::-webkit-scrollbar { display: none; }
+.sheet-handle { width: 36px; height: 4px; background: var(--ink-faint); opacity: 0.3; border-radius: 2px; margin: 0 auto 16px; }
+.sheet-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+
+/* ---------- Toast ---------- */
+.toast { position: absolute; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(46,47,51,0.9); color: #fff; padding: 8px 18px; border-radius: var(--r-pill); font-size: 12px; z-index: 600; opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease; white-space: nowrap; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- Badge Unlock Overlay ---------- */
+.badge-overlay { position: absolute; inset: 0; background: rgba(46,47,51,0.7); backdrop-filter: blur(8px); z-index: 500; display: none; align-items: center; justify-content: center; flex-direction: column; }
+.badge-overlay.show { display: flex; animation: pageIn 0.3s ease; }
+.badge-unlock-card { background: linear-gradient(160deg, #FFFFFF 0%, #FFF6EE 100%); border-radius: var(--r-lg); padding: 36px 32px 28px; width: 280px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.badge-unlock-icon { width: 100px; height: 100px; margin: 0 auto 18px; animation: badgeUnlock 1s var(--ease-out); }
+@keyframes badgeUnlock { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 60% { transform: scale(1.2) rotate(10deg); opacity: 1; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+.badge-unlock-eyebrow { font-size: 11px; color: var(--brand-dark); letter-spacing: 0.3em; margin-bottom: 8px; font-weight: 500; }
+.badge-unlock-title { font-family: var(--serif); font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.badge-unlock-desc { font-size: 12px; color: var(--ink-soft); margin-bottom: 22px; }
+.badge-unlock-btn { background: var(--brand); color: #fff; border: none; padding: 12px 36px; border-radius: var(--r-pill); font-size: 13px; font-weight: 600; letter-spacing: 0.15em; cursor: pointer; transition: transform 0.18s ease; box-shadow: 0 4px 14px rgba(200,149,110,0.4); }
+.badge-unlock-btn:active { transform: scale(0.95); }
+
+/* ---------- Tab Bar ---------- */
+.tabbar { position: absolute; bottom: 0; left: 0; right: 0; height: 70px; padding: 8px 24px 16px; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-top: 1px solid var(--line); display: flex; align-items: center; gap: 8px; z-index: 90; box-shadow: var(--shadow-tabbar); }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; padding: 6px 0; transition: transform 0.2s ease; border-radius: var(--r-pill); }
+.tab:active { transform: scale(0.92); }
+.tab svg { width: 22px; height: 22px; color: var(--ink-faint); transition: color 0.2s ease; }
+.tab-label { font-size: 10px; color: var(--ink-faint); letter-spacing: 0.1em; transition: color 0.2s ease; }
+.tab.active svg { color: var(--brand); }
+.tab.active .tab-label { color: var(--brand); font-weight: 600; }
+
+/* ---------- Loading ---------- */
+.loading-overlay { position: absolute; inset: 0; background: var(--canvas); z-index: 400; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; }
+.loading-overlay.show { display: flex; }
+.spinner { width: 48px; height: 48px; border: 3px solid var(--brand-tint); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   PAGE: ONBOARDING
+   ============================================================ */
+.page-onboarding { background: radial-gradient(circle at 30% 20%, #FFE8D6 0%, transparent 50%), radial-gradient(circle at 70% 80%, #FFD7B5 0%, transparent 50%), linear-gradient(160deg, #FFF0E4 0%, #F5E6D8 60%, #E8D5C0 100%); }
+.onboard-wrap { flex: 1; display: flex; flex-direction: column; padding: 60px 32px 40px; }
+.onboard-steps { flex: 1; display: flex; overflow: hidden; }
+.onboard-track { display: flex; transition: transform 0.4s var(--ease); width: 100%; }
+.onboard-step { min-width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 8px; }
+.onboard-illust { width: 120px; height: 120px; margin-bottom: 32px; animation: floatY 3.5s ease-in-out infinite; }
+@keyframes floatY { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(3deg); } }
+.onboard-step h2 { font-family: var(--serif); font-weight: 700; font-size: 26px; line-height: 1.3; color: var(--ink); margin-bottom: 12px; letter-spacing: 0.01em; }
+.onboard-step p { font-size: 14px; color: var(--ink-soft); line-height: 1.7; max-width: 260px; }
+.onboard-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; }
+.onboard-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(200,149,110,0.25); transition: all 0.3s ease; }
+.onboard-dot.active { width: 24px; border-radius: 4px; background: var(--brand); }
+.onboard-btn { width: 100%; padding: 16px; background: var(--brand); color: #fff; border: none; border-radius: var(--r-btn); font-size: 15px; font-weight: 600; letter-spacing: 0.1em; cursor: pointer; box-shadow: var(--shadow-btn-strong); transition: transform 0.18s ease; }
+.onboard-btn:active { transform: scale(0.97); }
+
+/* ============================================================
+   PAGE: INDEX (HOME)
+   ============================================================ */
+.hero { position: relative; padding: 60px 24px 28px; background: radial-gradient(circle at 20% 0%, #FFE8D6 0%, transparent 50%), radial-gradient(circle at 80% 20%, #FFD7B5 0%, transparent 40%), radial-gradient(circle at 50% 100%, #FFF0E4 0%, transparent 60%), linear-gradient(180deg, #FFF0E4 0%, #FFF6F0 18%, #F5F3EF 75%); overflow: hidden; }
+.hero::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 24px; background: linear-gradient(180deg, transparent, var(--canvas)); pointer-events: none; }
+.hero-pills { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+.hero-title { font-family: var(--serif); font-weight: 700; font-size: 30px; line-height: 1.2; color: var(--ink); margin-bottom: 6px; letter-spacing: 0.01em; }
+.hero-sub { font-size: 13px; color: var(--ink-soft); letter-spacing: 0.04em; }
+
+.mode-tag { margin: 20px 24px 16px; background: var(--white); border-radius: var(--r-card); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-card); cursor: pointer; transition: transform 0.18s ease; }
+.mode-tag:active { transform: scale(0.98); }
+.mode-tag-left { display: flex; align-items: center; gap: 12px; }
+.mode-tag-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--brand-tint); display: flex; align-items: center; justify-content: center; }
+.mode-tag-icon svg { width: 18px; height: 18px; color: var(--brand-dark); }
+.mode-tag-text { display: flex; flex-direction: column; gap: 2px; }
+.mode-tag-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+.mode-tag-desc { font-size: 11px; color: var(--ink-soft); }
+.mode-tag .chev { width: 14px; height: 14px; color: var(--ink-faint); transition: transform 0.3s ease; }
+.mode-tag .chev.up { transform: rotate(180deg); }
+
+.escape-card-wrap { padding: 0 24px; margin-bottom: 28px; }
+.escape-card { background: linear-gradient(135deg, #FFFFFF 0%, #FFF8F0 100%); border-radius: var(--r-lg); padding: 36px 24px 28px; box-shadow: 0 4px 20px rgba(200,149,110,0.12); position: relative; overflow: hidden; text-align: center; cursor: pointer; transition: transform 0.18s ease; }
+.escape-card:active { transform: scale(0.985); }
+.escape-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 80% 10%, rgba(255,220,190,0.5) 0%, transparent 50%), radial-gradient(circle at 10% 90%, rgba(245,230,216,0.6) 0%, transparent 50%); pointer-events: none; }
+.dice-wrap { position: relative; width: 110px; height: 110px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; }
+.dice-pulse { position: absolute; inset: -8px; border-radius: 50%; border: 2px solid var(--brand); animation: pulse 2.2s ease-in-out infinite; }
+.dice-pulse.delay { animation-delay: 1.1s; }
+@keyframes pulse { 0%,100% { opacity: 0; transform: scale(0.96); } 50% { opacity: 0.5; transform: scale(1.06); } }
+.dice { width: 72px; height: 72px; position: relative; z-index: 2; transition: transform 0.1s ease; }
+.dice svg { width: 100%; height: 100%; }
+.dice.shaking { animation: shake 0.5s ease-in-out; }
+@keyframes shake { 0%,100% { transform: rotate(0) scale(1); } 20% { transform: rotate(-18deg) scale(0.88); } 40% { transform: rotate(14deg) scale(1.1); } 60% { transform: rotate(-12deg) scale(0.92); } 80% { transform: rotate(8deg) scale(1.05); } }
+.escape-title { font-family: var(--serif); font-weight: 700; font-size: 22px; color: var(--ink); margin-bottom: 6px; letter-spacing: 0.02em; }
+.escape-sub { font-size: 12px; color: var(--ink-soft); letter-spacing: 0.05em; }
+.escape-counter { margin-top: 16px; display: inline-flex; align-items: center; gap: 6px; background: rgba(200,149,110,0.08); padding: 5px 12px; border-radius: var(--r-pill); font-size: 11px; color: var(--brand-dark); font-weight: 500; }
+.escape-counter .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand); }
+
+/* Daily recommend */
+.daily-scroll { padding: 0 24px 8px; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; }
+.daily-scroll::-webkit-scrollbar { display: none; }
+.daily-card { min-width: 200px; background: var(--white); border-radius: var(--r-card); padding: 16px; box-shadow: var(--shadow-card); cursor: pointer; transition: transform 0.18s ease; scroll-snap-align: start; display: flex; flex-direction: column; gap: 8px; }
+.daily-card:active { transform: scale(0.98); }
+.daily-card .dc-type { font-size: 10px; padding: 3px 8px; border-radius: var(--r-tag); font-weight: 500; align-self: flex-start; }
+.daily-title { font-size: 13px; font-weight: 500; line-height: 1.5; color: var(--ink); }
+.daily-meta { font-size: 11px; color: var(--ink-soft); }
+
+/* Collection entry */
+.collect-entry { margin: 0 24px 24px; background: var(--white); border-radius: var(--r-card); padding: 14px 16px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-card); cursor: pointer; transition: transform 0.18s ease; }
+.collect-entry:active { transform: scale(0.98); }
+.collect-entry-ico { width: 40px; height: 40px; border-radius: var(--r-tag); background: var(--brand-tint); display: flex; align-items: center; justify-content: center; }
+.collect-entry-ico svg { width: 20px; height: 20px; color: var(--brand-dark); }
+.collect-entry-text { flex: 1; }
+.collect-entry-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+.collect-entry-sub { font-size: 11px; color: var(--ink-soft); }
+.collect-entry .chev { width: 14px; height: 14px; color: var(--ink-faint); }
+
+/* Command detail (inline card on home) */
+.cmd-card-inline { margin: 0 24px 24px; background: var(--white); border-radius: var(--r-lg); padding: 24px 20px; box-shadow: var(--shadow-pop); position: relative; }
+.cmd-close { position: absolute; top: 16px; left: 16px; }
+.cmd-fav-toggle { position: absolute; top: 16px; right: 16px; }
+.cmd-type-row { margin-bottom: 12px; padding-left: 40px; }
+.cmd-title-lg { font-family: var(--serif); font-weight: 700; font-size: 20px; line-height: 1.4; color: var(--ink); margin-bottom: 16px; letter-spacing: 0.01em; }
+.cmd-image-wrap { position: relative; height: 140px; border-radius: var(--r-card); margin-bottom: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.cmd-image-bg { position: absolute; inset: 0; }
+.cmd-image-icon { width: 56px; height: 56px; opacity: 0.5; z-index: 1; }
+.cmd-meta { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.cmd-meta .pill { background: var(--brand-weak); border: none; color: var(--brand-dark); font-size: 11px; padding: 4px 10px; }
+.cmd-meta .pill svg { width: 10px; height: 10px; }
+.tip-box { background: linear-gradient(135deg, #FFF8EC 0%, #FFEED9 100%); border-radius: var(--r-card); padding: 14px 16px; display: flex; gap: 10px; margin-bottom: 20px; border: 1px dashed rgba(212,138,90,0.25); }
+.tip-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tip-dot svg { width: 11px; height: 11px; color: #fff; }
+.tip-label { font-size: 10px; color: var(--brand-dark); font-weight: 600; letter-spacing: 0.1em; margin-bottom: 3px; }
+.tip-text { font-size: 13px; color: var(--ink); line-height: 1.55; }
+.cmd-actions { display: flex; gap: 10px; }
+.cmd-actions .btn { flex: 1; }
+.invite-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; padding: 14px; border-radius: var(--r-btn); background: var(--accent); color: #fff; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform 0.18s ease; }
+.invite-btn:active { transform: scale(0.97); }
+.invite-btn svg { width: 14px; height: 14px; }
+.reroll-hint { text-align: center; font-size: 11px; color: var(--ink-faint); margin-top: 12px; }
+
+/* Mode sheet */
+.mode-sheet .mode-item { display: flex; align-items: center; gap: 14px; padding: 14px 12px; border-radius: var(--r-card); cursor: pointer; transition: background 0.2s ease; margin-bottom: 4px; }
+.mode-sheet .mode-item:active { background: var(--brand-weak); }
+.mode-sheet .mode-item.selected { background: var(--brand-weak); }
+.mode-sheet .mode-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mode-sheet .mode-icon svg { width: 22px; height: 22px; color: #fff; }
+.mode-sheet .mode-text { flex: 1; }
+.mode-sheet .mode-name { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.mode-sheet .mode-desc { font-size: 12px; color: var(--ink-soft); }
+.mode-sheet .mode-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--ink-faint); opacity: 0.4; }
+.mode-sheet .mode-item.selected .mode-check { border-color: var(--brand); background: var(--brand); opacity: 1; position: relative; }
+.mode-sheet .mode-item.selected .mode-check::after { content: ''; position: absolute; left: 5px; top: 2px; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+
+/* ============================================================
+   PAGE: EXECUTING
+   ============================================================ */
+.exec-cmd-card { background: linear-gradient(135deg, #FFFFFF 0%, #FFF6EE 100%); border-radius: var(--r-card); padding: 22px 20px; box-shadow: var(--shadow-card); margin-bottom: 28px; border: 1px solid rgba(200,149,110,0.1); }
+.exec-cmd-card .type-pill { margin-bottom: 10px; }
+.exec-cmd-card h3 { font-family: var(--serif); font-weight: 700; font-size: 18px; line-height: 1.5; color: var(--ink); }
+.steps-title { font-family: var(--serif); font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 14px; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; }
+.steps-title .line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--brand-tint), transparent); }
+.steps-title .count { font-size: 11px; color: var(--ink-soft); font-family: var(--sans); font-weight: 500; }
+.steps-list { display: flex; flex-direction: column; gap: 8px; }
+.step-item { display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--white); border-radius: var(--r-card); box-shadow: var(--shadow-card); cursor: pointer; transition: transform 0.18s ease, opacity 0.3s ease; }
+.step-item:active { transform: scale(0.99); }
+.step-item.done { opacity: 0.55; }
+.step-check { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--brand); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background 0.3s ease; position: relative; }
+.step-check svg { width: 14px; height: 14px; color: transparent; transition: color 0.2s ease; }
+.step-item.done .step-check { background: var(--brand); }
+.step-item.done .step-check svg { color: #fff; animation: checkPop 0.35s var(--ease-out); }
+@keyframes checkPop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.step-text { flex: 1; font-size: 14px; color: var(--ink); line-height: 1.5; }
+.step-item.done .step-text { text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+.step-num { font-size: 11px; color: var(--ink-faint); font-family: var(--serif); font-weight: 700; }
+.exec-finish-wrap { margin-top: 28px; display: none; }
+.exec-finish-wrap.show { display: block; animation: pageIn 0.4s ease; }
+.finish-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%); color: #fff; border: none; border-radius: var(--r-btn); font-size: 15px; font-weight: 600; letter-spacing: 0.15em; cursor: pointer; box-shadow: var(--shadow-btn-strong); transition: transform 0.18s ease; }
+.finish-btn:active { transform: scale(0.97); }
+
+/* ============================================================
+   PAGE: MAP
+   ============================================================ */
+.map-tabs { display: flex; background: var(--white); margin: 12px 24px 0; padding: 4px; border-radius: var(--r-pill); box-shadow: var(--shadow-card); }
+.map-tab { flex: 1; padding: 8px; text-align: center; font-size: 12px; color: var(--ink-soft); border-radius: var(--r-pill); cursor: pointer; transition: all 0.25s ease; font-weight: 500; }
+.map-tab.active { background: var(--brand); color: #fff; box-shadow: 0 2px 8px rgba(200,149,110,0.3); }
+.map-canvas { margin: 16px 24px 0; height: 380px; background: linear-gradient(135deg, #EFE9DD 0%, #E5DBC8 100%); border-radius: var(--r-card); position: relative; overflow: hidden; box-shadow: var(--shadow-card); }
+.map-canvas.satellite { background: linear-gradient(135deg, #3a4a3a 0%, #2a3a2a 50%, #1a2a1a 100%); }
+.map-canvas.satellite .map-grid { opacity: 0.05; }
+.map-canvas.satellite .map-roads::before, .map-canvas.satellite .map-roads::after { background: rgba(200,180,140,0.4); }
+.map-canvas.satellite .map-river { background: linear-gradient(180deg, #4a6a8a 0%, #3a5a7a 100%); }
+.map-canvas.route .map-route-line { display: block; }
+.map-grid { position: absolute; inset: 0; background-image: linear-gradient(0deg, rgba(168,125,82,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(168,125,82,0.08) 1px, transparent 1px); background-size: 28px 28px; }
+.map-roads { position: absolute; inset: 0; }
+.map-roads::before, .map-roads::after { content: ''; position: absolute; background: rgba(255,255,255,0.6); }
+.map-roads::before { top: 38%; left: -10%; right: -10%; height: 14px; transform: rotate(-3deg); }
+.map-roads::after { left: 48%; top: -10%; bottom: -10%; width: 14px; transform: rotate(8deg); }
+.map-river { position: absolute; top: 70%; left: -10%; right: -10%; height: 26px; background: linear-gradient(180deg, #C9DAE5 0%, #B0C4D8 100%); transform: rotate(-6deg); border-radius: 4px; }
+.map-block { position: absolute; background: rgba(200,149,110,0.18); border-radius: 4px; }
+.map-block.b1 { top: 12%; left: 14%; width: 80px; height: 60px; }
+.map-block.b2 { top: 8%; right: 14%; width: 70px; height: 70px; background: rgba(155,123,184,0.15); }
+.map-block.b3 { bottom: 18%; left: 10%; width: 90px; height: 55px; background: rgba(212,138,90,0.18); }
+.map-block.b4 { bottom: 22%; right: 12%; width: 60px; height: 80px; background: rgba(91,143,185,0.15); }
+.map-pin { position: absolute; width: 24px; height: 24px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 4px 8px rgba(46,47,51,0.25); border: 2px solid #fff; cursor: pointer; transition: transform 0.18s ease; }
+.map-pin:active { transform: rotate(-45deg) scale(1.15); }
+.map-pin::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; background: #fff; border-radius: 50%; }
+.map-route-line { display: none; position: absolute; inset: 0; pointer-events: none; }
+.map-route-line svg { width: 100%; height: 100%; }
+.map-pin.p1 { top: 22%; left: 28%; background: #5B8FB9; }
+.map-pin.p2 { top: 18%; right: 28%; background: #D98A5C; }
+.map-pin.p3 { top: 48%; left: 18%; background: #9B7BB8; }
+.map-pin.p4 { top: 52%; right: 22%; background: var(--brand); }
+.map-pin.p5 { bottom: 32%; left: 38%; background: #A67C52; }
+.map-pin.p6 { bottom: 12%; right: 38%; background: #5CBF9E; }
+.map-pin.home { bottom: 45%; left: 45%; background: var(--brand-dark); width: 28px; height: 28px; }
+.map-fab-group { position: absolute; bottom: 130px; right: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 20; }
+.map-fab { width: 44px; height: 44px; border-radius: 50%; background: var(--white); box-shadow: var(--shadow-pop); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.18s ease; }
+.map-fab:active { transform: scale(0.9); }
+.map-fab svg { width: 20px; height: 20px; color: var(--brand-dark); }
+.map-stats { margin: 16px 24px 0; background: var(--white); border-radius: var(--r-card); padding: 14px 20px; display: flex; justify-content: space-around; box-shadow: var(--shadow-card); }
+.map-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.map-stat .num { font-family: var(--serif); font-size: 20px; font-weight: 700; color: var(--brand-dark); }
+.map-stat .label { font-size: 10px; color: var(--ink-soft); letter-spacing: 0.1em; }
+.map-stat + .map-stat { border-left: 1px solid var(--line); }
+.map-filter-row { display: flex; gap: 8px; padding: 16px 24px 0; overflow-x: auto; }
+.map-filter-row::-webkit-scrollbar { display: none; }
+.map-filter { font-size: 11px; padding: 5px 12px; border-radius: var(--r-pill); background: var(--white); color: var(--ink-soft); border: 1px solid var(--line); white-space: nowrap; cursor: pointer; transition: all 0.2s ease; }
+.map-filter.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+/* ============================================================
+   PAGE: PROFILE
+   ============================================================ */
+.mine-hero { padding: 20px 24px 28px; background: radial-gradient(circle at 30% 0%, #FFE8D6 0%, transparent 60%), linear-gradient(180deg, #FFF0E4 0%, #F5F3EF 100%); }
+.mine-user { display: flex; align-items: center; gap: 14px; }
+.mine-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(200,149,110,0.3); overflow: hidden; }
+.mine-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.mine-avatar svg { width: 28px; height: 28px; color: #fff; }
+.mine-info { flex: 1; }
+.mine-name { font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.mine-streak { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--brand-dark); background: rgba(200,149,110,0.12); padding: 3px 8px; border-radius: var(--r-pill); }
+.mine-streak svg { width: 10px; height: 10px; }
+.mine-edit-btn { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.6); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.mine-edit-btn svg { width: 16px; height: 16px; color: var(--ink-soft); }
+.mine-stats { margin: 0 24px; background: var(--white); border-radius: var(--r-card); padding: 18px 12px; display: flex; box-shadow: var(--shadow-card); margin-top: -8px; position: relative; }
+.mine-stat { flex: 1; text-align: center; cursor: pointer; }
+.mine-stat .num { font-family: var(--serif); font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1; margin-bottom: 4px; }
+.mine-stat .label { font-size: 11px; color: var(--ink-soft); letter-spacing: 0.05em; }
+.mine-stat + .mine-stat { border-left: 1px solid var(--line); }
+.badge-section { padding: 24px 24px 0; }
+.badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 14px; }
+.badge-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+.badge-circle { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; background: var(--brand-weak); }
+.badge-circle.unlocked { background: var(--brand-tint); box-shadow: 0 4px 14px rgba(200,149,110,0.2); }
+.badge-circle.unlocked::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1px dashed rgba(200,149,110,0.4); }
+.badge-circle svg { width: 28px; height: 28px; }
+.badge-circle:not(.unlocked) svg { opacity: 0.3; filter: grayscale(1); }
+.badge-name { font-size: 11px; color: var(--ink); font-weight: 500; text-align: center; }
+.badge-item:not(.unlocked) .badge-name { color: var(--ink-faint); }
+.settings-list { margin-top: 28px; background: var(--white); border-radius: var(--r-card); overflow: hidden; box-shadow: var(--shadow-card); }
+.settings-item { display: flex; align-items: center; padding: 14px 16px; cursor: pointer; transition: background 0.2s ease; }
+.settings-item:active { background: var(--brand-weak); }
+.settings-item + .settings-item { border-top: 1px solid var(--line); }
+.settings-icon { width: 28px; height: 28px; border-radius: 8px; background: var(--brand-weak); display: flex; align-items: center; justify-content: center; margin-right: 12px; }
+.settings-icon svg { width: 14px; height: 14px; color: var(--brand-dark); }
+.settings-label { flex: 1; font-size: 14px; color: var(--ink); }
+.settings-arrow { width: 14px; height: 14px; color: var(--ink-faint); }
+.settings-toggle { width: 40px; height: 22px; border-radius: var(--r-pill); background: var(--ink-faint); opacity: 0.4; position: relative; cursor: pointer; transition: all 0.25s ease; }
+.settings-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: all 0.25s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.settings-toggle.on { background: var(--brand); opacity: 1; }
+.settings-toggle.on::after { left: 20px; }
+
+/* ============================================================
+   PAGE: BADGES / ACHIEVEMENTS / STATS / TIMELINE etc.
+   ============================================================ */
+.list-page-body { padding: 8px 0 100px; }
+.list-card { margin: 0 24px 12px; background: var(--white); border-radius: var(--r-card); padding: 16px; box-shadow: var(--shadow-card); }
+.list-card-row { display: flex; align-items: center; gap: 14px; }
+.list-card-icon { width: 44px; height: 44px; border-radius: var(--r-tag); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.list-card-icon svg { width: 22px; height: 22px; }
+.list-card-body { flex: 1; }
+.list-card-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.list-card-sub { font-size: 12px; color: var(--ink-soft); }
+.list-card-meta { font-size: 11px; color: var(--ink-faint); }
+.progress-bar { height: 6px; background: var(--brand-weak); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--brand), var(--accent)); border-radius: 3px; transition: width 0.5s var(--ease); }
+
+/* Badge detail */
+.badge-detail-hero { padding: 40px 24px 32px; text-align: center; background: radial-gradient(circle at 50% 30%, var(--brand-tint) 0%, transparent 70%); }
+.badge-detail-icon { width: 120px; height: 120px; margin: 0 auto 16px; }
+.badge-detail-name { font-family: var(--serif); font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.badge-detail-desc { font-size: 13px; color: var(--ink-soft); }
+.badge-detail-section { padding: 24px; }
+.badge-detail-section h4 { font-family: var(--serif); font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 12px; }
+.condition-box { background: var(--brand-weak); border-radius: var(--r-card); padding: 16px; }
+.condition-box p { font-size: 13px; color: var(--ink); line-height: 1.6; }
+
+/* Stats charts */
+.chart-card { margin: 0 24px 16px; background: var(--white); border-radius: var(--r-card); padding: 20px; box-shadow: var(--shadow-card); }
+.chart-title { font-family: var(--serif); font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 16px; }
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.bar { width: 100%; background: linear-gradient(180deg, var(--brand), var(--accent)); border-radius: 4px 4px 0 0; min-height: 4px; transition: height 0.5s var(--ease); }
+.bar-label { font-size: 10px; color: var(--ink-soft); }
+.donut-chart { display: flex; align-items: center; gap: 20px; }
+.donut { width: 100px; height: 100px; border-radius: 50%; position: relative; flex-shrink: 0; }
+.donut::after { content: ''; position: absolute; inset: 18px; background: var(--white); border-radius: 50%; }
+.donut-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.heatmap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.heat-cell { aspect-ratio: 1; border-radius: 3px; background: var(--brand-weak); }
+.heat-cell.l1 { background: rgba(200,149,110,0.2); }
+.heat-cell.l2 { background: rgba(200,149,110,0.4); }
+.heat-cell.l3 { background: rgba(200,149,110,0.6); }
+.heat-cell.l4 { background: rgba(200,149,110,0.85); }
+
+/* Timeline */
+.timeline { padding: 8px 24px 100px; }
+.timeline-item { display: flex; gap: 16px; padding-bottom: 24px; position: relative; }
+.timeline-item::before { content: ''; position: absolute; left: 11px; top: 28px; bottom: 0; width: 2px; background: var(--brand-tint); }
+.timeline-item:last-child::before { display: none; }
+.timeline-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--brand); background: var(--white); flex-shrink: 0; z-index: 1; }
+.timeline-content { flex: 1; }
+.timeline-date { font-size: 11px; color: var(--ink-faint); margin-bottom: 4px; }
+.timeline-card { background: var(--white); border-radius: var(--r-card); padding: 14px; box-shadow: var(--shadow-card); }
+
+/* Year review */
+.review-hero { padding: 60px 24px 40px; text-align: center; background: radial-gradient(circle at 30% 20%, #FFE8D6 0%, transparent 50%), radial-gradient(circle at 70% 80%, #FFD7B5 0%, transparent 50%), linear-gradient(160deg, #FFF0E4, #F5E6D8); }
+.review-hero h1 { font-family: var(--serif); font-weight: 900; font-size: 36px; color: var(--ink); margin-bottom: 8px; }
+.review-hero p { font-size: 13px; color: var(--ink-soft); }
+.review-grid { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.review-card { background: var(--white); border-radius: var(--r-card); padding: 20px; box-shadow: var(--shadow-card); text-align: center; }
+.review-card .big-num { font-family: var(--serif); font-size: 32px; font-weight: 900; color: var(--brand-dark); line-height: 1; margin-bottom: 6px; }
+.review-card .label { font-size: 11px; color: var(--ink-soft); }
+
+/* Leaderboard */
+.rank-list { padding: 8px 24px 100px; }
+.rank-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--white); border-radius: var(--r-card); margin-bottom: 8px; box-shadow: var(--shadow-card); }
+.rank-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-weight: 700; font-size: 13px; flex-shrink: 0; background: var(--brand-weak); color: var(--brand-dark); }
+.rank-item.top1 .rank-num { background: linear-gradient(135deg, #FFE4B5, #FFD700); color: #8A6A00; }
+.rank-item.top2 .rank-num { background: linear-gradient(135deg, #E5E5E5, #C0C0C0); color: #555; }
+.rank-item.top3 .rank-num { background: linear-gradient(135deg, #FFDAB5, #CD7F32); color: #5A3A1A; }
+.rank-item.me { border: 2px solid var(--brand); }
+.rank-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--accent)); flex-shrink: 0; }
+.rank-info { flex: 1; }
+.rank-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+.rank-sub { font-size: 11px; color: var(--ink-soft); }
+.rank-score { font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--brand-dark); }
+
+/* Daily challenge */
+.challenge-hero { margin: 0 24px 16px; background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%); border-radius: var(--r-lg); padding: 24px 20px; color: #fff; box-shadow: var(--shadow-btn); }
+.challenge-hero .tag { font-size: 10px; letter-spacing: 0.2em; opacity: 0.8; margin-bottom: 8px; }
+.challenge-hero h2 { font-family: var(--serif); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.challenge-hero p { font-size: 13px; opacity: 0.9; line-height: 1.5; }
+.challenge-progress { margin: 16px 0 0; }
+.challenge-progress-bar { height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; }
+.challenge-progress-fill { height: 100%; background: #fff; border-radius: 3px; }
+.challenge-reward { font-size: 11px; opacity: 0.9; margin-top: 8px; }
+
+/* ============================================================
+   PAGE: COMMUNITY / PARTNER / INVITE / MEMBER / MOOD
+   ============================================================ */
+.feed-list { padding: 8px 24px 100px; }
+.feed-card { background: var(--white); border-radius: var(--r-card); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-card); }
+.feed-user { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.feed-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--accent)); flex-shrink: 0; }
+.feed-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+.feed-time { font-size: 11px; color: var(--ink-faint); }
+.feed-text { font-size: 14px; color: var(--ink); line-height: 1.6; margin-bottom: 12px; }
+.feed-img { width: 100%; height: 160px; border-radius: var(--r-card); margin-bottom: 12px; background: linear-gradient(135deg, var(--brand-tint), var(--brand-weak)); display: flex; align-items: center; justify-content: center; }
+.feed-img svg { width: 40px; height: 40px; color: var(--brand); opacity: 0.4; }
+.feed-actions { display: flex; gap: 20px; }
+.feed-action { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-soft); cursor: pointer; }
+.feed-action svg { width: 14px; height: 14px; }
+.feed-action.liked { color: var(--accent); }
+.feed-action.liked svg { color: var(--accent); }
+
+/* Partner list */
+.partner-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--white); border-radius: var(--r-card); margin: 0 24px 8px; box-shadow: var(--shadow-card); }
+.partner-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--accent)); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.partner-avatar svg { width: 22px; height: 22px; color: #fff; }
+.partner-info { flex: 1; }
+.partner-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+.partner-sub { font-size: 11px; color: var(--ink-soft); }
+
+/* Invite */
+.invite-card { margin: 24px; background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%); border-radius: var(--r-lg); padding: 32px 24px; text-align: center; color: #fff; box-shadow: var(--shadow-btn); }
+.invite-card h2 { font-family: var(--serif); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.invite-card p { font-size: 13px; opacity: 0.9; margin-bottom: 20px; }
+.invite-code { font-family: var(--mono); font-size: 24px; font-weight: 700; letter-spacing: 0.2em; background: rgba(255,255,255,0.2); padding: 12px 24px; border-radius: var(--r-card); margin-bottom: 16px; }
+.qr-placeholder { width: 120px; height: 120px; background: #fff; border-radius: var(--r-card); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; }
+.qr-placeholder svg { width: 60px; height: 60px; color: var(--ink); }
+
+/* Member */
+.member-hero { padding: 40px 24px 32px; text-align: center; background: linear-gradient(135deg, #2E2F33 0%, #1A1B1E 100%); color: #fff; }
+.member-hero .crown { width: 56px; height: 56px; margin: 0 auto 16px; }
+.member-hero h2 { font-family: var(--serif); font-size: 24px; font-weight: 700; margin-bottom: 6px; color: var(--gold); }
+.member-hero p { font-size: 13px; opacity: 0.7; }
+.member-benefit { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--white); border-radius: var(--r-card); margin: 0 24px 8px; box-shadow: var(--shadow-card); }
+.member-benefit-ico { width: 40px; height: 40px; border-radius: var(--r-tag); background: var(--brand-tint); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.member-benefit-ico svg { width: 20px; height: 20px; color: var(--brand-dark); }
+.member-benefit-text { flex: 1; }
+.member-benefit-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+.member-benefit-sub { font-size: 12px; color: var(--ink-soft); }
+
+/* Mood journal */
+.mood-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 0 24px 20px; }
+.mood-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px; border-radius: var(--r-card); cursor: pointer; transition: background 0.2s ease; }
+.mood-item:active, .mood-item.active { background: var(--brand-weak); }
+.mood-emoji { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.mood-label { font-size: 11px; color: var(--ink-soft); }
+.mood-entry { margin: 0 24px 12px; background: var(--white); border-radius: var(--r-card); padding: 16px; box-shadow: var(--shadow-card); }
+.mood-entry-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.mood-entry-emoji { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.mood-entry-date { font-size: 11px; color: var(--ink-faint); }
+.mood-entry-text { font-size: 14px; color: var(--ink); line-height: 1.6; }
+
+/* ============================================================
+   PAGE: CITY / MODE-INTRO / THEME-MARKET / ABOUT / HELP
+   ============================================================ */
+.search-bar { margin: 12px 24px 0; background: var(--white); border-radius: var(--r-pill); padding: 10px 16px; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-card); }
+.search-bar svg { width: 16px; height: 16px; color: var(--ink-faint); }
+.search-bar input { flex: 1; border: none; outline: none; background: transparent; font-size: 14px; font-family: var(--sans); color: var(--ink); }
+.city-list { padding: 16px 24px 100px; }
+.city-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.city-item:last-child { border: none; }
+.city-name { font-size: 15px; color: var(--ink); }
+.city-name.active { color: var(--brand); font-weight: 600; }
+.city-check { width: 18px; height: 18px; color: var(--brand); }
+
+.mode-intro-card { margin: 0 24px 12px; background: var(--white); border-radius: var(--r-card); padding: 20px; box-shadow: var(--shadow-card); display: flex; gap: 16px; }
+.mode-intro-ico { width: 52px; height: 52px; border-radius: var(--r-tag); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mode-intro-ico svg { width: 26px; height: 26px; color: #fff; }
+.mode-intro-body { flex: 1; }
+.mode-intro-name { font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.mode-intro-desc { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+
+.theme-card { margin: 0 24px 12px; background: var(--white); border-radius: var(--r-card); padding: 16px; box-shadow: var(--shadow-card); display: flex; align-items: center; gap: 14px; }
+.theme-preview { width: 56px; height: 56px; border-radius: var(--r-tag); flex-shrink: 0; }
+.theme-info { flex: 1; }
+.theme-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+.theme-desc { font-size: 12px; color: var(--ink-soft); }
+
+/* About */
+.about-hero { padding: 60px 24px 40px; text-align: center; }
+.about-logo { width: 80px; height: 80px; margin: 0 auto 20px; }
+.about-name { font-family: var(--serif); font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.about-ver { font-size: 12px; color: var(--ink-faint); margin-bottom: 24px; }
+.about-desc { font-size: 14px; color: var(--ink-soft); line-height: 1.7; max-width: 280px; margin: 0 auto; }
+.about-link { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--white); border-radius: var(--r-card); margin: 0 24px 8px; box-shadow: var(--shadow-card); cursor: pointer; }
+.about-link-label { font-size: 14px; color: var(--ink); }
+.about-link-val { font-size: 12px; color: var(--ink-soft); }
+
+/* Help FAQ */
+.faq-item { margin: 0 24px 8px; background: var(--white); border-radius: var(--r-card); overflow: hidden; box-shadow: var(--shadow-card); }
+.faq-q { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.faq-q-text { font-size: 14px; font-weight: 500; color: var(--ink); flex: 1; }
+.faq-q .chev { width: 14px; height: 14px; color: var(--ink-faint); transition: transform 0.3s ease; }
+.faq-item.open .faq-q .chev { transform: rotate(180deg); }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; padding: 0 16px; font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+.faq-item.open .faq-a { max-height: 200px; padding: 0 16px 14px; }
+
+/* Record list */
+.record-item { display: flex; gap: 14px; padding: 16px; background: var(--white); border-radius: var(--r-card); margin: 0 24px 8px; box-shadow: var(--shadow-card); cursor: pointer; }
+.record-thumb { width: 64px; height: 64px; border-radius: var(--r-tag); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.record-thumb svg { width: 28px; height: 28px; color: #fff; }
+.record-body { flex: 1; }
+.record-title { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.5; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.record-meta { display: flex; gap: 8px; font-size: 11px; color: var(--ink-soft); }
+
+/* Record detail */
+.record-detail-hero { padding: 24px; }
+.record-detail-card { background: var(--white); border-radius: var(--r-card); padding: 20px; box-shadow: var(--shadow-card); }
+.record-detail-img { width: 100%; height: 200px; border-radius: var(--r-card); margin-bottom: 16px; background: linear-gradient(135deg, var(--brand-tint), var(--brand-weak)); display: flex; align-items: center; justify-content: center; }
+.record-detail-img svg { width: 48px; height: 48px; color: var(--brand); opacity: 0.4; }
+.record-detail-title { font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 8px; line-height: 1.4; }
+.record-detail-meta { display: flex; gap: 12px; margin-bottom: 16px; }
+.record-detail-note { background: var(--brand-weak); border-radius: var(--r-card); padding: 14px 16px; }
+.record-detail-note-label { font-size: 11px; color: var(--brand-dark); font-weight: 600; letter-spacing: 0.1em; margin-bottom: 6px; }
+.record-detail-note-text { font-size: 14px; color: var(--ink); line-height: 1.6; }
+
+/* Photo edit */
+.photo-preview { width: 100%; height: 280px; border-radius: var(--r-card); margin-bottom: 16px; background: linear-gradient(135deg, var(--brand-tint), var(--brand-weak)); display: flex; align-items: center; justify-content: center; }
+.photo-preview svg { width: 56px; height: 56px; color: var(--brand); opacity: 0.4; }
+.filter-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; }
+.filter-row::-webkit-scrollbar { display: none; }
+.filter-item { min-width: 72px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+.filter-thumb { width: 64px; height: 64px; border-radius: var(--r-tag); border: 2px solid transparent; background: linear-gradient(135deg, var(--brand-tint), var(--accent-warm)); }
+.filter-item.active .filter-thumb { border-color: var(--brand); }
+.filter-name { font-size: 11px; color: var(--ink-soft); }
+.filter-item.active .filter-name { color: var(--brand); font-weight: 600; }
+
+/* Data export */
+.export-card { margin: 24px; background: var(--white); border-radius: var(--r-card); padding: 20px; box-shadow: var(--shadow-card); }
+.export-preview { background: #1e1e1e; color: #a5d6a7; border-radius: var(--r-card); padding: 16px; font-family: var(--mono); font-size: 11px; line-height: 1.6; max-height: 300px; overflow-y: auto; margin-bottom: 16px; white-space: pre-wrap; word-break: break-all; }
+.export-preview::-webkit-scrollbar { width: 4px; }
+.export-preview::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+/* Escape prep */
+.prep-list { padding: 8px 24px 100px; }
+.prep-item { display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--white); border-radius: var(--r-card); margin-bottom: 8px; box-shadow: var(--shadow-card); cursor: pointer; }
+.prep-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--brand); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background 0.3s ease; }
+.prep-item.done .prep-check { background: var(--brand); }
+.prep-item.done .prep-check svg { color: #fff; }
+.prep-check svg { width: 12px; height: 12px; color: transparent; }
+.prep-text { flex: 1; font-size: 14px; color: var(--ink); }
+.prep-item.done .prep-text { text-decoration: line-through; color: var(--ink-faint); }
+
+/* Generating */
+.gen-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 40px; }
+.gen-orb { width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, var(--brand-tint), var(--brand)); display: flex; align-items: center; justify-content: center; animation: genPulse 1.5s ease-in-out infinite; }
+@keyframes genPulse { 0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(200,149,110,0.3); } 50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(200,149,110,0); } }
+.gen-orb svg { width: 48px; height: 48px; color: #fff; }
+.gen-text { font-family: var(--serif); font-size: 16px; color: var(--ink); text-align: center; }
+.gen-sub { font-size: 12px; color: var(--ink-soft); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 480px) {
+  body { background: var(--canvas); }
+  .phone-frame { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; box-shadow: none; }
+  .phone-frame::before { display: none; }
+  /* statusbar 始终显示——它是 demo UI 的一部分，需要保留以展示小程序完整效果 */
+  /* max(env, N) 保证桌面测试（env=0）和真机（env=safe-area）都正确避让 */
+  .page-body { padding-top: max(env(safe-area-inset-top), 44px); }
+  .nav-header { margin-top: max(env(safe-area-inset-top), 44px); }
+  .hero { padding-top: max(env(safe-area-inset-top), 60px); }
+  .tabbar { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+}
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="screen">
+
+    <!-- Status Bar -->
+    <div class="statusbar">
+      <span class="time">9:41</span>
+      <div class="icons">
+        <svg viewBox="0 0 16 10" fill="currentColor"><path d="M1 7h2v2H1zm3-2h2v4H4zm3-2h2v6H7zm3-2h2v8h-2z"/></svg>
+        <svg viewBox="0 0 14 10" fill="currentColor"><path d="M7 1.5c2.4 0 4.6.9 6.3 2.4l-.7.7C11 2.9 9 2.2 7 2.2s-4 .7-5.6 2.4l-.7-.7C2.4 2.4 4.6 1.5 7 1.5zm0 3c1.6 0 3.1.6 4.2 1.6l-.7.7C9.6 6 8.4 5.5 7 5.5S4.4 6 3.5 6.8l-.7-.7C3.9 5.1 5.4 4.5 7 4.5zm0 3c.8 0 1.5.3 2 .9l-.7.7c-.4-.4-.8-.6-1.3-.6s-.9.2-1.3.6l-.7-.7c.5-.6 1.2-.9 2-.9zm0 1.5l1 1H6l1-1z"/></svg>
+        <svg viewBox="0 0 18 10" fill="currentColor"><rect x="0.5" y="1.5" width="14" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="0.8"/><rect x="2" y="3" width="11" height="4" rx="0.5"/><rect x="15" y="3.5" width="1.5" height="3" rx="0.5"/></svg>
+      </div>
+    </div>
+
+    <!-- App container: all pages rendered here -->
+    <div id="app"></div>
+
+    <!-- TabBar -->
+    <div class="tabbar" id="tabbar">
+      <div class="tab active" data-route="index">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor"/></svg>
+        <span class="tab-label">出逃</span>
+      </div>
+      <div class="tab" data-route="map">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 4L4 6v14l5-2 6 2 5-2V4l-5 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
+        <span class="tab-label">地图</span>
+      </div>
+      <div class="tab" data-route="profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="9" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
+        <span class="tab-label">我的</span>
+      </div>
+    </div>
+
+    <!-- Mode Sheet -->
+    <div class="sheet-overlay" id="modeSheet">
+      <div class="sheet mode-sheet">
+        <div class="sheet-handle"></div>
+        <div class="section-title" style="padding:0; margin-bottom:14px;">
+          <h3 style="font-size:16px;">选择出逃模式</h3>
+        </div>
+        <div id="modeList"></div>
+        <button class="btn btn-ghost" style="margin-top:14px;" id="modeClose">取消</button>
+      </div>
+    </div>
+
+    <!-- Command Detail Sheet -->
+    <div class="sheet-overlay" id="cmdSheet">
+      <div class="sheet" id="cmdSheetBody"></div>
+    </div>
+
+    <!-- Custom Task Sheet (reroll exhausted) -->
+    <div class="sheet-overlay" id="customSheet">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="section-title" style="padding:0; margin-bottom:14px;">
+          <h3 style="font-size:16px;">自定义出逃任务</h3>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:12px; color:var(--ink-soft); display:block; margin-bottom:8px;">写下你想完成的任务</label>
+          <textarea id="customInput" rows="3" style="width:100%; border:1px solid var(--line-strong); border-radius:var(--r-card); padding:12px; font-size:14px; font-family:var(--sans); resize:none; outline:none;" placeholder="例如：去河边看一次日落"></textarea>
+        </div>
+        <div class="cmd-actions">
+          <button class="btn btn-ghost" id="customCancel">取消</button>
+          <button class="btn btn-primary" id="customConfirm">生成指令</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Badge Unlock Overlay -->
+    <div class="badge-overlay" id="badgeOverlay">
+      <div class="badge-unlock-card">
+        <div class="badge-unlock-icon" id="badgeUnlockIcon"></div>
+        <div class="badge-unlock-eyebrow">BADGE UNLOCKED</div>
+        <div class="badge-unlock-title" id="badgeUnlockTitle">初次出逃</div>
+        <div class="badge-unlock-desc" id="badgeUnlockDesc">完成了第一次出逃</div>
+        <button class="badge-unlock-btn" id="badgeClose">收下徽章</button>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading">
+      <div class="spinner"></div>
+      <div style="font-size:13px; color:var(--ink-soft);" id="loadingText">生成中...</div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   数据层：指令池 / 徽章 / 主题 / 挑战 / 常量
+   ============================================================ */
+
+// 类型元数据
+const TYPE_META = {
+  color: { name: '颜色探索', color: '#5B8FB9' },
+  walk: { name: '漫步发现', color: '#D98A5C' },
+  sense: { name: '感官体验', color: '#9B7BB8' },
+  collect: { name: '收藏拼贴', color: '#C9B037' },
+  food: { name: '美食探索', color: '#A67C52' },
+  culture: { name: '如实文化', color: '#5CBF9E' },
+  micro: { name: '微出逃', color: '#7BAE7F' },
+  custom: { name: '自定义', color: '#E07A5F' }
+};
+
+const MODE_LIST = [
+  { id: 'smart', name: '智能匹配', color: '#C8956E', desc: '算法懂你，随机推荐' },
+  { id: 'micro', name: '微出逃', color: '#7BAE7F', desc: '碎片时间，快速出逃' },
+  { id: 'walk', name: '城市漫游', color: '#D98A5C', desc: '户外长线，深度探索' },
+  { id: 'double', name: '双人出逃', color: '#9B7BB8', desc: '邀请朋友，一起冒险' },
+  { id: 'night', name: '深夜出逃', color: '#9B8EC4', desc: '夜色独白，安静漫步' },
+  { id: 'rainy', name: '雨天出逃', color: '#7EC8F5', desc: '雨中漫步，室内寻觅' }
+];
+
+const SHEET_MODES = [
+  { id: 'smart', name: '智能匹配', color: '#C8956E', desc: '算法懂你，随机推荐', filter: () => true },
+  { id: 'micro', name: '微出逃', color: '#7BAE7F', desc: '碎片时间，快速出逃', filter: c => c.duration <= 15 },
+  { id: 'walk', name: '城市漫游', color: '#D98A5C', desc: '户外长线，深度探索', filter: c => c.duration >= 25 }
+];
+
+const MOODS = [
+  { id: 'happy', name: '开心', emoji: '😊', color: '#E0A92E' },
+  { id: 'calm', name: '平静', emoji: '😌', color: '#5CBF9E' },
+  { id: 'surprise', name: '惊喜', emoji: '😲', color: '#D98A5C' },
+  { id: 'heal', name: '治愈', emoji: '🥰', color: '#9B7BB8' },
+  { id: 'fun', name: '好玩', emoji: '🤩', color: '#5B8FB9' }
+];
+
+const TYPE_STEPS = {
+  color: ['带上眼睛出门', '找到今天定下的那个颜色', '把它拍下来，凑近一点', '写一句它给你的感觉'],
+  walk: ['选一个方向开始走', '遇到岔路就凭直觉选', '走够 10 分钟再停下', '拍下停下来的地方'],
+  sense: ['找一个能坐下的角落', '闭上眼睛 30 秒', '记下你听到的 3 种声音', '给这段安静写一句话'],
+  collect: ['带一个小袋子出门', '捡起第一眼吸引你的小物', '找个地方把它摆好', '拍下这张小小收藏'],
+  food: ['走进一家没去过的店', '点一份今天想吃的', '慢慢吃完，不要刷手机', '记下这家店的味道'],
+  culture: ['找一个文化场所的入口', '走进去，挑一件展品多看一会', '拍下它的细节', '写一句它让你想到的事'],
+  micro: ['放下手头的事', '按指令做一个小动作', '专注感受这 5 分钟', '给自己一个小肯定'],
+  custom: ['设定一个小目标', '按自己的节奏完成', '简单记录感受', '给自己一个肯定']
+};
+
+// 完整指令池（~150条，紧凑格式）
+const COMMANDS = [
+  // 颜色探索
+  {id:'c001',content:'找到三扇不同颜色的门，从同一个角度拍它们并排站在一起',type:'color',duration:25,mode:'smart',tip:'留意老小区的木门，经常会有惊喜的颜色'},
+  {id:'c002',content:'今天只看绿色：收集5种不同深浅的绿色，拼一张图',type:'color',duration:20,mode:'smart',tip:'树叶、青苔、路牌、衣服、垃圾桶——绿色无处不在'},
+  {id:'c003',content:'找一面有涂鸦或斑驳痕迹的墙，在前面拍一张影子',type:'color',duration:15,mode:'smart',tip:'下午阳光斜照的时候影子最好看'},
+  {id:'c004',content:'数一下这条街上有多少个红色消防栓，超过5个就给自己买根冰棍',type:'color',duration:20,mode:'smart',tip:'冰棍钱花得开心才重要'},
+  {id:'c005',content:'找到一个黄色的东西，把它放在灰色的背景前拍照',type:'color',duration:15,mode:'smart',tip:'黄色在灰色里特别跳'},
+  {id:'c006',content:'抬头找一块蓝色的招牌或路牌，和蓝天合个影',type:'color',duration:10,mode:'smart',tip:''},
+  {id:'c007',content:'找到一朵白色的花，放在深色背景前拍它',type:'color',duration:15,mode:'smart',tip:'公园和小区绿化带里最多'},
+  {id:'c008',content:'观察路边停着的车，找到5种不同颜色的车，按彩虹色排序拍一张',type:'color',duration:20,mode:'smart',tip:''},
+  {id:'c009',content:'找到三个圆形的东西，把它们拍成一张图',type:'color',duration:15,mode:'smart',tip:'窨井盖、轮胎、路牌、碗——圆就在身边'},
+  {id:'c010',content:'找一个紫色或者粉色的小店门面，拍下来',type:'color',duration:25,mode:'smart',tip:'奶茶店和花店经常有惊喜'},
+  {id:'c011',content:'找到今天穿的衣服上最不起眼的一个颜色，去街上找它的同款',type:'color',duration:20,mode:'smart',tip:'你身上的颜色，街上也有'},
+  {id:'c012',content:'找一面红砖墙，拍下砖缝里长出的小草或青苔',type:'color',duration:15,mode:'smart',tip:'老厂区和老小区的红砖墙最好找'},
+  {id:'c013',content:'找一个霓虹灯招牌，等天刚暗它亮起来的那一刻拍一张',type:'color',duration:20,mode:'smart',tip:'天没全黑时的霓虹灯最有故事感'},
+  {id:'c014',content:'找到3种不同深浅的蓝色，按从浅到深排列拍一张',type:'color',duration:20,mode:'smart',tip:'天空、招牌、车门、围裙——蓝色层次很丰富'},
+  {id:'c015',content:'找一条街上所有的橙色元素，拼成一张九宫格',type:'color',duration:25,mode:'smart',tip:'橙色是城市里最暖的颜色'},
+  {id:'c016',content:'找一个褪色的广告牌，拍下它原本的颜色还剩多少',type:'color',duration:15,mode:'smart',tip:'褪色也是一种时间的颜色'},
+  {id:'c017',content:'找一个全是玻璃幕墙的建筑，拍下它反射的天空颜色',type:'color',duration:15,mode:'smart',tip:'不同时间段反射的颜色完全不一样'},
+  {id:'c018',content:'找一个涂满了彩色涂鸦的墙角，拍下你最喜欢的那一块',type:'color',duration:15,mode:'smart',tip:'每一块涂鸦都是一幅画'},
+  // 感官体验
+  {id:'s001',content:'找个长椅坐下，闭眼听3分钟，记下听到的5种声音',type:'sense',duration:10,mode:'smart',tip:'不要看，耳朵会打开新世界'},
+  {id:'s002',content:'倒退着走100步，注意你平时看不到的风景',type:'sense',duration:10,mode:'smart',tip:'找个没人的小路，别撞着人'},
+  {id:'s003',content:'踩一踩地上的影子，假装你在玩"不能踩黑线"的小时候游戏',type:'sense',duration:10,mode:'smart',tip:'阳光好的时候最好玩'},
+  {id:'s004',content:'摸3种不同材质的东西——树皮、金属、石头或布料，感受它们的温度差',type:'sense',duration:15,mode:'smart',tip:'闭眼摸更有感觉'},
+  {id:'s005',content:'深呼吸5次，每次都闻闻空气里有什么味道',type:'sense',duration:5,mode:'smart',tip:'饭馆的香味、雨后的土味、桂花香'},
+  {id:'s006',content:'抬头看云3分钟，找到形状最奇怪的那朵，给它起个名字',type:'sense',duration:10,mode:'smart',tip:'那朵云像什么？恐龙？兔子？'},
+  {id:'s007',content:'赤脚踩在草地/石板/木地板上，感受30秒',type:'sense',duration:5,mode:'smart',tip:'注意安全，别踩玻璃渣'},
+  {id:'s008',content:'闭上眼睛，让人牵着你（或者扶着墙）走50步',type:'sense',duration:10,mode:'smart',tip:'信任是第一步',double:true},
+  {id:'s009',content:'站在风里，感受风吹过皮肤和头发的感觉，站1分钟',type:'sense',duration:5,mode:'smart',tip:''},
+  {id:'s010',content:'仔细看一个人的表情（不要盯着看），猜他今天心情怎么样',type:'sense',duration:10,mode:'smart',tip:'不要被发现哦'},
+  {id:'s011',content:'走一条路，只踩地砖的格子，不要踩到线',type:'sense',duration:10,mode:'smart',tip:'小时候的游戏永远不会过时'},
+  {id:'s012',content:'停下来，数到10，说出你现在能看到的5种颜色',type:'sense',duration:3,mode:'smart',tip:''},
+  {id:'s013',content:'走一段路用手摸路边的墙/栏杆，感受材质从粗糙到光滑的变化',type:'sense',duration:15,mode:'smart',tip:'闭眼摸会有完全不同的感受'},
+  {id:'s014',content:'找一个有回声的地方（地下通道/空旷大厅），说一句话听它弹回来',type:'sense',duration:10,mode:'smart',tip:'说一句平时不好意思说的话'},
+  {id:'s015',content:'找一个有香味的地方（花店/面包店/茶叶店），闭眼站5分钟只闻味道',type:'sense',duration:10,mode:'smart',tip:'分辨一下里面有几种香味'},
+  {id:'s016',content:'用手背感受3种不同表面的温度——金属、木头、玻璃',type:'sense',duration:10,mode:'smart',tip:'温度差比你想象的大得多'},
+  {id:'s017',content:'喝一口水，闭眼感受它从喉咙到胃的过程',type:'sense',duration:5,mode:'smart',tip:'慢慢喝，别着急'},
+  {id:'s018',content:'找一片树叶放在手心，闭眼感受它的纹路和重量',type:'sense',duration:5,mode:'smart',tip:'每片叶子的纹路都是独一无二的'},
+  // 美食探索
+  {id:'m001',content:'去菜市场找最热闹的摊位，问摊主"今天什么最新鲜"，买一样回来',type:'food',duration:30,mode:'smart',tip:'听摊主的准没错',double:true},
+  {id:'m002',content:'走进最近一家你从没去过的小店，不管卖什么，逛5分钟',type:'food',duration:15,mode:'smart',tip:'不一定要买东西，看看就好'},
+  {id:'m003',content:'去独立咖啡馆，对店员说"给我一杯你今天最想做的"',type:'food',duration:25,mode:'smart',tip:'把选择权交出去，会有惊喜',double:true},
+  {id:'m004',content:'找报刊亭买一本你从没看过的杂志',type:'food',duration:15,mode:'smart',tip:'报刊亭越来越少了，抓紧'},
+  {id:'m005',content:'晚上去便利店，观察这个时间店里都有什么样的人',type:'food',duration:10,mode:'smart',tip:'深夜便利店是城市的缩影'},
+  {id:'m006',content:'去花店，只问不买，看5分钟，闻一闻花香',type:'food',duration:10,mode:'smart',tip:'记得跟店员说谢谢'},
+  {id:'m007',content:'找到一家卖包子/煎饼/早餐的小店，买一个热乎乎的吃',type:'food',duration:15,mode:'smart',tip:'刚出锅的最好吃'},
+  {id:'m008',content:'去水果店，让老板给你挑一个最好吃的水果',type:'food',duration:15,mode:'smart',tip:'老板挑的比你自己挑的甜'},
+  {id:'m009',content:'去一家开了10年以上的苍蝇馆子，只点招牌菜',type:'food',duration:30,mode:'smart',tip:'能开10年的店一定有道理'},
+  {id:'m010',content:'找一个推车卖小吃的大爷/大妈，买一份，聊两句家常',type:'food',duration:15,mode:'smart',tip:'推车小吃是城市最真实的味道'},
+  {id:'m011',content:'去超市试吃区转一圈，每样尝一点，猜猜是什么',type:'food',duration:20,mode:'smart',tip:'脸皮厚一点，品尝不丢人'},
+  {id:'m012',content:'找一个你小时候吃过的小吃摊，买一份回忆那个味道',type:'food',duration:15,mode:'smart',tip:'味道会带你回到小时候'},
+  {id:'m013',content:'去一家你从没注意过的早餐店，坐下来吃一顿慢早餐',type:'food',duration:25,mode:'smart',tip:'不要外卖，坐下来吃'},
+  {id:'m014',content:'找一个菜市场门口的熟食摊，买一样下酒菜带回家',type:'food',duration:15,mode:'smart',tip:'菜市场的熟食最接地气'},
+  {id:'m015',content:'去一家少数民族餐厅，点一道你没吃过的菜',type:'food',duration:30,mode:'smart',tip:'用舌头去旅行',double:true},
+  {id:'m016',content:'找一个有开放式厨房的店，坐着看厨师做菜5分钟',type:'food',duration:20,mode:'smart',tip:'看别人做饭也是一种治愈'},
+  // 漫步发现
+  {id:'w001',content:'不带目的走30分钟，看到感兴趣的就拐进去，迷路了再导航回家',type:'walk',duration:40,mode:'walk',tip:'迷路是最好的向导',double:true},
+  {id:'w002',content:'找一辆你从没坐过的公交车，坐3站下来，看看是哪里',type:'walk',duration:30,mode:'walk',tip:'随便上一辆，目的地不重要',double:true},
+  {id:'w003',content:'找一条有树的路，只踩树荫走，阳光照到的地方不能踩',type:'walk',duration:20,mode:'walk',tip:'夏天玩最爽'},
+  {id:'w004',content:'沿着一条河/湖边一直走，走到你觉得该停的时候就停',type:'walk',duration:30,mode:'walk',tip:'水边走最治愈',double:true},
+  {id:'w005',content:'每到一个路口选绿灯方向走，走20分钟',type:'walk',duration:25,mode:'walk',tip:'让红绿灯决定你的方向'},
+  {id:'w006',content:'找到你家附近最高的楼，想办法上到最高层看一眼全景',type:'walk',duration:30,mode:'walk',tip:'居民楼天台、商场顶楼都可以，注意安全'},
+  {id:'w007',content:'找到一条你从来没有走过的小巷，走到头看看是什么',type:'walk',duration:20,mode:'walk',tip:'城市的秘密都藏在巷子里'},
+  {id:'w008',content:'出门左转，走到第一个路口再左转，再左转，再左转——看看能不能绕回来',type:'walk',duration:25,mode:'walk',tip:'左转左转左转左转，是个圈吗？'},
+  {id:'w009',content:'找一个地下通道/过街天桥，上去/下去走一遍再回来',type:'walk',duration:10,mode:'walk',tip:''},
+  {id:'w010',content:'在地图上找一个你没听过的公交站名字，坐车去那里',type:'walk',duration:45,mode:'walk',tip:'名字好听的站往往有惊喜',double:true},
+  {id:'w011',content:'找一条有老房子的街，慢慢走完，看每家的门楣和窗框',type:'walk',duration:40,mode:'walk',tip:'老房子的细节是时间的签名'},
+  {id:'w012',content:'沿着铁轨或高架桥下面走30分钟，听听城市另一种声音',type:'walk',duration:30,mode:'walk',tip:'桥下和桥上是两个世界'},
+  {id:'w013',content:'去一个你从没去过的公园，走一条不是主干道的小路',type:'walk',duration:35,mode:'walk',tip:'小路通向的往往是公园最安静的角落'},
+  {id:'w014',content:'找一条自行车道走20分钟，跟着骑自行车的人的方向走',type:'walk',duration:25,mode:'walk',tip:'骑车的人选的路通常有意思'},
+  {id:'w015',content:'去老城区走一圈，找三家开了20年以上的老店，拍下它们的招牌',type:'walk',duration:45,mode:'walk',tip:'20年老店是城市的活化石'},
+  {id:'w016',content:'沿着一条河走到河的转弯处，看看水从哪里来往哪里去',type:'walk',duration:40,mode:'walk',tip:'河的转弯处风景最好'},
+  {id:'w017',content:'找一个坡度比较陡的街，从下往上走，到顶回头看',type:'walk',duration:30,mode:'walk',tip:'到顶回头的风景值回票价'},
+  {id:'w018',content:'去大学校园里走一圈，坐一会操场边的长椅看人跑步',type:'walk',duration:35,mode:'walk',tip:'校园里有城市最干净的气息'},
+  {id:'w019',content:'找一个菜市场走一圈，从后门出，看看卸货区的样子',type:'walk',duration:30,mode:'walk',tip:'后门是菜市场最真实的部分'},
+  {id:'w020',content:'沿着一条你日常坐公交的路线，这次用脚走一段',type:'walk',duration:40,mode:'walk',tip:'走路和坐车看到的完全不同'},
+  {id:'w021',content:'找一个高架桥下的空地，看看桥下都有什么人在做什么',type:'walk',duration:25,mode:'walk',tip:'桥下是城市的另一种公共空间'},
+  {id:'w023',content:'找一条有梧桐或银杏的林荫道走20分钟，捡一片最好看的叶子',type:'walk',duration:25,mode:'walk',tip:'秋天的林荫道是城市的诗'},
+  {id:'w025',content:'找一个你城市的老火车站或汽车站，在附近走一圈',type:'walk',duration:40,mode:'walk',tip:'老车站附近是城市最有故事的地方'},
+  {id:'w027',content:'找一个你从没去过的地铁站下车，出站走15分钟看看周围',type:'walk',duration:35,mode:'walk',tip:'陌生站名是最好的盲盒'},
+  {id:'w030',content:'找一条有书店的路，走一路看一路橱窗，进去翻一本就走',type:'walk',duration:35,mode:'walk',tip:'书店橱窗是城市的文化脸面'},
+  // 收藏拼贴
+  {id:'p001',content:'拍一个正在遛狗的人和他们的狗（不要打扰）',type:'collect',duration:15,mode:'smart',tip:'远远拍，不要怼脸'},
+  {id:'p002',content:'拍今天天上形状最奇怪的那朵云，给它起个名字',type:'collect',duration:10,mode:'smart',tip:''},
+  {id:'p003',content:'找一个被遗忘在角落的小东西（落叶/纸条/小花），给它拍张肖像',type:'collect',duration:15,mode:'smart',tip:'被遗忘的东西最有故事'},
+  {id:'p004',content:'拍一张你脚的照片，背景是今天最好看的地面',type:'collect',duration:5,mode:'smart',tip:'低头看脚下也有风景'},
+  {id:'p005',content:'找一对牵手的老人，远远拍一张（不要打扰他们）',type:'collect',duration:25,mode:'smart',tip:'愿你也能这样'},
+  {id:'p006',content:'拍一张阳光透过树叶洒在地上的光斑',type:'collect',duration:10,mode:'smart',tip:'上午10点和下午4点的光最好'},
+  {id:'p007',content:'找一个有趣的影子，和它合个影',type:'collect',duration:15,mode:'smart',tip:'路灯下、雕塑旁都是影子的舞台'},
+  {id:'p008',content:'拍一个笑得很开心的人（远远地，不要打扰）',type:'collect',duration:20,mode:'smart',tip:'笑是会传染的'},
+  {id:'p009',content:'拍一张"正在发生"的照片——有人在走路、骑车、做饭、聊天',type:'collect',duration:15,mode:'smart',tip:'不要摆拍，生活本身最好看'},
+  {id:'p010',content:'拍一张你和今天天气的合影',type:'collect',duration:5,mode:'smart',tip:'用前置摄像头，天空在你身后'},
+  {id:'p011',content:'捡3片不同形状的落叶，拼成一个小图案拍下来',type:'collect',duration:15,mode:'smart',tip:'落叶是秋天写给地面的信'},
+  {id:'p012',content:'找一个有特色的小店要一张名片或小票，带回家收藏',type:'collect',duration:10,mode:'smart',tip:'名片是店的名片也是你的记忆'},
+  {id:'p013',content:'拍5张不同材质的地面特写，拼成一张图',type:'collect',duration:20,mode:'smart',tip:'低头看，地面也很多样'},
+  {id:'p014',content:'找3个有年代感的小物件，给每个写一句话',type:'collect',duration:20,mode:'smart',tip:'老物件会说话'},
+  {id:'p015',content:'收集一路上看到的最有趣的3个字（招牌/路牌上的），拍下来',type:'collect',duration:20,mode:'smart',tip:'汉字的美在街头'},
+  {id:'p016',content:'拍下今天路上最让你停下来的一瞬间，不管是什么',type:'collect',duration:15,mode:'smart',tip:'停下来本身就是一种收藏'},
+  // 微出逃
+  {id:'mi001',content:'下楼走5分钟，找一朵正在开的花，对它说句你好',type:'micro',duration:8,mode:'micro',tip:''},
+  {id:'mi002',content:'站在窗边找3个亮着灯的窗户，猜猜里面的人在干嘛',type:'micro',duration:5,mode:'micro',tip:'每个亮灯的窗户都是一个故事'},
+  {id:'mi003',content:'去便利店买一样你小时候吃过但很久没吃的零食',type:'micro',duration:10,mode:'micro',tip:'第一口的回忆最动人'},
+  {id:'mi004',content:'对着镜子笑一分钟，直到你真的笑出来',type:'micro',duration:3,mode:'micro',tip:'假笑也会变成真笑'},
+  {id:'mi005',content:'打开手机前置摄像头，对自己做3个鬼脸，然后删掉',type:'micro',duration:3,mode:'micro',tip:'没人看见，放心做'},
+  {id:'mi006',content:'写一张小纸条，写上今天最开心的一件小事，夹在书里',type:'micro',duration:5,mode:'micro',tip:'以后翻到会惊喜'},
+  {id:'mi007',content:'去楼下走5分钟，什么都不想，只数呼吸',type:'micro',duration:8,mode:'micro',tip:'呼——吸——'},
+  {id:'mi008',content:'听一首你大学/高中时候听的歌，完整听完',type:'micro',duration:5,mode:'micro',tip:''},
+  {id:'mi009',content:'给一个很久没联系的朋友发一句"突然想起你了"',type:'micro',duration:3,mode:'micro',tip:'不需要等回复，发出去就好'},
+  {id:'mi010',content:'倒一杯热水，捧着它暖手，慢慢喝完',type:'micro',duration:5,mode:'micro',tip:'冬天特别治愈'},
+  {id:'mi011',content:'抬头看看天花板或者天空，发1分钟呆',type:'micro',duration:3,mode:'micro',tip:'发呆不是浪费时间'},
+  {id:'mi012',content:'把今天的口袋/包里东西全部拿出来摆好，拍张照再放回去',type:'micro',duration:5,mode:'micro',tip:'看看你每天都带什么'},
+  {id:'mi013',content:'下楼扔垃圾的时候，顺便走一小段，看看天',type:'micro',duration:8,mode:'micro',tip:'扔垃圾也可以是出逃'},
+  {id:'mi014',content:'做10个伸展动作，伸个大大的懒腰',type:'micro',duration:2,mode:'micro',tip:''},
+  {id:'mi015',content:'打开窗户，深呼吸3次，看看楼下在发生什么',type:'micro',duration:3,mode:'micro',tip:''},
+  {id:'mi016',content:'去茶水间泡一杯茶，看茶叶在水里慢慢展开',type:'micro',duration:8,mode:'micro',tip:'茶叶展开是慢动作的花开'},
+  {id:'mi018',content:'午休时去公司楼顶或天台站5分钟，看看远处的天际线',type:'micro',duration:8,mode:'micro',tip:'天台是写字楼里的秘密花园'},
+  {id:'mi021',content:'下楼到花坛边蹲1分钟，看看有没有蚂蚁在搬家',type:'micro',duration:5,mode:'micro',tip:'蚂蚁的世界也很忙'},
+  {id:'mi029',content:'把手机调静音5分钟，什么都不做，只坐着',type:'micro',duration:5,mode:'micro',tip:'5分钟不看手机不会怎样'},
+  {id:'mi030',content:'去楼下花坛找一片自然掉落的落叶，夹在笔记本里',type:'micro',duration:8,mode:'micro',tip:'落叶是免费的纪念品'},
+  // 雨天出逃
+  {id:'r001',content:'坐在窗边，看雨滴在玻璃上画线，选最先流到底的当冠军',type:'walk',duration:10,mode:'rainy',tip:'你选几号选手？',double:true},
+  {id:'r002',content:'穿拖鞋去踩水，找最大的那个水坑踩3下',type:'walk',duration:10,mode:'rainy',tip:'小时候踩水会被骂，现在没人管你了'},
+  {id:'r003',content:'去便利店买一杯热饮，站在门口喝完再走',type:'micro',duration:10,mode:'rainy',tip:'看雨、喝热饮、发呆',double:true},
+  {id:'r004',content:'听着雨声睡20分钟午觉，定好闹钟',type:'micro',duration:25,mode:'rainy',tip:'雨天午觉是上天的礼物'},
+  {id:'r005',content:'透过起雾的玻璃，用手指画一个小图案',type:'sense',duration:3,mode:'rainy',tip:''},
+  {id:'r006',content:'撑伞走一段路，故意踩小水洼，听雨声打在伞上',type:'walk',duration:15,mode:'rainy',tip:'伞下是你的小世界'},
+  {id:'r007',content:'撑伞走到最近的屋檐下，站着听雨5分钟不出声',type:'walk',duration:10,mode:'rainy',tip:'雨声是最好的白噪音'},
+  {id:'r008',content:'找一个咖啡馆靠窗位置，点一杯热的，看外面的人撑伞跑过',type:'food',duration:30,mode:'rainy',tip:'雨中奔跑的人各有各的着急'},
+  {id:'r009',content:'雨天去博物馆或美术馆，在展厅里慢慢走，不用看展品只听脚步声',type:'culture',duration:40,mode:'rainy',tip:'雨天博物馆人最少最安静'},
+  {id:'r010',content:'穿雨衣出门，故意不撑伞，感受雨打在身上的感觉',type:'walk',duration:15,mode:'rainy',tip:'雨衣比伞更自由'},
+  {id:'r012',content:'雨天去图书馆，找一本旧书翻一翻，闻闻纸张的味道',type:'culture',duration:30,mode:'rainy',tip:'旧书配雨天，绝配'},
+  {id:'r013',content:'找一个公交站台，坐着等一辆不知道几路的公交来',type:'walk',duration:20,mode:'rainy',tip:'雨天的公交站是城市的小剧场'},
+  {id:'r014',content:'雨小的时候出门，找一片沾满水珠的叶子拍下来',type:'collect',duration:10,mode:'rainy',tip:'水珠在叶子上像水晶'},
+  {id:'r018',content:'雨后出门找水洼里倒映的天空或建筑，拍下来',type:'collect',duration:15,mode:'rainy',tip:'水洼是地上的镜子'},
+  {id:'r025',content:'雨天撑伞走一条没人的小巷，听自己的脚步声和雨声',type:'walk',duration:20,mode:'rainy',tip:'雨天的巷子只属于你'},
+  {id:'r026',content:'找一个雨天最安静的角落，闭眼坐3分钟听周围所有的声音',type:'sense',duration:5,mode:'rainy',tip:'雨天安静得能听见自己'},
+  // 深夜出逃
+  {id:'n001',content:'去24小时便利店买一份关东煮，坐在窗边慢慢吃',type:'food',duration:15,mode:'night',tip:'深夜关东煮是城市的温柔',double:true},
+  {id:'n002',content:'站在阳台/窗边深呼吸10次，看看深夜的城市和白天有什么不一样',type:'micro',duration:5,mode:'night',tip:''},
+  {id:'n003',content:'找一个能看到路灯的角度，看灯光在空气里的光晕',type:'sense',duration:5,mode:'night',tip:'有雾或毛毛雨的时候最好看'},
+  {id:'n004',content:'写一张小纸条，写上明天最期待的一件小事',type:'micro',duration:3,mode:'night',tip:'明天会更好'},
+  {id:'n006',content:'看一眼月亮，不管它圆不圆，和它对视10秒',type:'sense',duration:3,mode:'night',tip:'月亮也在看你'},
+  {id:'n007',content:'深夜出门走一圈，只看路灯不看手机，走15分钟回家',type:'walk',duration:15,mode:'night',tip:'深夜的街道属于路灯和你'},
+  {id:'n008',content:'找一个深夜还开着的面馆或烧烤摊，坐下来吃一份',type:'food',duration:30,mode:'night',tip:'深夜的食物有白天没有的味道',double:true},
+  {id:'n009',content:'站在天桥上看深夜的车流，数5种不同颜色的车',type:'color',duration:15,mode:'night',tip:'深夜的车流像发光的河'},
+  {id:'n010',content:'深夜去便利店买一瓶啤酒或牛奶，坐在门口慢慢喝',type:'food',duration:15,mode:'night',tip:'深夜便利店门口是最好的座位'},
+  {id:'n011',content:'找一个能看到城市夜景的高处，看10分钟灯火',type:'walk',duration:15,mode:'night',tip:'城市的灯火比星星更密',double:true},
+  {id:'n012',content:'深夜在小区里走一圈，听蟋蟀或蝉鸣，数3种声音',type:'sense',duration:10,mode:'night',tip:'深夜的小区是另一个世界'},
+  {id:'n013',content:'找一个深夜还亮的招牌，拍下它在黑暗里的颜色',type:'color',duration:10,mode:'night',tip:'深夜的招牌是城市的霓虹画'},
+  {id:'n014',content:'深夜坐在阳台或窗边，写3件今天发生过的小事',type:'micro',duration:10,mode:'night',tip:'写下来才算发生过'},
+  {id:'n017',content:'找一个深夜的出租车，坐到窗外看着街景发呆',type:'walk',duration:20,mode:'night',tip:'深夜出租车窗外是电影'},
+  {id:'n022',content:'深夜坐在公园长椅上，听自己的心跳10次',type:'sense',duration:10,mode:'night',tip:'深夜你能听见自己的心跳'},
+  {id:'n026',content:'深夜走一条白天很热闹的街，看看它睡着的样子',type:'walk',duration:20,mode:'night',tip:'热闹的街睡着了也很好看'},
+  // 双人出逃
+  {id:'d001',content:'两人各选一个方向走10分钟，回到起点互相讲刚才看到了什么',type:'walk',duration:25,mode:'double',tip:'10分钟后见，看看你们的世界有什么不同',double:true},
+  {id:'d002',content:'一起找一家你们都没去过的小店，石头剪刀布输的人点单',type:'food',duration:30,mode:'double',tip:'愿赌服输哦',double:true},
+  {id:'d003',content:'互相给对方拍一张照，不能摆拍，要抓最自然的样子',type:'collect',duration:15,mode:'double',tip:'你眼里的TA是什么样的',double:true},
+  {id:'d004',content:'蒙上一个人的眼睛，另一个人牵着走5分钟，然后换过来',type:'sense',duration:15,mode:'double',tip:'把你的手交给我',double:true},
+  {id:'d005',content:'两个人不说话一起走15分钟，结束后再聊刚才各自在想什么',type:'walk',duration:20,mode:'double',tip:'沉默也可以很舒服',double:true},
+  {id:'d006',content:'一人选左转一人选右转，走20分钟后汇合，看看你们到了哪里',type:'walk',duration:30,mode:'double',tip:'分头行动，定时汇合',double:true},
+  {id:'d007',content:'一起买一支冰淇淋分着吃，猜对方觉得什么口味最好吃',type:'food',duration:10,mode:'double',tip:'',double:true},
+  {id:'d008',content:'互相给对方买一个小礼物，不超过10块钱，看谁买的更让对方惊喜',type:'food',duration:25,mode:'double',tip:'便宜的东西也可以很珍贵',double:true},
+  {id:'d010',content:'一人描述一个画面，另一人闭上眼想象30秒，然后角色互换',type:'sense',duration:10,mode:'double',tip:'看看你们想象的世界一样吗',double:true},
+  {id:'d011',content:'一起去超市，一人选3样食材，回来一起做一道菜',type:'food',duration:40,mode:'double',tip:'一起做饭是最日常的浪漫',double:true},
+  {id:'d013',content:'互相给对方写一段话描述"我眼里的你"，念给对方听',type:'micro',duration:15,mode:'double',tip:'说出口的话最有分量',double:true},
+  {id:'d019',content:'一起去一个公园，躺在草地上看10分钟天空',type:'walk',duration:15,mode:'double',tip:'一起躺着看天最放松',double:true},
+  {id:'d020',content:'找一条没走过的巷子一起探险，走到头看看是什么',type:'walk',duration:20,mode:'double',tip:'一起迷路一起找路',double:true},
+  {id:'d025',content:'找一段有台阶的路，一起数到100，每人轮流说一个数',type:'walk',duration:10,mode:'double',tip:'数到100的默契',double:true},
+  {id:'d026',content:'一起做一顿饭，一个人洗菜一个人切菜，不说话配合着做',type:'food',duration:40,mode:'double',tip:'默契是不用说话也知道下一步',double:true},
+  {id:'d028',content:'互相给对方画一张肖像，画完不许笑对方',type:'collect',duration:15,mode:'double',tip:'画得好不好不重要，重要的是认真看对方',double:true},
+  // 如实文化
+  {id:'u001',content:'去博物馆找一个最不起眼的展品，看5分钟',type:'culture',duration:30,mode:'smart',tip:'不起眼的东西往往有最长的故事'},
+  {id:'u002',content:'找一个老书店或独立书店，问老板"你最推荐哪一本"',type:'culture',duration:25,mode:'smart',tip:'老板推荐的书不会错'},
+  {id:'u003',content:'去一个你从没去过的展览，只看一件作品看完',type:'culture',duration:30,mode:'smart',tip:'一件作品看透比十件走马观花强'},
+  {id:'u004',content:'找一个城市里的老建筑，在门口站3分钟想象它当年的样子',type:'culture',duration:15,mode:'smart',tip:'老建筑是凝固的时间'},
+  {id:'u005',content:'去纪念馆或故居走一圈，找一个让你停下来看的细节',type:'culture',duration:35,mode:'smart',tip:'让你停下来的就是和你有缘的'},
+  {id:'u006',content:'找一个城市博物馆，看一张老照片，对比现在这个地方',type:'culture',duration:30,mode:'smart',tip:'老照片是时间的切片'},
+  {id:'u007',content:'去一个非遗或手工艺店，看师傅做手艺5分钟',type:'culture',duration:20,mode:'smart',tip:'手艺人的手是时间的容器'},
+  {id:'u008',content:'找一个教堂、寺庙或清真寺，进去坐5分钟感受安静',type:'culture',duration:15,mode:'smart',tip:'信仰场所是城市最安静的角落'},
+  {id:'u010',content:'找一个城市的标志或纪念碑，在它脚下抬头看3分钟',type:'culture',duration:10,mode:'smart',tip:'抬头看才懂它有多高'},
+  {id:'u011',content:'去图书馆找一本本地的地方志或城市史，翻10页',type:'culture',duration:25,mode:'smart',tip:'地方志是城市的说明书'},
+  {id:'u012',content:'找一个老街区，看墙上有没有残留的老标语或老广告',type:'culture',duration:25,mode:'smart',tip:'墙上的字是时代的化石'},
+  {id:'u013',content:'去一个美术馆，找一幅人最少的画，多看一会',type:'culture',duration:30,mode:'smart',tip:'人最少的画可能最值得看'},
+  {id:'u015',content:'去一个城市的老火车站，看站台上的时刻表和老钟',type:'culture',duration:20,mode:'smart',tip:'老钟还在走，时间也是'}
+];
+
+// 19 徽章
+const BADGES = [
+  {id:'first_escape',name:'初次出逃',desc:'完成了第一次出逃',color:'#D4A017',category:'milestone'},
+  {id:'seven_streak',name:'七连胜',desc:'连续 7 天完成出逃',color:'#3A8C6F',category:'milestone'},
+  {id:'thirty_streak',name:'月度漫游家',desc:'连续 30 天完成出逃',color:'#6B4F8A',category:'milestone'},
+  {id:'color_hunter',name:'蓝色猎人',desc:'完成 10 次颜色探索指令',color:'#3A6D96',category:'type'},
+  {id:'market_regular',name:'菜市场熟客',desc:'完成 5 次市井美食相关指令',color:'#A8603A',category:'type'},
+  {id:'culture_lover',name:'文化漫游者',desc:'完成 5 次文化类指令',color:'#3A8C6F',category:'type'},
+  {id:'night_walker',name:'夜行者',desc:'深夜完成 5 次出逃',color:'#4A5060',category:'mode'},
+  {id:'rainy_walker',name:'雨天漫步者',desc:'雨天完成 3 次出逃',color:'#3A8AB5',category:'mode'},
+  {id:'micro_master',name:'微出逃达人',desc:'完成 10 次微出逃',color:'#5A8E5E',category:'mode'},
+  {id:'walk_master',name:'漫游达人',desc:'完成 10 次城市漫游',color:'#A8603A',category:'mode'},
+  {id:'double_master',name:'双人冒险家',desc:'完成 5 次双人出逃',color:'#6B4F8A',category:'mode'},
+  {id:'night_master',name:'深夜诗人',desc:'完成 10 次深夜出逃',color:'#5A4A8A',category:'mode'},
+  {id:'rainy_master',name:'雨天诗人',desc:'完成 10 次雨天出逃',color:'#3A8AB5',category:'mode'},
+  {id:'social_master',name:'社交达人',desc:'邀请 3 位朋友完成双人出逃',color:'#A8603A',category:'social'},
+  {id:'collector',name:'收藏家',desc:'收藏 20 条指令',color:'#8A7620',category:'social'},
+  {id:'city_detective',name:'城市侦探',desc:'探索过 50 个不同角落',color:'#8A7620',category:'special'},
+  {id:'member_pro',name:'出逃会员',desc:'会员功能暂不展示',color:'#C9B037',category:'special'},
+  {id:'explorer',name:'探索家',desc:'完成 6 种类型的指令',color:'#3A6D96',category:'special'},
+  {id:'challenge_king',name:'挑战王',desc:'完成 7 个每日挑战',color:'#A04040',category:'special'}
+];
+
+const BADGE_CATEGORIES = [
+  {id:'milestone',name:'里程碑'},
+  {id:'type',name:'类型'},
+  {id:'mode',name:'模式'},
+  {id:'social',name:'社交'},
+  {id:'special',name:'特殊'}
+];
+
+// 3 主题
+const THEMES = [
+  {id:'default',name:'暖棕原野',desc:'温暖的棕褐色调',preview:'#C8956E',vars:{'--canvas':'#F5F3EF','--brand':'#C8956E','--brand-dark':'#A87B52','--brand-tint':'#F5E6D8'}},
+  {id:'warm-orange',name:'黄昏暖橙',desc:'温暖的橙色调，像黄昏的光',preview:'#D98A5C',vars:{'--canvas':'#FFF8F0','--brand':'#D98A5C','--brand-dark':'#B87042','--brand-tint':'#FFE8D6'}},
+  {id:'lavender',name:'薰衣草夜',desc:'安静的紫色调，适合夜晚',preview:'#9B7BB8',vars:{'--canvas':'#F5F0FA','--brand':'#9B7BB8','--brand-dark':'#7B5B98','--brand-tint':'#E8D5F5'}}
+];
+
+// 33 挑战（精选展示）
+const CHALLENGES = [
+  {id:'ch001',title:'色彩猎人',desc:'今天完成一条颜色探索类指令',type:'color',rewardDesc:'颜色探索进度 +3',difficulty:1},
+  {id:'ch002',title:'感官觉醒',desc:'今天完成一条感官体验类指令',type:'sense',rewardDesc:'感官体验进度 +3',difficulty:1},
+  {id:'ch003',title:'漫步启程',desc:'今天完成一条漫步发现类指令',type:'walk',rewardDesc:'漫步发现进度 +3',difficulty:1},
+  {id:'ch004',title:'味蕾探险',desc:'今天完成一条美食探索类指令',type:'food',rewardDesc:'美食探索进度 +3',difficulty:1},
+  {id:'ch005',title:'收藏时刻',desc:'今天完成一条收藏拼贴类指令',type:'collect',rewardDesc:'收藏拼贴进度 +3',difficulty:1},
+  {id:'ch006',title:'文化漫步',desc:'今天完成一条文化类指令',type:'culture',rewardDesc:'文化漫游进度 +3',difficulty:1},
+  {id:'ch011',title:'微出逃日',desc:'今天用微出逃模式完成一条指令',type:'mode',rewardDesc:'微出逃进度 +3',difficulty:1},
+  {id:'ch012',title:'漫游日',desc:'今天用城市漫游模式完成一条指令',type:'mode',rewardDesc:'城市漫游进度 +3',difficulty:1},
+  {id:'ch013',title:'双人时光',desc:'今天用双人出逃模式完成一条指令',type:'mode',rewardDesc:'双人出逃进度 +3',difficulty:2},
+  {id:'ch014',title:'夜行客',desc:'今晚 20:00 后完成一条指令',type:'mode',rewardDesc:'夜行进度 +3',difficulty:2},
+  {id:'ch015',title:'雨天出门',desc:'今天在雨天完成一条指令',type:'mode',rewardDesc:'雨天进度 +3',difficulty:2},
+  {id:'ch019',title:'清晨出逃',desc:'在上午 10 点前完成一条指令',type:'time',rewardDesc:'时间进度 +3',difficulty:2},
+  {id:'ch020',title:'夜晚出逃',desc:'在晚上 8 点后完成一条指令',type:'time',rewardDesc:'时间进度 +3',difficulty:1},
+  {id:'ch024',title:'开心一刻',desc:'完成一条指令并记录心情为「开心」',type:'mood',rewardDesc:'心情进度 +3',difficulty:1},
+  {id:'ch025',title:'平静时光',desc:'完成一条指令并记录心情为「平静」',type:'mood',rewardDesc:'心情进度 +3',difficulty:1},
+  {id:'ch029',title:'收藏家',desc:'今天收藏 3 条指令到收藏夹',type:'special',rewardDesc:'收藏进度 +5',difficulty:1},
+  {id:'ch031',title:'探索新境',desc:'今天去一个从没去过的区域完成指令',type:'special',rewardDesc:'探索进度 +5',difficulty:3},
+  {id:'ch033',title:'三连击',desc:'今天完成 3 条指令',type:'special',rewardDesc:'挑战计数 +1，出逃进度 +6',difficulty:3}
+];
+
+/* ============================================================
+   SVG 图标库
+   ============================================================ */
+const I = {
+  clock: '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="5" cy="5" r="4"/><path d="M5 2.5V5l1.5 1"/></svg>',
+  pin: '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 1L1 5l4 4 4-4z"/></svg>',
+  people: '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="3.5" cy="5" r="1.5"/><circle cx="6.5" cy="5" r="1.5"/></svg>',
+  share: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="7" r="1.5"/><circle cx="10" cy="3.5" r="1.5"/><circle cx="10" cy="10.5" r="1.5"/><path d="M5.3 6.3l3.4-2M5.3 7.7l3.4 2"/></svg>',
+  bookmark: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2v10l4-3 4 3V2z"/></svg>',
+  refresh: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 7a5 5 0 019-3M12 7a5 5 0 01-9 3M11 2v3h-3M3 12V9h3"/></svg>',
+  check: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7l3 3 5-6"/></svg>',
+  checkSimple: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l3 3 5-6"/></svg>',
+  close: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l8 8M11 3l-8 8"/></svg>',
+  chevR: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3l4 4-4 4"/></svg>',
+  chevD: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5l4 4 4-4"/></svg>',
+  chevL: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3l-4 4 4 4"/></svg>',
+  back: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 4l-4 4 4 4"/></svg>',
+  dice: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="14" height="14" rx="3"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="14" cy="8" r="1" fill="currentColor"/><circle cx="11" cy="11" r="1" fill="currentColor"/><circle cx="8" cy="14" r="1" fill="currentColor"/><circle cx="14" cy="14" r="1" fill="currentColor"/></svg>',
+  sprout: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 4c3 4 5 6 5 9a5 5 0 01-10 0c0-3 2-5 5-9z"/></svg>',
+  walk: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 4l3 4 3-4M7 18l3-4 3 4M5 11h4M13 11h4"/><circle cx="9" cy="8" r="1.2"/><circle cx="13" cy="8" r="1.2"/></svg>',
+  users: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="9" r="2.5"/><circle cx="15" cy="9" r="2"/><path d="M3 18c0-3 2-5 5-5s5 2 5 5M11 13c3 0 5 2 5 5"/></svg>',
+  settings: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="3"/><path d="M11 2v3M11 17v3M2 11h3M17 11h3M4.5 4.5l2 2M15.5 15.5l2 2M17.5 4.5l-2 2M6.5 15.5l-2 2"/></svg>',
+  bell: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 2v2M5 9a6 6 0 1112 0c0 4 2 6 2 6H3s2-2 2-6M9 17a2 2 0 004 0"/></svg>',
+  chart: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 19h16M6 16V9M10 16V5M14 16v-7M18 16v-4"/></svg>',
+  calendar: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="16" height="14" rx="2"/><path d="M3 9h16M7 3v4M15 3v4"/></svg>',
+  trophy: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 3h8v5a4 4 0 11-8 0V3zM7 5H4v2a3 3 0 003 3M15 5h3v2a3 3 0 01-3 3M9 13h4M8 17h6M11 13v4"/></svg>',
+  crown: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7l3 8h10l3-8-4 4-4-6-4 6-4-4zM6 17h10"/></svg>',
+  camera: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="18" height="13" rx="2"/><circle cx="11" cy="12" r="3.5"/><path d="M8 6l1-2h4l1 2"/></svg>',
+  download: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 3v11M7 10l4 4 4-4M3 19h16"/></svg>',
+  search: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="6"/><path d="M15 15l4 4"/></svg>',
+  location: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 2a7 7 0 00-7 7c0 5 7 11 7 11s7-6 7-11a7 7 0 00-7-7z"/><circle cx="11" cy="9" r="2.5"/></svg>',
+  home: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11l8-7 8 7M5 10v8h12v-8"/></svg>',
+  compass: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><path d="M14 8l-2 5-4 1 2-5 4-1z"/></svg>',
+  palette: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 2a9 9 0 100 18c1.5 0 2-1 2-2s-.5-2-1-2 0-2 1-2h2a5 5 0 005-5c0-5-4-7-9-7z"/><circle cx="7" cy="10" r="1" fill="currentColor"/><circle cx="10" cy="6" r="1" fill="currentColor"/><circle cx="15" cy="7" r="1" fill="currentColor"/><circle cx="17" cy="12" r="1" fill="currentColor"/></svg>',
+  info: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><path d="M11 10v5M11 7h.01"/></svg>',
+  help: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><path d="M9 9a2 2 0 014 0c0 1.5-2 2-2 3M11 15h.01"/></svg>',
+  edit: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 4l4 4M3 17l4-4 7-7 4 4-7 7-4 4H3v-4z"/></svg>',
+  trash: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h14M9 6V4h4v2M6 6l1 13h8l1-13M9 10v5M13 10v5"/></svg>',
+  heart: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 18C5 14 3 11 3 7a4 4 0 018-1 4 4 0 018 1c0 4-2 7-8 11z"/></svg>',
+  comment: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5h16v10H8l-5 4V5z"/></svg>',
+  send: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11l16-7-7 16-2-7-7-2z"/></svg>',
+  moon: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 13a8 8 0 11-10-10 6 6 0 0010 10z"/></svg>',
+  rain: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 8a4 4 0 018-1 4 4 0 013 7H6a4 4 0 01-1-6zM7 14l-1 4M11 14l-1 4M15 14l-1 4"/></svg>',
+  sun: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="4"/><path d="M11 2v3M11 17v3M2 11h3M17 11h3M4.5 4.5l2 2M15.5 15.5l2 2M17.5 4.5l-2 2M6.5 15.5l-2 2"/></svg>',
+  sparkle: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 3l1.5 5 5 1.5-5 1.5L11 16l-1.5-5-5-1.5 5-1.5L11 3zM17 14l.5 2 2 .5-2 .5-.5 2-.5-2-2-.5 2-.5.5-2z"/></svg>',
+  fire: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 2c0 4-4 5-4 9a4 4 0 008 0c0-2-1-3-1-5 0 2-2 2-2 0 0-2 1-3-1-4z"/></svg>',
+  gift: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="8" width="16" height="11" rx="1"/><path d="M3 12h16M11 8v11M11 8s-2-4-4-3 1 3 4 3zM11 8s2-4 4-3-1 3-4 3z"/></svg>',
+  leaf: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 18s2-12 14-14c0 0 2 12-14 14zM6 16l8-8"/></svg>',
+  coffee: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h12v5a5 5 0 01-10 0V8zM16 9h2a3 3 0 010 6h-2M7 4v2M11 3v3M14 4v2"/></svg>',
+  book: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h7a3 3 0 013 3v13a3 3 0 00-3-3H4V4zM18 4h-7a3 3 0 00-3 3v13a3 3 0 013-3h7V4z"/></svg>',
+  music: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 17V5l9-2v11"/><circle cx="7" cy="17" r="2.5"/><circle cx="16" cy="14" r="2.5"/></svg>',
+  plus: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 4v14M4 11h14"/></svg>',
+  star: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 3l2.5 5.5L19 9l-4 4 1 5.5L11 15l-5 3.5 1-5.5-4-4 5.5-.5L11 3z"/></svg>',
+  flag: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3v16M5 4h12l-2 4 2 4H5"/></svg>',
+  zap: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2L4 13h7l-2 7 9-11h-7l2-7z"/></svg>',
+  more: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5" cy="11" r="1.5" fill="currentColor"/><circle cx="11" cy="11" r="1.5" fill="currentColor"/><circle cx="17" cy="11" r="1.5" fill="currentColor"/></svg>',
+  lock: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="14" height="10" rx="2"/><path d="M7 10V7a4 4 0 018 0v3M11 14v2"/></svg>',
+  eye: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 11s3-7 9-7 9 7 9 7-3 7-9 7-9-7-9-7z"/><circle cx="11" cy="11" r="3"/></svg>',
+  link: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 13a3 3 0 004 0l3-3a3 3 0 00-4-4l-1 1M13 9a3 3 0 00-4 0l-3 3a3 3 0 004 4l1-1"/></svg>',
+  mic: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="8" y="3" width="6" height="11" rx="3"/><path d="M5 11a6 6 0 0012 0M11 17v3"/></svg>',
+  filter: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5h16l-6 7v6l-4 2v-8L3 5z"/></svg>',
+  target: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><circle cx="11" cy="11" r="4"/><circle cx="11" cy="11" r="1" fill="currentColor"/></svg>',
+  route: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="2"/><circle cx="16" cy="16" r="2"/><path d="M6 8v6a4 4 0 004 4h2"/></svg>',
+  layers: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 3l8 4-8 4-8-4 8-4zM3 11l8 4 8-4M3 15l8 4 8-4"/></svg>',
+  feather: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 3a8 8 0 01-11 11l-3 3M5 13l7-7M9 9l4-2"/></svg>',
+  shield: '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 2l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V5l8-3z"/></svg>'
+};
+
+/* ============================================================
+   状态管理 + Storage (localStorage 持久化)
+   ============================================================ */
+const Storage = {
+  KEY: 'escape_v17_state',
+  load() {
+    try { const s = JSON.parse(localStorage.getItem(this.KEY) || '{}'); return s; }
+    catch(e) { return {}; }
+  },
+  save() {
+    try { localStorage.setItem(this.KEY, JSON.stringify(appState)); }
+    catch(e) { console.warn('storage save failed', e); }
+  },
+  clear() { localStorage.removeItem(this.KEY); }
+};
+
+const appState = {
+  // 引导与初始化
+  onboarded: false,
+  onboardStep: 0,
+  // 当前模式与指令
+  currentMode: 'smart',
+  currentCommand: null,
+  // 摇骰子次数（每次进入小程序重置为 3，用完弹自定义）
+  rerollCount: 3,
+  rerollMax: 3,
+  // 每日推荐种子（用于随机但防重）
+  dailySeed: 0,
+  lastDailyDate: '',
+  // 收藏夹
+  favorites: [],
+  // 完成记录
+  records: [],
+  // 已解锁徽章
+  unlockedBadges: [],
+  // 当前查看的徽章 / 记录
+  viewingBadgeId: null,
+  viewingRecordId: null,
+  // 执行页步骤状态
+  execSteps: [],
+  execStepsDone: 0,
+  // 出逃准备页 checklist
+  prepItems: [false, false, false, false],
+  // 当前心情记录
+  currentMood: null,
+  moodEntries: [],
+  // 主题
+  themeId: 'default',
+  // 设置
+  settings: {
+    notifications: true,
+    sound: true,
+    haptic: true,
+    autoSave: true,
+    darkMode: false,
+    privacy: 'public'
+  },
+  // 用户信息
+  user: {
+    name: '出逃者',
+    avatar: null,
+    city: '上海',
+    bio: '在城市的缝隙里寻找出口',
+    joinDate: '2024.03.15'
+  },
+  // 连续打卡天数
+  streakDays: 0,
+  lastCompleteDate: '',
+  // 今日完成挑战
+  todayChallenges: [],
+  // 执行中步骤模板（根据当前指令类型选择）
+  currentSteps: [],
+  // 累计统计
+  totalEscapes: 0,
+  totalPhotos: 0,
+  totalDistance: 0,
+  // 当前地图模式
+  mapMode: 'normal',
+  mapFilter: 'all',
+  // 排行榜（模拟）
+  leaderboard: [
+    { name: '林深时见鹿', score: 89, sub: '本月出逃 24 次' },
+    { name: '城市漫游者', score: 76, sub: '本月出逃 21 次' },
+    { name: '夜行诗人', score: 68, sub: '本月出逃 19 次' },
+    { name: '出逃者', score: 42, sub: '本月出逃 12 次', me: true },
+    { name: '微光收集', score: 35, sub: '本月出逃 10 次' },
+    { name: '雨中漫步', score: 28, sub: '本月出逃 8 次' },
+    { name: '颜色猎人', score: 22, sub: '本月出逃 7 次' },
+    { name: '闲逛的人', score: 15, sub: '本月出逃 5 次' }
+  ],
+  // 社区动态（模拟）
+  feed: [
+    { id: 1, user: '林深时见鹿', time: '5分钟前', text: '今天找到了一面爬满常春藤的红砖墙，叶子在风里翻动像无数小手在打招呼。', type: 'color', likes: 28, comments: 6, liked: false, hasImage: true },
+    { id: 2, user: '夜行诗人', time: '32分钟前', text: '深夜便利店门口，一瓶热牛奶配一段路灯的光。城市睡着了，醒着的人都很温柔。', type: 'micro', likes: 56, comments: 12, liked: true, hasImage: true },
+    { id: 3, user: '颜色猎人', time: '2小时前', text: '今天的颜色是「褪色的招牌蓝」。它在巷子深处，被时间打磨得只剩轮廓，但比新的更动人。', type: 'color', likes: 41, comments: 8, liked: false, hasImage: true },
+    { id: 4, user: '微光收集', time: '4小时前', text: '闭上眼听了三分钟：风、远处汽车、孩子的笑声、自己的呼吸。原来安静也有颜色。', type: 'sense', likes: 33, comments: 5, liked: false, hasImage: false },
+    { id: 5, user: '雨中漫步', time: '昨天 19:42', text: '雨后的水洼里倒映着整条街，我蹲下来拍了好久。原来低头也能看见天空。', type: 'collect', likes: 72, comments: 15, liked: false, hasImage: true }
+  ],
+  // 合作伙伴（模拟）
+  partners: [
+    { id: 1, name: '阿茶', sub: '一起出逃 7 次', type: 'close' },
+    { id: 2, name: '远山', sub: '一起出逃 3 次', type: 'friend' },
+    { id: 3, name: '小满', sub: '一起出逃 1 次', type: 'friend' }
+  ],
+  // 每日推荐（基于种子）
+  dailyCommands: []
+};
+
+// 初始化时从 localStorage 读取
+function initState() {
+  const saved = Storage.load();
+  if (saved && saved.onboarded) {
+    Object.assign(appState, saved);
+    // 重置每日推荐种子（不同日期不同种子）
+    const today = new Date().toDateString();
+    if (appState.lastDailyDate !== today) {
+      appState.lastDailyDate = today;
+      appState.dailySeed = Math.floor(Math.random() * 10000);
+      appState.rerollCount = appState.rerollMax; // 新一天重置摇骰次数
+      appState.todayChallenges = [];
+      Storage.save();
+    }
+    // 生成每日推荐
+    if (!appState.dailyCommands || appState.dailyCommands.length === 0) {
+      appState.dailyCommands = pickDailyCommands();
+    }
+  } else {
+    appState.dailySeed = Math.floor(Math.random() * 10000);
+    appState.lastDailyDate = new Date().toDateString();
+    appState.dailyCommands = pickDailyCommands();
+  }
+}
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+const $ = (sel, parent = document) => parent.querySelector(sel);
+const $$ = (sel, parent = document) => Array.from(parent.querySelectorAll(sel));
+const h = (tag, props = {}, children = []) => {
+  const el = document.createElement(tag);
+  Object.entries(props).forEach(([k, v]) => {
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === 'data') Object.entries(v).forEach(([dk, dv]) => el.dataset[dk] = dv);
+    else el.setAttribute(k, v);
+  });
+  (Array.isArray(children) ? children : [children]).forEach(c => {
+    if (c == null) return;
+    el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  });
+  return el;
+};
+const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const seedShuffle = (arr, seed) => {
+  const a = arr.slice();
+  let s = seed;
+  for (let i = a.length - 1; i > 0; i--) {
+    s = (s * 9301 + 49297) % 233280;
+    const j = Math.floor((s / 233280) * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+const pickDailyCommands = () => {
+  const shuffled = seedShuffle(COMMANDS, appState.dailySeed);
+  return shuffled.slice(0, 6);
+};
+const findCommand = (id) => COMMANDS.find(c => c.id === id) || appState.dailyCommands.find(c => c.id === id);
+const getMode = (id) => MODE_LIST.find(m => m.id === id);
+const getBadge = (id) => BADGES.find(b => b.id === id);
+const getMood = (id) => MOODS.find(m => m.id === id);
+const getChallenge = (id) => CHALLENGES.find(c => c.id === id);
+const getTheme = (id) => THEMES.find(t => t.id === id);
+const formatDate = (d) => {
+  const date = new Date(d);
+  const m = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${date.getFullYear()}.${m}.${day}`;
+};
+const formatRelative = (d) => {
+  const diff = Date.now() - new Date(d).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 60) return `${min || 1}分钟前`;
+  if (min < 1440) return `${Math.floor(min / 60)}小时前`;
+  const days = Math.floor(min / 1440);
+  if (days < 7) return `${days}天前`;
+  return formatDate(d);
+};
+const showToast = (msg, duration = 2000) => {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), duration);
+};
+const showLoading = (text = '生成中...') => {
+  $('#loadingText').textContent = text;
+  $('#loading').classList.add('show');
+};
+const hideLoading = () => $('#loading').classList.remove('show');
+const vibrate = (pattern = 10) => { if (navigator.vibrate && appState.settings.haptic) navigator.vibrate(pattern); };
+
+// 根据 type 返回步骤模板
+const getStepsForCommand = (cmd) => {
+  if (!cmd) return [];
+  if (cmd.type === 'custom' || cmd.id?.startsWith('custom')) return TYPE_STEPS.custom;
+  return TYPE_STEPS[cmd.type] || TYPE_STEPS.custom;
+};
+
+// 根据模式过滤指令池
+const filterCommandsByMode = (modeId) => {
+  const mode = SHEET_MODES.find(m => m.id === modeId);
+  if (!mode) return COMMANDS;
+  return COMMANDS.filter(mode.filter);
+};
+
+// 摇骰子随机指令（避免与每日推荐重复）
+const rollCommand = (modeId) => {
+  const pool = filterCommandsByMode(modeId);
+  const available = pool.filter(c => !appState.dailyCommands.slice(0, 3).some(d => d.id === c.id));
+  return pickRandom(available.length ? available : pool);
+};
+
+// 计算连续天数
+const computeStreak = () => {
+  if (!appState.lastCompleteDate) return 0;
+  const last = new Date(appState.lastCompleteDate);
+  const today = new Date();
+  const diff = Math.floor((today.setHours(0,0,0,0) - last.setHours(0,0,0,0)) / 86400000);
+  if (diff === 0) return appState.streakDays;
+  if (diff === 1) return appState.streakDays + 1;
+  return 0; // 中断
+};
+
+/* ============================================================
+   路由系统 (SPA hash router)
+   ============================================================ */
+const ROUTES = {
+  'onboarding': { render: renderOnboarding, tab: null, noTabbar: true },
+  'index': { render: renderIndex, tab: 'index' },
+  'command-detail': { render: renderCommandDetail, tab: 'index' },
+  'executing': { render: renderExecuting, tab: 'index' },
+  'escape-prep': { render: renderEscapePrep, tab: 'index' },
+  'generating': { render: renderGenerating, tab: 'index', noTabbar: true },
+  'map': { render: renderMap, tab: 'map' },
+  'profile': { render: renderProfile, tab: 'profile' },
+  'badges': { render: renderBadges, tab: 'profile' },
+  'badge-detail': { render: renderBadgeDetail, tab: 'profile' },
+  'achievements': { render: renderAchievements, tab: 'profile' },
+  'stats': { render: renderStats, tab: 'profile' },
+  'timeline': { render: renderTimeline, tab: 'profile' },
+  'year-review': { render: renderYearReview, tab: 'profile' },
+  'daily-challenge': { render: renderDailyChallenge, tab: 'profile' },
+  'leaderboard': { render: renderLeaderboard, tab: 'profile' },
+  'records': { render: renderRecords, tab: 'profile' },
+  'record-detail': { render: renderRecordDetail, tab: 'profile' },
+  'photo-edit': { render: renderPhotoEdit, tab: null },
+  'data-export': { render: renderDataExport, tab: 'profile' },
+  'mood-journal': { render: renderMoodJournal, tab: 'profile' },
+  'community': { render: renderCommunity, tab: null },
+  'partner': { render: renderPartner, tab: null },
+  'invite': { render: renderInvite, tab: null },
+  'member': { render: renderMember, tab: 'profile' },
+  'city-select': { render: renderCitySelect, tab: null },
+  'mode-intro': { render: renderModeIntro, tab: null },
+  'theme-market': { render: renderThemeMarket, tab: 'profile' },
+  'about': { render: renderAbout, tab: 'profile' },
+  'help': { render: renderHelp, tab: 'profile' },
+  'settings': { render: renderSettings, tab: 'profile' },
+  'edit-profile': { render: renderEditProfile, tab: null },
+  'escape-rules': { render: renderEscapeRules, tab: null }
+};
+
+function getCurrentRoute() {
+  const hash = location.hash.slice(2) || 'index';
+  return ROUTES[hash] ? hash : 'index';
+}
+
+function navigate(route, params = {}) {
+  if (!ROUTES[route]) route = 'index';
+  // 引导未完成强制走 onboarding
+  if (!appState.onboarded && route !== 'onboarding') {
+    location.hash = '#/onboarding';
+    return;
+  }
+  // 参数挂到 routeParams
+  window._routeParams = params;
+  location.hash = '#/' + route;
+}
+
+function onRouteChange() {
+  const route = getCurrentRoute();
+  const def = ROUTES[route];
+  const app = $('#app');
+  app.innerHTML = '';
+  // 隐藏 tabbar?
+  const phoneFrame = $('.phone-frame');
+  if (def.noTabbar) phoneFrame.classList.add('no-tabbar');
+  else phoneFrame.classList.remove('no-tabbar');
+  // 渲染页面
+  def.render(app);
+  // 同步 tabbar 高亮
+  syncTabBar(def.tab);
+  // 滚动重置
+  setTimeout(() => {
+    const body = $('.page-body');
+    if (body) body.scrollTop = 0;
+  }, 50);
+  // 关闭所有 sheet
+  closeAllSheets();
+  // 保存状态
+  Storage.save();
+}
+
+function syncTabBar(tab) {
+  $$('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.route === tab);
+  });
+  $('#tabbar').style.display = tab ? 'flex' : 'none';
+}
+
+/* ============================================================
+   共享组件渲染
+   ============================================================ */
+function navHeader(title, opts = {}) {
+  const showBack = opts.back !== false;
+  const right = opts.right || '';
+  const transparent = opts.transparent ? 'transparent' : '';
+  const center = opts.center ? 'center' : '';
+  return `<div class="nav-header ${transparent}">
+    ${showBack ? `<button class="nav-back" data-action="back">${I.back}</button>` : '<div style="width:32px;"></div>'}
+    <div class="nav-title ${center}">${title}</div>
+    <div class="nav-right">${right}</div>
+  </div>`;
+}
+
+function pageShell(opts) {
+  const cls = opts.pageClass || '';
+  const hasNav = opts.nav !== false;
+  const navHtml = hasNav ? navHeader(opts.title || '', opts.navOpts || {}) : '';
+  const body = opts.body || '';
+  const bottomSpacer = opts.noSpacer ? '' : '<div class="bottom-spacer"></div>';
+  return `<div class="page page-${opts.name} ${cls} ${hasNav ? 'has-nav' : 'no-nav'} active">
+    ${navHtml}
+    <div class="page-body">${body}${bottomSpacer}</div>
+  </div>`;
+}
+
+function typePill(type) {
+  const meta = TYPE_META[type] || { name: type, color: '#999' };
+  return `<span class="type-pill" style="background:${meta.color}">${meta.name}</span>`;
+}
+
+function cmdCard(cmd, opts = {}) {
+  const meta = TYPE_META[cmd.type] || { name: '自定义', color: '#E07A5F' };
+  const fav = appState.favorites.includes(cmd.id);
+  const mode = getMode(cmd.mode) || { name: '智能', color: '#C8956E' };
+  return `<div class="cmd-card-inline">
+    <button class="icon-btn cmd-close" data-action="close-cmd">${I.close}</button>
+    <button class="icon-btn fav cmd-fav-toggle ${fav ? 'active' : ''}" data-action="toggle-fav" data-id="${cmd.id}">${I.bookmark}</button>
+    <div class="cmd-type-row">${typePill(cmd.type)}</div>
+    <h3 class="cmd-title-lg">${cmd.content}</h3>
+    <div class="cmd-image-wrap">
+      <div class="cmd-image-bg" style="background:linear-gradient(135deg, ${meta.color}22, ${meta.color}08);"></div>
+      <div class="cmd-image-icon" style="color:${meta.color}">${typeIcon(cmd.type)}</div>
+    </div>
+    <div class="cmd-meta">
+      <span class="pill">${I.clock}<span>${cmd.duration || 15}分钟</span></span>
+      <span class="pill" style="background:${mode.color}1a;color:${mode.color};">${modeMetaIcon(cmd.mode)}${mode.name}</span>
+      ${cmd.double ? `<span class="pill" style="background:#9B7BB81a;color:#9B7BB8;">${I.users}双人</span>` : ''}
+    </div>
+    ${cmd.tip ? `<div class="tip-box"><div class="tip-dot">${I.sparkle}</div><div><div class="tip-label">TIP</div><div class="tip-text">${cmd.tip}</div></div></div>` : ''}
+    ${opts.actions !== false ? `<div class="cmd-actions">
+      <button class="btn btn-secondary" data-action="reroll">${I.refresh}换一个</button>
+      <button class="invite-btn" data-action="invite-friend">${I.users}邀请朋友</button>
+    </div>
+    <div class="cmd-actions" style="margin-top:10px;">
+      <button class="btn btn-primary btn-block" data-action="start-escape">${I.flag}接受指令</button>
+    </div>
+    <div class="reroll-hint">今日剩余摇骰次数 ${appState.rerollCount}/${appState.rerollMax}</div>` : ''}
+  </div>`;
+}
+
+function typeIcon(type) {
+  const map = { color: I.palette, walk: I.walk, sense: I.eye, collect: I.bookmark, food: I.coffee, culture: I.book, micro: I.sprout, custom: I.feather };
+  return map[type] || I.compass;
+}
+
+function modeMetaIcon(mode) {
+  const map = { smart: I.sparkle, micro: I.sprout, walk: I.walk, double: I.users, night: I.moon, rainy: I.rain };
+  return map[mode] || I.sparkle;
+}
+
+function dailyCard(cmd) {
+  const meta = TYPE_META[cmd.type] || { name: '自定义', color: '#E07A5F' };
+  return `<div class="daily-card" data-action="view-command" data-id="${cmd.id}">
+    <span class="dc-type" style="background:${meta.color}1a;color:${meta.color};">${meta.name}</span>
+    <div class="daily-title">${cmd.content}</div>
+    <div class="daily-meta">${cmd.duration}分钟 · ${getMode(cmd.mode)?.name || '智能'}</div>
+  </div>`;
+}
+
+function listCard(opts) {
+  const ico = opts.iconBg ? `<div class="list-card-icon" style="background:${opts.iconBg}1a;">${opts.icon || I.compass}</div>` : '';
+  const meta = opts.meta ? `<div class="list-card-meta">${opts.meta}</div>` : '';
+  return `<div class="list-card" data-action="${opts.action || ''}" data-id="${opts.id || ''}">
+    <div class="list-card-row">
+      ${ico}
+      <div class="list-card-body">
+        <div class="list-card-title">${opts.title || ''}</div>
+        <div class="list-card-sub">${opts.sub || ''}</div>
+        ${opts.progress !== undefined ? `<div class="progress-bar"><div class="progress-fill" style="width:${opts.progress}%;"></div></div>` : ''}
+        ${meta}
+      </div>
+      ${opts.right || `<div class="list-card-meta">${I.chevR}</div>`}
+    </div>
+  </div>`;
+}
+
+function badgeSvg(badge, unlocked) {
+  // 用 CSS 渐变+SVG 模拟徽章图形
+  const color = badge.color || '#C8956E';
+  const innerSvg = unlocked ? badgeInnerIcon(badge.id) : I.lock;
+  return `<div class="badge-circle ${unlocked ? 'unlocked' : ''}" style="background: ${unlocked ? `radial-gradient(circle at 30% 30%, ${color}33, ${color}11)` : 'var(--brand-weak)'}; border: ${unlocked ? 'none' : '2px solid var(--line)'};">
+    <div style="color:${unlocked ? color : 'var(--ink-faint)'};">${innerSvg}</div>
+  </div>`;
+}
+
+function badgeInnerIcon(id) {
+  const map = {
+    first_escape: I.sprout, seven_streak: I.fire, thirty_streak: I.trophy,
+    color_hunter: I.palette, market_regular: I.coffee, culture_lover: I.book,
+    night_walker: I.moon, rainy_walker: I.rain, micro_master: I.zap, walk_master: I.walk,
+    double_master: I.users, night_master: I.moon, rainy_master: I.rain,
+    social_master: I.users, collector: I.bookmark, city_detective: I.eye,
+    member_pro: I.crown, explorer: I.compass, challenge_king: I.trophy
+  };
+  return map[id] || I.star;
+}
+
+function modeItemHtml(mode, selected) {
+  return `<div class="mode-item ${selected ? 'selected' : ''}" data-action="select-mode" data-id="${mode.id}">
+    <div class="mode-icon" style="background:${mode.color};">${modeMetaIcon(mode.id)}</div>
+    <div class="mode-text">
+      <div class="mode-name">${mode.name}</div>
+      <div class="mode-desc">${mode.desc}</div>
+    </div>
+    <div class="mode-check"></div>
+  </div>`;
+}
+
+function settingsItem(opts) {
+  if (opts.toggle !== undefined) {
+    return `<div class="settings-item" data-action="${opts.action || ''}" data-id="${opts.id || ''}">
+      <div class="settings-icon">${opts.icon || I.settings}</div>
+      <div class="settings-label">${opts.label}</div>
+      <div class="settings-toggle ${opts.toggle ? 'on' : ''}" data-toggle="${opts.id || ''}"></div>
+    </div>`;
+  }
+  return `<div class="settings-item" data-action="${opts.action || ''}" data-id="${opts.id || ''}">
+    <div class="settings-icon">${opts.icon || I.settings}</div>
+    <div class="settings-label">${opts.label}</div>
+    ${opts.value ? `<div class="settings-arrow" style="font-size:11px;color:var(--ink-soft);margin-right:8px;">${opts.value}</div>` : ''}
+    <div class="settings-arrow">${I.chevR}</div>
+  </div>`;
+}
+
+// Sheet 控制
+function openSheet(id) {
+  $('#' + id).classList.add('show');
+  vibrate(8);
+}
+function closeSheet(id) {
+  $('#' + id).classList.remove('show');
+}
+function closeAllSheets() {
+  $$('.sheet-overlay').forEach(s => s.classList.remove('show'));
+}
+
+// 渲染模式选择 Sheet
+function renderModeSheet() {
+  const list = $('#modeList');
+  list.innerHTML = MODE_LIST.map(m => modeItemHtml(m, m.id === appState.currentMode)).join('');
+}
+
+// 渲染指令详情 Sheet（备用，主要用首页内嵌卡片）
+function renderCmdSheet(cmd) {
+  $('#cmdSheetBody').innerHTML = `<div class="sheet-handle"></div>${cmdCard(cmd, { actions: false })}<div class="cmd-actions" style="margin-top:16px;">
+    <button class="btn btn-ghost" data-action="close-cmd">关闭</button>
+    <button class="btn btn-primary" data-action="start-escape">${I.flag}接受指令</button>
+  </div>`;
+}
+
+// 徽章解锁动画
+function unlockBadge(badgeId) {
+  if (appState.unlockedBadges.includes(badgeId)) return false;
+  appState.unlockedBadges.push(badgeId);
+  const badge = getBadge(badgeId);
+  if (!badge) return false;
+  // 显示解锁动画
+  setTimeout(() => {
+    $('#badgeUnlockTitle').textContent = badge.name;
+    $('#badgeUnlockDesc').textContent = badge.desc;
+    $('#badgeUnlockIcon').innerHTML = `<div style="width:100px;height:100px;border-radius:50%;background:${badge.color};display:flex;align-items:center;justify-content:center;">${badgeInnerIcon(badge.id)}</div>`;
+    $('#badgeOverlay').classList.add('show');
+    vibrate([10, 50, 20]);
+  }, 400);
+  Storage.save();
+  return true;
+}
+
+// TabBar 渲染（已在 HTML 中静态，仅同步 active 状态）
+function renderTabBar() {
+  syncTabBar(null); // 默认隐藏，路由切换时同步
+}
+
+// 设置主题
+function applyTheme(themeId) {
+  const theme = getTheme(themeId) || THEMES[0];
+  Object.entries(theme.vars).forEach(([k, v]) => {
+    document.documentElement.style.setProperty(k, v);
+  });
+  appState.themeId = themeId;
+  Storage.save();
+}
+
+/* ============================================================
+   L1 核心 6 页：onboarding / index / command-detail / executing / escape-prep / generating
+   ============================================================ */
+
+// 1) 引导页
+function renderOnboarding(app) {
+  const steps = [
+    { illust: I.compass, title: '给城市一个随机出口', desc: '当你不知道该做什么，让一颗骰子替你决定今天的方向。' },
+    { illust: I.dice, title: '摇一颗骰子', desc: '从 150+ 条精选指令中随机出一条，颜色、漫步、感官、美食、文化……总有一款适合此刻的你。' },
+    { illust: I.flag, title: '4 步完成出逃', desc: '不靠自律，靠流程。每一步都由你亲自点击完成，从准备到记录，仪式感拉满。' },
+    { illust: I.trophy, title: '收集徽章，留下轨迹', desc: '每一次出逃都被认真记录，连续打卡、类型挑战、深夜出逃……慢慢长成一棵属于你的城市之树。' }
+  ];
+  const step = appState.onboardStep || 0;
+  app.innerHTML = `<div class="page page-onboarding active">
+    <div class="onboard-wrap">
+      <div class="onboard-steps">
+        <div class="onboard-track" style="transform:translateX(-${step * 100}%);">
+          ${steps.map(s => `<div class="onboard-step">
+            <div class="onboard-illust" style="color:var(--brand);">${s.illust}</div>
+            <h2>${s.title}</h2>
+            <p>${s.desc}</p>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="onboard-dots">
+        ${steps.map((_, i) => `<div class="onboard-dot ${i === step ? 'active' : ''}"></div>`).join('')}
+      </div>
+      <button class="onboard-btn" data-action="${step < steps.length - 1 ? 'onboard-next' : 'onboard-finish'}">
+        ${step < steps.length - 1 ? '继续' : '开始出逃'}
+      </button>
+    </div>
+  </div>`;
+}
+
+// 2) 首页
+function renderIndex(app) {
+  const mode = getMode(appState.currentMode);
+  const cmd = appState.currentCommand;
+  const heroPills = `<div class="hero-pills">
+    <span class="pill" style="background:${mode.color}1a;color:${mode.color};border-color:${mode.color}33;">${modeMetaIcon(mode.id)}${mode.name}</span>
+    <span class="pill">${I.location}<span>${appState.user.city}</span></span>
+    <span class="pill">${I.fire}<span>连续 ${appState.streakDays} 天</span></span>
+  </div>`;
+
+  const modeTag = `<div class="mode-tag" data-action="open-mode-sheet">
+    <div class="mode-tag-left">
+      <div class="mode-tag-icon" style="background:${mode.color}1a;">${modeMetaIcon(mode.id)}</div>
+      <div class="mode-tag-text">
+        <div class="mode-tag-name">${mode.name}</div>
+        <div class="mode-tag-desc">${mode.desc}</div>
+      </div>
+    </div>
+    <div class="chev">${I.chevD}</div>
+  </div>`;
+
+  const escapeCard = cmd
+    ? `<div class="escape-card-wrap"><div class="escape-card" data-action="view-command" data-id="${cmd.id}">
+        <div class="dice-wrap">
+          <div class="dice-pulse"></div>
+          <div class="dice-pulse delay"></div>
+          <div class="dice">${I.dice}</div>
+        </div>
+        <div class="escape-title">${cmd.content.length > 18 ? cmd.content.slice(0, 18) + '…' : cmd.content}</div>
+        <div class="escape-sub">点击查看完整指令</div>
+        <div class="escape-counter"><span class="dot"></span>今日剩余 ${appState.rerollCount} 次摇骰</div>
+      </div></div>`
+    : `<div class="escape-card-wrap"><div class="escape-card" data-action="roll-dice">
+        <div class="dice-wrap">
+          <div class="dice-pulse"></div>
+          <div class="dice-pulse delay"></div>
+          <div class="dice" id="diceEl">${I.dice}</div>
+        </div>
+        <div class="escape-title">摇一颗骰子</div>
+        <div class="escape-sub">让随机替你决定今天的方向</div>
+        <div class="escape-counter"><span class="dot"></span>今日剩余 ${appState.rerollCount} 次摇骰</div>
+      </div></div>`;
+
+  const dailyHtml = appState.dailyCommands.map(dailyCard).join('');
+  const collectCount = appState.favorites.length;
+
+  app.innerHTML = pageShell({
+    name: 'index',
+    nav: false,
+    body: `
+      <div class="hero">
+        ${heroPills}
+        <h1 class="hero-title">出逃指令</h1>
+        <div class="hero-sub">今日 · ${new Date().getMonth() + 1}月${new Date().getDate()}日 · ${weekdayZh()}</div>
+      </div>
+      ${modeTag}
+      ${escapeCard}
+      <div class="section-title"><h3>今日推荐</h3><span class="more" data-action="reroll-daily">换一批</span></div>
+      <div class="daily-scroll">${dailyHtml}</div>
+      <div class="collect-entry" data-action="navigate" data-route="records">
+        <div class="collect-entry-ico">${I.bookmark}</div>
+        <div class="collect-entry-text">
+          <div class="collect-entry-title">我的收藏</div>
+          <div class="collect-entry-sub">${collectCount} 条指令 · ${appState.totalEscapes} 次出逃</div>
+        </div>
+        <div class="chev">${I.chevR}</div>
+      </div>
+    `,
+    noSpacer: false
+  });
+}
+
+function weekdayZh() {
+  return ['周日','周一','周二','周三','周四','周五','周六'][new Date().getDay()];
+}
+
+// 3) 指令详情页（备选用 Sheet，主要用首页内嵌卡片）
+function renderCommandDetail(app) {
+  const cmd = appState.currentCommand;
+  if (!cmd) { navigate('index'); return; }
+  app.innerHTML = pageShell({
+    name: 'command-detail',
+    title: '指令详情',
+    body: `<div style="padding:8px 0 0;">${cmdCard(cmd)}</div>`
+  });
+}
+
+// 4) 执行中页
+function renderExecuting(app) {
+  const cmd = appState.currentCommand;
+  if (!cmd) { navigate('index'); return; }
+  if (!appState.execSteps || appState.execSteps.length === 0) {
+    appState.execSteps = getStepsForCommand(cmd).map((text, i) => ({ text, done: false }));
+    appState.execStepsDone = 0;
+  }
+  const stepsHtml = appState.execSteps.map((s, i) => `
+    <div class="step-item ${s.done ? 'done' : ''}" data-action="toggle-step" data-idx="${i}">
+      <div class="step-check">${I.check}</div>
+      <div class="step-text">${s.text}</div>
+      <div class="step-num">0${i + 1}</div>
+    </div>
+  `).join('');
+
+  const allDone = appState.execSteps.every(s => s.done);
+  const finishHtml = `<div class="exec-finish-wrap ${allDone ? 'show' : ''}">
+    <button class="finish-btn" data-action="finish-escape">${I.check}完成出逃</button>
+  </div>`;
+
+  app.innerHTML = pageShell({
+    name: 'executing',
+    title: '执行中',
+    navOpts: { back: false, right: `<button class="icon-btn" data-action="navigate" data-route="escape-prep">${I.help}</button>` },
+    body: `
+      <div style="padding:20px 24px 0;">
+        <div class="exec-cmd-card">
+          ${typePill(cmd.type)}
+          <h3>${cmd.content}</h3>
+        </div>
+        <div class="steps-title">出逃步骤<span class="line"></span><span class="count">${appState.execStepsDone}/${appState.execSteps.length}</span></div>
+        <div class="steps-list">${stepsHtml}</div>
+        ${finishHtml}
+      </div>
+    `
+  });
+}
+
+// 5) 出逃准备页
+function renderEscapePrep(app) {
+  const prepList = [
+    { text: '手机电量充足（>30%）', icon: I.zap },
+    { text: '带上耳机和水', icon: I.coffee },
+    { text: '告知家人/朋友你的大致去向', icon: I.users },
+    { text: '准备一个小袋子装今天的「战利品」', icon: I.bookmark }
+  ];
+  const itemsHtml = prepList.map((p, i) => `
+    <div class="prep-item ${appState.prepItems[i] ? 'done' : ''}" data-action="toggle-prep" data-idx="${i}">
+      <div class="prep-check">${I.check}</div>
+      <div class="prep-text">${p.text}</div>
+      <div style="width:24px;color:var(--brand-dark);">${p.icon}</div>
+    </div>
+  `).join('');
+
+  app.innerHTML = pageShell({
+    name: 'escape-prep',
+    title: '出逃准备',
+    body: `
+      <div style="padding:16px 24px 0;">
+        <div class="tip-box" style="margin-bottom:16px;">
+          <div class="tip-dot">${I.shield}</div>
+          <div>
+            <div class="tip-label">出发前清单</div>
+            <div class="tip-text">出逃不是逃亡，准备充分才能尽兴而归。逐项确认后即可出发。</div>
+          </div>
+        </div>
+      </div>
+      <div class="prep-list">${itemsHtml}</div>
+      <div style="padding:0 24px;">
+        <button class="btn btn-primary btn-block" data-action="navigate" data-route="executing" style="margin-top:8px;">${I.flag}准备就绪，出发</button>
+      </div>
+    `
+  });
+}
+
+// 6) 生成中页
+function renderGenerating(app) {
+  app.innerHTML = `<div class="page page-generating active">
+    <div class="gen-wrap">
+      <div class="gen-orb">${I.dice}</div>
+      <div>
+        <div class="gen-text">正在为你摇一颗骰子…</div>
+        <div class="gen-sub">从 ${COMMANDS.length} 条指令中精挑细选</div>
+      </div>
+    </div>
+  </div>`;
+  // 1.2s 后自动跳到首页显示指令
+  setTimeout(() => {
+    hideLoading();
+    navigate('index');
+  }, 1200);
+}
+
+/* ============================================================
+   L2 导航 7 页：map / profile / badges / badge-detail / achievements / stats / timeline
+   ============================================================ */
+
+// 7) 地图页（普通/卫星/路线三模式）
+function renderMap(app) {
+  const filters = [
+    { id: 'all', name: '全部' },
+    { id: 'color', name: '颜色' },
+    { id: 'walk', name: '漫步' },
+    { id: 'food', name: '美食' },
+    { id: 'culture', name: '文化' },
+    { id: 'sense', name: '感官' }
+  ];
+  const filterHtml = filters.map(f => `<div class="map-filter ${appState.mapFilter === f.id ? 'active' : ''}" data-action="map-filter" data-id="${f.id}">${f.name}</div>`).join('');
+
+  app.innerHTML = pageShell({
+    name: 'map',
+    title: '城市地图',
+    navOpts: { back: false, right: `<button class="icon-btn" data-action="navigate" data-route="city-select">${I.location}</button>` },
+    body: `
+      <div class="map-tabs">
+        <div class="map-tab ${appState.mapMode === 'normal' ? 'active' : ''}" data-action="map-mode" data-id="normal">普通地图</div>
+        <div class="map-tab ${appState.mapMode === 'satellite' ? 'active' : ''}" data-action="map-mode" data-id="satellite">卫星地图</div>
+        <div class="map-tab ${appState.mapMode === 'route' ? 'active' : ''}" data-action="map-mode" data-id="route">路线模式</div>
+      </div>
+      <div class="map-filter-row">${filterHtml}</div>
+      <div class="map-canvas ${appState.mapMode === 'satellite' ? 'satellite' : ''} ${appState.mapMode === 'route' ? 'route' : ''}" id="mapCanvas">
+        <div class="map-grid"></div>
+        <div class="map-roads"></div>
+        <div class="map-river"></div>
+        <div class="map-block b1"></div>
+        <div class="map-block b2"></div>
+        <div class="map-block b3"></div>
+        <div class="map-block b4"></div>
+        <div class="map-pin p1" data-action="view-pin" data-id="p1"></div>
+        <div class="map-pin p2" data-action="view-pin" data-id="p2"></div>
+        <div class="map-pin p3" data-action="view-pin" data-id="p3"></div>
+        <div class="map-pin p4" data-action="view-pin" data-id="p4"></div>
+        <div class="map-pin p5" data-action="view-pin" data-id="p5"></div>
+        <div class="map-pin p6" data-action="view-pin" data-id="p6"></div>
+        <div class="map-pin home" data-action="view-pin" data-id="home"></div>
+        <div class="map-route-line">
+          <svg viewBox="0 0 327 380" preserveAspectRatio="none">
+            <path d="M 160 180 Q 100 150 80 100 T 60 60" stroke="${getCssVar('--brand')}" stroke-width="3" stroke-dasharray="6 4" fill="none"/>
+            <path d="M 160 180 Q 220 200 260 180 T 280 220" stroke="${getCssVar('--accent')}" stroke-width="3" stroke-dasharray="6 4" fill="none"/>
+          </svg>
+        </div>
+        <div class="map-fab-group">
+          <button class="map-fab" data-action="map-locate">${I.location}</button>
+          <button class="map-fab" data-action="map-set-home">${I.home}</button>
+          <button class="map-fab" data-action="map-zoom-in">${I.plus}</button>
+        </div>
+      </div>
+      <div class="map-stats">
+        <div class="map-stat"><div class="num">${appState.totalEscapes}</div><div class="label">出逃次数</div></div>
+        <div class="map-stat"><div class="num">${appState.favorites.length}</div><div class="label">收藏地点</div></div>
+        <div class="map-stat"><div class="num">${(appState.totalDistance / 1000).toFixed(1)}</div><div class="label">公里数</div></div>
+      </div>
+    `
+  });
+}
+
+function getCssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#C8956E';
+}
+
+// 8) 个人页
+function renderProfile(app) {
+  const unlockedCount = appState.unlockedBadges.length;
+  const recentBadges = BADGES.filter(b => appState.unlockedBadges.includes(b.id)).slice(0, 3);
+  const badgePreview = recentBadges.length
+    ? recentBadges.map(b => badgeSvg(b, true)).join('')
+    : `<div style="font-size:12px;color:var(--ink-faint);grid-column:span 3;text-align:center;padding:24px 0;">完成第一次出逃解锁徽章</div>`;
+
+  app.innerHTML = pageShell({
+    name: 'profile',
+    nav: false,
+    body: `
+      <div class="mine-hero">
+        <div class="mine-user">
+          <div class="mine-avatar">${appState.user.avatar ? `<img src="${appState.user.avatar}">` : I.users}</div>
+          <div class="mine-info">
+            <div class="mine-name">${appState.user.name}</div>
+            <div class="mine-streak">${I.fire}已出逃 ${appState.streakDays} 天 · 加入于 ${appState.user.joinDate}</div>
+          </div>
+          <button class="mine-edit-btn" data-action="navigate" data-route="edit-profile">${I.edit}</button>
+        </div>
+      </div>
+      <div class="mine-stats">
+        <div class="mine-stat" data-action="navigate" data-route="records"><div class="num">${appState.totalEscapes}</div><div class="label">出逃</div></div>
+        <div class="mine-stat" data-action="navigate" data-route="badges"><div class="num">${unlockedCount}</div><div class="label">徽章</div></div>
+        <div class="mine-stat" data-action="navigate" data-route="timeline"><div class="num">${appState.records.length}</div><div class="label">记录</div></div>
+      </div>
+      <div class="badge-section">
+        <div class="section-title" style="padding:0;margin-bottom:8px;">
+          <h3 style="font-size:16px;">徽章</h3>
+          <span class="more" data-action="navigate" data-route="badges">查看全部</span>
+        </div>
+        <div class="badge-grid">${badgePreview}</div>
+      </div>
+      <div class="badge-section" style="padding-top:16px;">
+        <div class="section-title" style="padding:0;margin-bottom:8px;">
+          <h3 style="font-size:16px;">更多</h3>
+        </div>
+        <div class="settings-list">
+          ${settingsItem({ label: '每日挑战', icon: I.target, action: 'navigate', id: 'daily-challenge' })}
+          ${settingsItem({ label: '年度回顾', icon: I.calendar, action: 'navigate', id: 'year-review' })}
+          ${settingsItem({ label: '排行榜', icon: I.trophy, action: 'navigate', id: 'leaderboard' })}
+          ${settingsItem({ label: '心情手账', icon: I.heart, action: 'navigate', id: 'mood-journal' })}
+          ${settingsItem({ label: '主题市场', icon: I.palette, action: 'navigate', id: 'theme-market' })}
+          ${settingsItem({ label: '出逃会员', icon: I.crown, action: 'navigate', id: 'member' })}
+          ${settingsItem({ label: '数据导出', icon: I.download, action: 'navigate', id: 'data-export' })}
+          ${settingsItem({ label: '设置', icon: I.settings, action: 'navigate', id: 'settings' })}
+          ${settingsItem({ label: '帮助与反馈', icon: I.help, action: 'navigate', id: 'help' })}
+          ${settingsItem({ label: '关于', icon: I.info, action: 'navigate', id: 'about' })}
+        </div>
+      </div>
+    `
+  });
+}
+
+// 9) 徽章列表页
+function renderBadges(app) {
+  const cats = BADGE_CATEGORIES;
+  const catsHtml = cats.map(cat => {
+    const items = BADGES.filter(b => b.category === cat.id);
+    const itemsHtml = items.map(b => {
+      const unlocked = appState.unlockedBadges.includes(b.id);
+      return `<div class="badge-item ${unlocked ? 'unlocked' : ''}" data-action="view-badge" data-id="${b.id}">
+        ${badgeSvg(b, unlocked)}
+        <div class="badge-name">${b.name}</div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:20px;">
+      <div class="section-title" style="padding:0;margin-bottom:10px;">
+        <h3 style="font-size:15px;">${cat.name}</h3>
+        <span class="more">${items.filter(b => appState.unlockedBadges.includes(b.id)).length}/${items.length}</span>
+      </div>
+      <div class="badge-grid">${itemsHtml}</div>
+    </div>`;
+  }).join('');
+
+  app.innerHTML = pageShell({
+    name: 'badges',
+    title: '徽章',
+    body: `<div class="list-page-body" style="padding-top:16px;">${catsHtml}</div>`
+  });
+}
+
+// 10) 徽章详情页
+function renderBadgeDetail(app) {
+  const id = appState.viewingBadgeId || window._routeParams?.id;
+  const badge = getBadge(id);
+  if (!badge) { navigate('badges'); return; }
+  const unlocked = appState.unlockedBadges.includes(badge.id);
+  app.innerHTML = pageShell({
+    name: 'badge-detail',
+    title: '徽章详情',
+    body: `
+      <div class="badge-detail-hero">
+        <div class="badge-detail-icon">${badgeSvg(badge, unlocked)}</div>
+        <div class="badge-detail-name">${badge.name}</div>
+        <div class="badge-detail-desc">${badge.desc}</div>
+      </div>
+      <div class="badge-detail-section">
+        <h4>${unlocked ? '解锁条件（已达成）' : '解锁条件'}</h4>
+        <div class="condition-box">
+          <p>${badge.desc}</p>
+        </div>
+      </div>
+      <div class="badge-detail-section">
+        <h4>类型</h4>
+        <div class="condition-box">
+          <p>${BADGE_CATEGORIES.find(c => c.id === badge.category)?.name || '特殊'} · 颜色 ${badge.color}</p>
+        </div>
+      </div>
+      ${unlocked ? `<div class="badge-detail-section">
+        <h4>解锁时间</h4>
+        <div class="condition-box"><p>${formatDate(new Date())}</p></div>
+      </div>` : ''}
+    `
+  });
+}
+
+// 11) 成就页（按类型统计进度）
+function renderAchievements(app) {
+  const types = Object.keys(TYPE_META);
+  const stats = types.map(t => {
+    const count = appState.records.filter(r => r.type === t).length;
+    const target = t === 'color' || t === 'sense' ? 10 : 5;
+    return { type: t, count, target, progress: Math.min(100, count / target * 100) };
+  });
+
+  const itemsHtml = stats.map(s => {
+    const meta = TYPE_META[s.type];
+    return listCard({
+      title: meta.name,
+      sub: `已完成 ${s.count} / ${s.target} 次`,
+      progress: s.progress,
+      icon: typeIcon(s.type),
+      iconBg: meta.color,
+      action: 'navigate',
+      id: 'stats'
+    });
+  }).join('');
+
+  app.innerHTML = pageShell({
+    name: 'achievements',
+    title: '成就',
+    body: `<div class="list-page-body" style="padding-top:16px;">
+      <div style="padding:0 24px 16px;font-size:12px;color:var(--ink-soft);">按指令类型统计完成进度，达成目标可解锁对应徽章</div>
+      ${itemsHtml}
+    </div>`
+  });
+}
+
+// 12) 统计页（图表）
+function renderStats(app) {
+  // 模拟最近 7 天数据
+  const days = ['一','二','三','四','五','六','日'];
+  const bars = days.map((d, i) => {
+    const h = [40, 70, 30, 90, 60, 100, 50][i];
+    return `<div class="bar-col"><div class="bar" style="height:${h}%;"></div><div class="bar-label">${d}</div></div>`;
+  }).join('');
+
+  // 类型分布
+  const typeStats = Object.entries(TYPE_META).map(([k, v]) => {
+    const count = appState.records.filter(r => r.type === k).length || [12,8,5,3,7,4,6,2][Object.keys(TYPE_META).indexOf(k)];
+    return { type: k, name: v.name, color: v.color, count };
+  });
+  const total = typeStats.reduce((a, b) => a + b.count, 0) || 1;
+  let acc = 0;
+  const donutSegs = typeStats.map(t => {
+    const start = acc / total * 360;
+    acc += t.count;
+    const end = acc / total * 360;
+    return `<div data-name="${t.name}" data-color="${t.color}" data-start="${start}" data-end="${end}"></div>`;
+  });
+
+  // 热力图（30天）
+  const heatHtml = Array.from({ length: 30 }).map((_, i) => {
+    const level = Math.floor(Math.random() * 5);
+    return `<div class="heat-cell l${level}"></div>`;
+  }).join('');
+
+  app.innerHTML = pageShell({
+    name: 'stats',
+    title: '数据统计',
+    body: `
+      <div style="padding:16px 0 0;">
+        <div class="chart-card">
+          <div class="chart-title">本周出逃次数</div>
+          <div class="bar-chart">${bars}</div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">类型分布</div>
+          <div class="donut-chart">
+            <div class="donut" style="background:conic-gradient(${typeStats.map(t => `${t.color} 0 ${t.count / total * 360}deg`).join(',')});"></div>
+            <div class="donut-legend">
+              ${typeStats.map(t => `<div class="legend-item"><div class="legend-dot" style="background:${t.color};"></div>${t.name} · ${t.count}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">近 30 天活跃度</div>
+          <div class="heatmap">${heatHtml}</div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">总览</div>
+          <div style="display:flex;gap:16px;text-align:center;">
+            <div style="flex:1;"><div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--brand-dark);">${appState.totalEscapes}</div><div style="font-size:11px;color:var(--ink-soft);">总出逃</div></div>
+            <div style="flex:1;"><div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--brand-dark);">${appState.streakDays}</div><div style="font-size:11px;color:var(--ink-soft);">连续天数</div></div>
+            <div style="flex:1;"><div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--brand-dark);">${appState.unlockedBadges.length}</div><div style="font-size:11px;color:var(--ink-soft);">徽章</div></div>
+          </div>
+        </div>
+      </div>
+    `
+  });
+}
+
+// 13) 时间线页
+function renderTimeline(app) {
+  const records = appState.records.length > 0 ? appState.records : [
+    { id: 'demo1', content: '找到一个霓虹灯招牌，等天刚暗它亮起来的那一刻拍一张', type: 'color', date: Date.now() - 86400000 * 1, mood: 'surprise' },
+    { id: 'demo2', content: '不带目的走30分钟，看到感兴趣的就拐进去', type: 'walk', date: Date.now() - 86400000 * 2, mood: 'calm' },
+    { id: 'demo3', content: '深夜去便利店买一瓶啤酒或牛奶，坐在门口慢慢喝', type: 'food', date: Date.now() - 86400000 * 3, mood: 'heal' },
+    { id: 'demo4', content: '闭眼听3分钟，记下听到的5种声音', type: 'sense', date: Date.now() - 86400000 * 5, mood: 'fun' }
+  ];
+  const itemsHtml = records.map(r => {
+    const meta = TYPE_META[r.type] || { color: '#999' };
+    const mood = r.mood ? getMood(r.mood) : null;
+    return `<div class="timeline-item">
+      <div class="timeline-dot" style="background:${meta.color};"></div>
+      <div class="timeline-content">
+        <div class="timeline-date">${formatRelative(r.date)}${mood ? ` · ${mood.emoji}` : ''}</div>
+        <div class="timeline-card" data-action="view-record" data-id="${r.id}">
+          <div style="font-size:10px;color:${meta.color};margin-bottom:4px;">${meta.name || '记录'}</div>
+          <div style="font-size:13px;color:var(--ink);line-height:1.5;">${r.content}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  app.innerHTML = pageShell({
+    name: 'timeline',
+    title: '出逃轨迹',
+    body: `<div class="timeline">${itemsHtml}</div>`
+  });
+}
+
+/* ============================================================
+   L3 成就 8 页：year-review / daily-challenge / leaderboard / records / record-detail / photo-edit / data-export / mood-journal
+   ============================================================ */
+
+// 14) 年度回顾
+function renderYearReview(app) {
+  const year = new Date().getFullYear();
+  const joinDate = appState.user.joinDate || '2024.01.01';
+  const days = Math.max(1, Math.floor((Date.now() - new Date(joinDate.replace(/\./g, '/')).getTime()) / 86400000));
+  app.innerHTML = pageShell({
+    name: 'year-review',
+    title: '年度回顾',
+    body: `
+      <div class="review-hero">
+        <h1>${year}</h1>
+        <p>这是你出逃的第 ${days} 天</p>
+      </div>
+      <div class="review-grid">
+        <div class="review-card"><div class="big-num">${appState.totalEscapes || 42}</div><div class="label">总出逃次数</div></div>
+        <div class="review-card"><div class="big-num">${appState.streakDays || 12}</div><div class="label">最长连续天数</div></div>
+        <div class="review-card"><div class="big-num">${appState.unlockedBadges.length}</div><div class="label">解锁徽章</div></div>
+        <div class="review-card"><div class="big-num">${appState.favorites.length}</div><div class="label">收藏指令</div></div>
+        <div class="review-card"><div class="big-num">${Object.keys(TYPE_META).filter(t => appState.records.some(r => r.type === t)).length || 5}</div><div class="label">探索类型</div></div>
+        <div class="review-card"><div class="big-num">${(appState.totalDistance / 1000).toFixed(1) || '8.5'}</div><div class="label">总公里数</div></div>
+      </div>
+      <div style="padding:0 24px 16px;">
+        <div class="card" style="padding:20px;background:linear-gradient(135deg,var(--brand-tint),var(--brand-weak));">
+          <div style="font-family:var(--serif);font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px;">本年度关键词</div>
+          <div style="font-size:13px;color:var(--ink-soft);line-height:1.7;">「${pickRandom(['安静','色彩','漫游','微光','深夜','雨声','巷子','便利店'])}」是你 ${year} 年最常出现的状态。在城市的缝隙里，你比想象中更会寻找出口。</div>
+        </div>
+      </div>
+    `
+  });
+}
+
+// 15) 每日挑战
+function renderDailyChallenge(app) {
+  const todayChallenge = CHALLENGES[Math.floor(Date.now() / 86400000) % CHALLENGES.length];
+  const progress = appState.todayChallenges.includes(todayChallenge.id) ? 100 : 30;
+  const itemsHtml = CHALLENGES.map(c => {
+    const done = appState.todayChallenges.includes(c.id);
+    const diffStars = '★'.repeat(c.difficulty) + '☆'.repeat(3 - c.difficulty);
+    return `<div class="list-card" style="margin-bottom:8px;">
+      <div class="list-card-row">
+        <div class="list-card-icon" style="background:var(--brand-tint);color:var(--brand-dark);">${I.target}</div>
+        <div class="list-card-body">
+          <div class="list-card-title">${c.title} ${done ? I.checkSimple : ''}</div>
+          <div class="list-card-sub">${c.desc}</div>
+          <div class="list-card-meta">${diffStars} · ${c.rewardDesc}</div>
+        </div>
+        <div style="color:${done ? 'var(--brand)' : 'var(--ink-faint)'};">${done ? I.check : I.chevR}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  app.innerHTML = pageShell({
+    name: 'daily-challenge',
+    title: '每日挑战',
+    body: `
+      <div style="padding:16px 0 0;">
+        <div class="challenge-hero">
+          <div class="tag">TODAY'S CHALLENGE</div>
+          <h2>${todayChallenge.title}</h2>
+          <p>${todayChallenge.desc}</p>
+          <div class="challenge-progress">
+            <div class="challenge-progress-bar"><div class="challenge-progress-fill" style="width:${progress}%;"></div></div>
+          </div>
+          <div class="challenge-reward">${todayChallenge.rewardDesc}</div>
+        </div>
+        <div class="section-title" style="margin-top:16px;"><h3 style="font-size:16px;">所有挑战</h3><span class="more">${appState.todayChallenges.length}/${CHALLENGES.length}</span></div>
+        <div style="padding:0 0 16px;">${itemsHtml}</div>
+      </div>
+    `
+  });
+}
+
+// 16) 排行榜
+function renderLeaderboard(app) {
+  const items = appState.leaderboard;
+  const itemsHtml = items.map((u, i) => {
+    const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+    const meClass = u.me ? 'me' : '';
+    return `<div class="rank-item ${rankClass} ${meClass}">
+      <div class="rank-num">${i + 1}</div>
+      <div class="rank-avatar">${I.users}</div>
+      <div class="rank-info">
+        <div class="rank-name">${u.name}${u.me ? '（我）' : ''}</div>
+        <div class="rank-sub">${u.sub}</div>
+      </div>
+      <div class="rank-score">${u.score}</div>
+    </div>`;
+  }).join('');
+
+  app.innerHTML = pageShell({
+    name: 'leaderboard',
+    title: '本月排行',
+    body: `<div class="rank-list">${itemsHtml}</div>`
+  });
+}
+
+// 17) 记录列表
+function renderRecords(app) {
+  const records = appState.records.length > 0 ? appState.records : [
+    { id: 'demo1', content: '找到一个霓虹灯招牌，等天刚暗它亮起来的那一刻拍一张', type: 'color', date: Date.now() - 86400000 * 1 },
+    { id: 'demo2', content: '不带目的走30分钟，看到感兴趣的就拐进去', type: 'walk', date: Date.now() - 86400000 * 2 },
+    { id: 'demo3', content: '深夜去便利店买一瓶啤酒或牛奶，坐在门口慢慢喝', type: 'food', date: Date.now() - 86400000 * 3 },
+    { id: 'demo4', content: '闭眼听3分钟，记下听到的5种声音', type: 'sense', date: Date.now() - 86400000 * 5 },
+    { id: 'demo5', content: '找一面有涂鸦或斑驳痕迹的墙，在前面拍一张影子', type: 'color', date: Date.now() - 86400000 * 7 }
+  ];
+  const itemsHtml = records.map(r => {
+    const meta = TYPE_META[r.type] || { color: '#999', name: '记录' };
+    return `<div class="record-item" data-action="view-record" data-id="${r.id}">
+      <div class="record-thumb" style="background:${meta.color};">${typeIcon(r.type)}</div>
+      <div class="record-body">
+        <div class="record-title">${r.content}</div>
+        <div class="record-meta">
+          <span>${meta.name}</span><span>·</span><span>${formatRelative(r.date)}</span>
+        </div>
+      </div>
+      <div style="color:var(--ink-faint);">${I.chevR}</div>
+    </div>`;
+  }).join('');
+
+  app.innerHTML = pageShell({
+    name: 'records',
+    title: '出逃记录',
+    body: `<div class="list-page-body" style="padding-top:16px;">${itemsHtml}</div>`
+  });
+}
+
+// 18) 记录详情页
+function renderRecordDetail(app) {
+  const id = appState.viewingRecordId || window._routeParams?.id;
+  const records = appState.records.length > 0 ? appState.records : [
+    { id: 'demo1', content: '找到一个霓虹灯招牌，等天刚暗它亮起来的那一刻拍一张', type: 'color', date: Date.now() - 86400000 * 1, note: '招牌亮起来的那一秒，整条街突然有了主角。', mood: 'surprise' }
+  ];
+  const r = records.find(x => x.id === id) || records[0];
+  if (!r) { navigate('records'); return; }
+  const meta = TYPE_META[r.type] || { color: '#999', name: '记录' };
+  const mood = r.mood ? getMood(r.mood) : null;
+  app.innerHTML = pageShell({
+    name: 'record-detail',
+    title: '记录详情',
+    body: `
+      <div class="record-detail-hero">
+        <div class="record-detail-card">
+          <div class="record-detail-img">${typeIcon(r.type)}</div>
+          <div class="record-detail-title">${r.content}</div>
+          <div class="record-detail-meta">
+            <span class="pill" style="background:${meta.color}1a;color:${meta.color};">${meta.name}</span>
+            ${mood ? `<span class="pill" style="background:${mood.color}1a;color:${mood.color};">${mood.emoji}${mood.name}</span>` : ''}
+            <span class="pill">${I.clock}${formatRelative(r.date)}</span>
+          </div>
+          ${r.note ? `<div class="record-detail-note">
+            <div class="record-detail-note-label">我的笔记</div>
+            <div class="record-detail-note-text">${r.note}</div>
+          </div>` : ''}
+          <div class="cmd-actions" style="margin-top:16px;">
+            <button class="btn btn-secondary" data-action="navigate" data-route="photo-edit">${I.camera}编辑照片</button>
+            <button class="btn btn-primary" data-action="navigate" data-route="data-export">${I.download}导出</button>
+          </div>
+        </div>
+      </div>
+    `
+  });
+}
+
+// 19) 照片编辑页
+function renderPhotoEdit(app) {
+  const filters = [
+    { id: 'orig', name: '原图' },
+    { id: 'warm', name: '暖棕' },
+    { id: 'cool', name: '冷调' },
+    { id: 'bw', name: '黑白' },
+    { id: 'vintage', name: '复古' },
+    { id: 'fade', name: '褪色' }
+  ];
+  const filtersHtml = filters.map((f, i) => `<div class="filter-item ${i === 0 ? 'active' : ''}" data-action="select-filter" data-id="${f.id}">
+    <div class="filter-thumb" style="background:linear-gradient(135deg, var(--brand-tint), ${['var(--accent-warm)','#5B8FB9','#888','#D98A5C','#A8ADB5'][i]});"></div>
+    <div class="filter-name">${f.name}</div>
+  </div>`).join('');
+
+  app.innerHTML = pageShell({
+    name: 'photo-edit',
+    title: '编辑照片',
+    body: `
+      <div style="padding:16px 24px 0;">
+        <div class="photo-preview">${I.camera}</div>
+        <div style="margin-bottom:8px;font-family:var(--serif);font-size:14px;font-weight:700;color:var(--ink);">滤镜</div>
+        <div class="filter-row">${filtersHtml}</div>
+        <div style="margin:20px 0 8px;font-family:var(--serif);font-size:14px;font-weight:700;color:var(--ink);">写一句话</div>
+        <textarea placeholder="此刻的感受..." style="width:100%;border:1px solid var(--line-strong);border-radius:var(--r-card);padding:12px;font-size:14px;font-family:var(--sans);resize:none;outline:none;min-height:80px;"></textarea>
+        <button class="btn btn-primary btn-block" data-action="save-photo" style="margin-top:16px;">${I.check}保存到记录</button>
+      </div>
+    `
+  });
+}
+
+// 20) 数据导出页
+function renderDataExport(app) {
+  const exportData = {
+    user: appState.user,
+    totalEscapes: appState.totalEscapes,
+    streakDays: appState.streakDays,
+    favorites: appState.favorites,
+    records: appState.records.length,
+    unlockedBadges: appState.unlockedBadges,
+    theme: appState.themeId,
+    exportDate: new Date().toISOString()
+  };
+  app.innerHTML = pageShell({
+    name: 'data-export',
+    title: '数据导出',
+    body: `
+      <div class="export-card">
+        <div style="font-family:var(--serif);font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px;">你的出逃数据</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:16px;line-height:1.6;">包含 ${appState.records.length} 条记录、${appState.favorites.length} 个收藏、${appState.unlockedBadges.length} 个徽章</div>
+        <div class="export-preview">${JSON.stringify(exportData, null, 2)}</div>
+        <button class="btn btn-primary btn-block" data-action="copy-data">${I.download}复制到剪贴板</button>
+        <button class="btn btn-ghost btn-block" data-action="clear-data" style="margin-top:8px;color:var(--accent);">${I.trash}清空所有数据</button>
+      </div>
+    `
+  });
+}
+
+// 21) 心情手账页
+function renderMoodJournal(app) {
+  const entries = appState.moodEntries.length > 0 ? appState.moodEntries : [
+    { id: 1, mood: 'happy', text: '今天阳光特别好，找到一个爬满常春藤的红砖墙。', date: Date.now() - 86400000 * 1 },
+    { id: 2, mood: 'calm', text: '闭眼听了三分钟风声，原来安静也有颜色。', date: Date.now() - 86400000 * 2 },
+    { id: 3, mood: 'surprise', text: '霓虹灯亮起来的那一秒，整条街突然有了主角。', date: Date.now() - 86400000 * 3 }
+  ];
+  const moodsHtml = MOODS.map(m => `<div class="mood-item ${appState.currentMood === m.id ? 'active' : ''}" data-action="select-mood" data-id="${m.id}">
+    <div class="mood-emoji" style="background:${m.color}1a;">${m.emoji}</div>
+    <div class="mood-label">${m.name}</div>
+  </div>`).join('');
+  const entriesHtml = entries.map(e => {
+    const m = getMood(e.mood);
+    return `<div class="mood-entry">
+      <div class="mood-entry-head">
+        <div class="mood-entry-emoji" style="background:${m.color}1a;">${m.emoji}</div>
+        <div class="mood-entry-date">${formatRelative(e.date)}</div>
+      </div>
+      <div class="mood-entry-text">${e.text}</div>
+    </div>`;
+  }).join('');
+
+  app.innerHTML = pageShell({
+    name: 'mood-journal',
+    title: '心情手账',
+    body: `
+      <div style="padding:16px 0 0;">
+        <div style="padding:0 24px 12px;font-size:12px;color:var(--ink-soft);">记录此刻的感受</div>
+        <div class="mood-grid">${moodsHtml}</div>
+        ${appState.currentMood ? `<div style="padding:0 24px 16px;">
+          <textarea id="moodInput" placeholder="今天出逃的感受..." style="width:100%;border:1px solid var(--line-strong);border-radius:var(--r-card);padding:12px;font-size:14px;font-family:var(--sans);resize:none;outline:none;min-height:80px;"></textarea>
+          <button class="btn btn-primary btn-block" data-action="save-mood" style="margin-top:8px;">${I.check}保存心情</button>
+        </div>` : ''}
+        <div class="section-title"><h3 style="font-size:16px;">历史心情</h3></div>
+        ${entriesHtml}
+      </div>
+    `
+  });
+}
+
+/* ============================================================
+   L4 社交 5 页：community / partner / invite / member / city-select
+   ============================================================ */
+
+// 22) 社区动态页
+function renderCommunity(app) {
+  const itemsHtml = appState.feed.map(f => {
+    const meta = TYPE_META[f.type] || { color: '#999', name: '记录' };
+    return `<div class="feed-card">
+      <div class="feed-user">
+        <div class="feed-avatar"></div>
+        <div>
+          <div class="feed-name">${f.user}</div>
+          <div class="feed-time">${f.time}</div>
+        </div>
+      </div>
+      <div class="feed-text">${f.text}</div>
+      ${f.hasImage ? `<div class="feed-img">${typeIcon(f.type)}</div>` : ''}
+      <div class="feed-actions">
+        <div class="feed-action ${f.liked ? 'liked' : ''}" data-action="like-feed" data-id="${f.id}">${I.heart}<span>${f.likes}</span></div>
+        <div class="feed-action" data-action="comment-feed">${I.comment}<span>${f.comments}</span></div>
+        <div class="feed-action" data-action="share-feed">${I.send}<span>分享</span></div>
+      </div>
+    </div>`;
+  }).join('');
+  app.innerHTML = pageShell({
+    name: 'community',
+    title: '出逃社区',
+    navOpts: { right: `<button class="icon-btn" data-action="show-toast" data-msg="暂未开放发布">${I.plus}</button>` },
+    body: `<div class="feed-list">${itemsHtml}</div>`
+  });
+}
+
+// 23) 双人合作伙伴页
+function renderPartner(app) {
+  const itemsHtml = appState.partners.map(p => {
+    return `<div class="partner-card">
+      <div class="partner-avatar">${I.users}</div>
+      <div class="partner-info">
+        <div class="partner-name">${p.name}</div>
+        <div class="partner-sub">${p.sub}</div>
+      </div>
+      <button class="btn btn-sm btn-secondary" data-action="invite-partner" data-id="${p.id}">邀请</button>
+    </div>`;
+  }).join('');
+  app.innerHTML = pageShell({
+    name: 'partner',
+    title: '出逃搭子',
+    body: `
+      <div style="padding:16px 24px 0;">
+        <div class="tip-box" style="margin-bottom:16px;">
+          <div class="tip-dot">${I.users}</div>
+          <div>
+            <div class="tip-label">双人出逃</div>
+            <div class="tip-text">邀请一个朋友一起出逃，让默契在城市里慢慢长出来。</div>
+          </div>
+        </div>
+      </div>
+      ${itemsHtml}
+      <div style="padding:16px 24px;">
+        <button class="btn btn-primary btn-block" data-action="navigate" data-route="invite">${I.plus}邀请新搭子</button>
+      </div>
+    `
+  });
+}
+
+// 24) 邀请页
+function renderInvite(app) {
+  const nickname = appState.user.name || 'X';
+  const code = 'ESC' + (nickname.charCodeAt(0) || 88) + '0427';
+  app.innerHTML = pageShell({
+    name: 'invite',
+    title: '邀请朋友',
+    body: `
+      <div class="invite-card">
+        <h2>邀请朋友一起出逃</h2>
+        <p>城市太大，一个人会迷路。两个人一起，迷路也是冒险。</p>
+        <div class="qr-placeholder">${I.dice}</div>
+        <div class="invite-code">${code}</div>
+        <div style="font-size:11px;opacity:0.7;margin-bottom:16px;">扫描二维码或输入邀请码</div>
+        <button class="btn btn-block" style="background:rgba(255,255,255,0.2);color:#fff;" data-action="copy-code" data-code="${code}">${I.link}复制邀请码</button>
+      </div>
+      <div style="padding:0 24px;">
+        <div class="card" style="margin-bottom:12px;">
+          <div style="font-family:var(--serif);font-weight:700;font-size:14px;color:var(--ink);margin-bottom:8px;">邀请奖励</div>
+          <div style="font-size:12px;color:var(--ink-soft);line-height:1.7;">• 邀请 1 位朋友注册：解锁「社交达人」徽章进度 +3<br>• 邀请 3 位朋友完成双人出逃：解锁完整「社交达人」徽章<br>• 邀请 5 位朋友：解锁专属主题「黄昏暖橙」</div>
+        </div>
+      </div>
+    `
+  });
+}
+
+// 25) 会员页
+function renderMember(app) {
+  const benefits = [
+    { icon: I.dice, title: '无限摇骰', sub: '不再受每日 3 次限制' },
+    { icon: I.palette, title: '专属主题', sub: '解锁所有付费主题包' },
+    { icon: I.bookmark, title: '云端收藏', sub: '收藏永不丢失，跨设备同步' },
+    { icon: I.chart, title: '深度统计', sub: '解锁年度报告与维度分析' },
+    { icon: I.crown, title: '专属徽章', sub: '会员专属身份徽章' },
+    { icon: I.feather, title: '优先体验', sub: '新功能优先内测资格' }
+  ];
+  const itemsHtml = benefits.map(b => `<div class="member-benefit">
+    <div class="member-benefit-ico">${b.icon}</div>
+    <div class="member-benefit-text">
+      <div class="member-benefit-title">${b.title}</div>
+      <div class="member-benefit-sub">${b.sub}</div>
+    </div>
+    ${I.check}
+  </div>`).join('');
+  app.innerHTML = pageShell({
+    name: 'member',
+    title: '出逃会员',
+    body: `
+      <div class="member-hero">
+        <div class="crown" style="color:var(--gold);">${I.crown}</div>
+        <h2>出逃会员</h2>
+        <p>解锁完整出逃体验</p>
+      </div>
+      <div style="padding:24px 0 0;">${itemsHtml}</div>
+      <div style="padding:24px;">
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-block btn-secondary" data-action="show-toast" data-msg="会员功能开发中">月卡 ¥9/月</button>
+          <button class="btn btn-block btn-primary" data-action="show-toast" data-msg="会员功能开发中">年卡 ¥88/年</button>
+        </div>
+        <div style="text-align:center;font-size:11px;color:var(--ink-faint);margin-top:12px;">支付即视为同意《出逃会员协议》</div>
+      </div>
+    `
+  });
+}
+
+// 26) 城市选择页
+function renderCitySelect(app) {
+  const cities = ['北京','上海','广州','深圳','杭州','成都','重庆','西安','武汉','南京','苏州','长沙','青岛','厦门','天津'];
+  const itemsHtml = cities.map(c => {
+    const active = c === appState.user.city;
+    return `<div class="city-item" data-action="select-city" data-id="${c}">
+      <div class="city-name ${active ? 'active' : ''}">${c}</div>
+      ${active ? `<div class="city-check">${I.check}</div>` : ''}
+    </div>`;
+  }).join('');
+  app.innerHTML = pageShell({
+    name: 'city-select',
+    title: '选择城市',
+    body: `
+      <div class="search-bar">${I.search}<input placeholder="搜索城市..." id="citySearch"/></div>
+      <div class="city-list">${itemsHtml}</div>
+    `
+  });
+}
+
+/* ============================================================
+   L5 工具 10 页：mode-intro / theme-market / about / help / settings / edit-profile / escape-rules
+   （+ records-list 已包含在 L3 中，本节涵盖其余工具页）
+   ============================================================ */
+
+// 27) 模式介绍页
+function renderModeIntro(app) {
+  const itemsHtml = MODE_LIST.map(m => `<div class="mode-intro-card">
+    <div class="mode-intro-ico" style="background:${m.color};">${modeMetaIcon(m.id)}</div>
+    <div class="mode-intro-body">
+      <div class="mode-intro-name">${m.name}</div>
+      <div class="mode-intro-desc">${m.desc}</div>
+    </div>
+  </div>`).join('');
+  app.innerHTML = pageShell({
+    name: 'mode-intro',
+    title: '出逃模式',
+    body: `<div style="padding:16px 0 0;">
+      <div style="padding:0 24px 16px;font-size:12px;color:var(--ink-soft);line-height:1.7;">不同的出逃模式适配不同的心境与时间。选择适合自己的模式，让出逃更有节奏。</div>
+      ${itemsHtml}
+    </div>`
+  });
+}
+
+// 28) 主题市场
+function renderThemeMarket(app) {
+  const itemsHtml = THEMES.map(t => {
+    const active = t.id === appState.themeId;
+    return `<div class="theme-card" data-action="select-theme" data-id="${t.id}">
+      <div class="theme-preview" style="background:linear-gradient(135deg, ${t.preview}, ${t.vars['--brand-dark'] || t.preview});"></div>
+      <div class="theme-info">
+        <div class="theme-name">${t.name} ${active ? I.checkSimple : ''}</div>
+        <div class="theme-desc">${t.desc}</div>
+      </div>
+      ${active ? `<div style="color:var(--brand);">${I.check}</div>` : `<button class="btn btn-sm btn-secondary">应用</button>`}
+    </div>`;
+  }).join('');
+  app.innerHTML = pageShell({
+    name: 'theme-market',
+    title: '主题市场',
+    body: `<div style="padding:16px 0 0;">${itemsHtml}
+      <div style="padding:24px;">
+        <div class="card" style="background:linear-gradient(135deg,var(--brand-tint),var(--brand-weak));">
+          <div style="font-family:var(--serif);font-weight:700;font-size:14px;color:var(--ink);margin-bottom:6px;">更多主题敬请期待</div>
+          <div style="font-size:12px;color:var(--ink-soft);line-height:1.6;">我们正在精心打磨更多主题包，每个主题都有独特的故事和配色。</div>
+        </div>
+      </div>
+    </div>`
+  });
+}
+
+// 29) 关于页
+function renderAbout(app) {
+  app.innerHTML = pageShell({
+    name: 'about',
+    title: '关于',
+    navOpts: { transparent: true },
+    body: `
+      <div class="about-hero">
+        <div class="about-logo" style="color:var(--brand);">${I.compass}</div>
+        <div class="about-name">出逃指令</div>
+        <div class="about-ver">v1.7.0 · 完整 Demo</div>
+        <div class="about-desc">当你不知道该做什么的时候，让一颗骰子替你决定今天的方向。这是给城市生活者的随机出口，给日常一点被惊喜撞到的可能。</div>
+      </div>
+      <div style="padding:0 0 16px;">
+        ${settingsItem({ label: '版本号', icon: I.info, value: '1.7.0' })}
+        ${settingsItem({ label: '更新日志', icon: I.calendar, action: 'show-toast', id: 'log' })}
+        ${settingsItem({ label: '用户协议', icon: I.shield, action: 'show-toast', id: 'agreement' })}
+        ${settingsItem({ label: '隐私政策', icon: I.lock, action: 'show-toast', id: 'privacy' })}
+        ${settingsItem({ label: '开源许可', icon: I.book, action: 'show-toast', id: 'license' })}
+        ${settingsItem({ label: '联系我们', icon: I.send, value: 'hi@escape.app' })}
+      </div>
+    `
+  });
+}
+
+// 30) 帮助与反馈页
+function renderHelp(app) {
+  const faqs = [
+    { q: '什么是出逃指令？', a: '出逃指令是一个让你「按随机指令完成一次小冒险」的工具。当你不知道该做什么，让骰子替你决定方向。' },
+    { q: '摇骰次数用完了怎么办？', a: '每天 3 次免费摇骰机会，用完后可以填写自定义任务生成专属指令，或等待第二天刷新。' },
+    { q: '徽章如何解锁？', a: '完成对应的条件即可自动解锁徽章，如完成第一次出逃、连续 7 天打卡、完成 10 次颜色探索等。' },
+    { q: '数据会丢失吗？', a: '所有数据都存储在你的浏览器本地（localStorage），不会上传到云端。清除浏览器数据会同时清除出逃记录，请谨慎操作。' },
+    { q: '可以邀请朋友一起出逃吗？', a: '可以。选择「双人出逃」模式，或通过邀请页分享邀请码让朋友加入。' },
+    { q: '如何切换主题？', a: '在「我的 → 主题市场」中选择喜欢的主题包，所有页面会立即应用新主题。' },
+    { q: '地图上的标记是什么？', a: '地图标记是你过往出逃过的地点。普通模式展示街景地图，卫星模式展示航拍视图，路线模式展示你的出逃路径。' }
+  ];
+  const itemsHtml = faqs.map((f, i) => `<div class="faq-item" data-action="toggle-faq" data-idx="${i}">
+    <div class="faq-q">
+      <div class="faq-q-text">${f.q}</div>
+      <div class="chev">${I.chevD}</div>
+    </div>
+    <div class="faq-a">${f.a}</div>
+  </div>`).join('');
+  app.innerHTML = pageShell({
+    name: 'help',
+    title: '帮助与反馈',
+    body: `
+      <div style="padding:16px 0 0;">
+        <div class="section-title"><h3 style="font-size:16px;">常见问题</h3></div>
+        ${itemsHtml}
+        <div style="padding:24px;">
+          <div class="card" style="text-align:center;padding:24px;">
+            <div style="font-family:var(--serif);font-weight:700;font-size:14px;color:var(--ink);margin-bottom:8px;">没找到答案？</div>
+            <div style="font-size:12px;color:var(--ink-soft);margin-bottom:16px;">告诉我们你的问题或建议</div>
+            <button class="btn btn-primary" data-action="show-toast" data-msg="反馈入口开发中">${I.send}提交反馈</button>
+          </div>
+        </div>
+      </div>
+    `
+  });
+}
+
+// 31) 设置页
+function renderSettings(app) {
+  app.innerHTML = pageShell({
+    name: 'settings',
+    title: '设置',
+    body: `
+      <div class="list-page-body" style="padding-top:16px;">
+        <div style="padding:0 24px 8px;font-size:11px;color:var(--ink-soft);letter-spacing:0.1em;">通知与提醒</div>
+        <div class="settings-list" style="margin:0 24px 24px;">
+          ${settingsItem({ label: '每日提醒', icon: I.bell, toggle: appState.settings.notifications, id: 'notifications' })}
+          ${settingsItem({ label: '音效', icon: I.music, toggle: appState.settings.sound, id: 'sound' })}
+          ${settingsItem({ label: '震动反馈', icon: I.zap, toggle: appState.settings.haptic, id: 'haptic' })}
+        </div>
+        <div style="padding:0 24px 8px;font-size:11px;color:var(--ink-soft);letter-spacing:0.1em;">显示</div>
+        <div class="settings-list" style="margin:0 24px 24px;">
+          ${settingsItem({ label: '深色模式', icon: I.moon, toggle: appState.settings.darkMode, id: 'darkMode' })}
+          ${settingsItem({ label: '主题市场', icon: I.palette, action: 'navigate', id: 'theme-market' })}
+        </div>
+        <div style="padding:0 24px 8px;font-size:11px;color:var(--ink-soft);letter-spacing:0.1em;">数据</div>
+        <div class="settings-list" style="margin:0 24px 24px;">
+          ${settingsItem({ label: '自动保存', icon: I.shield, toggle: appState.settings.autoSave, id: 'autoSave' })}
+          ${settingsItem({ label: '导出数据', icon: I.download, action: 'navigate', id: 'data-export' })}
+          ${settingsItem({ label: '清空数据', icon: I.trash, action: 'clear-data-confirm' })}
+        </div>
+        <div style="padding:0 24px 8px;font-size:11px;color:var(--ink-soft);letter-spacing:0.1em;">其他</div>
+        <div class="settings-list" style="margin:0 24px 24px;">
+          ${settingsItem({ label: '查看引导', icon: I.info, action: 'view-onboarding' })}
+          ${settingsItem({ label: '出逃规则', icon: I.flag, action: 'navigate', id: 'escape-rules' })}
+          ${settingsItem({ label: '帮助与反馈', icon: I.help, action: 'navigate', id: 'help' })}
+          ${settingsItem({ label: '关于', icon: I.info, action: 'navigate', id: 'about' })}
+        </div>
+        <div style="padding:24px;">
+          <button class="btn btn-block btn-ghost" style="color:var(--accent);" data-action="reset-onboarding">${I.refresh}重新查看引导</button>
+        </div>
+      </div>
+    `
+  });
+}
+
+// 32) 编辑个人资料
+function renderEditProfile(app) {
+  app.innerHTML = pageShell({
+    name: 'edit-profile',
+    title: '编辑资料',
+    body: `
+      <div style="padding:24px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div class="mine-avatar" style="margin:0 auto 12px;width:80px;height:80px;" data-action="show-toast" data-msg="头像上传开发中">${appState.user.avatar ? `<img src="${appState.user.avatar}">` : I.users}</div>
+          <div style="font-size:12px;color:var(--ink-soft);">点击更换头像</div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:12px;color:var(--ink-soft);display:block;margin-bottom:8px;">昵称</label>
+          <input id="editName" value="${appState.user.name}" style="width:100%;border:1px solid var(--line-strong);border-radius:var(--r-card);padding:12px;font-size:14px;font-family:var(--sans);outline:none;"/>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:12px;color:var(--ink-soft);display:block;margin-bottom:8px;">所在城市</label>
+          <input id="editCity" value="${appState.user.city}" style="width:100%;border:1px solid var(--line-strong);border-radius:var(--r-card);padding:12px;font-size:14px;font-family:var(--sans);outline:none;" data-action="navigate" data-route="city-select"/>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:12px;color:var(--ink-soft);display:block;margin-bottom:8px;">个人简介</label>
+          <textarea id="editBio" rows="3" style="width:100%;border:1px solid var(--line-strong);border-radius:var(--r-card);padding:12px;font-size:14px;font-family:var(--sans);resize:none;outline:none;">${appState.user.bio}</textarea>
+        </div>
+        <button class="btn btn-primary btn-block" data-action="save-profile">${I.check}保存修改</button>
+      </div>
+    `
+  });
+}
+
+// 33) 出逃规则页
+function renderEscapeRules(app) {
+  const rules = [
+    { title: '1. 出于自愿', desc: '出逃应该是你主动选择的结果，不是任务。今天不想出逃就不出逃。' },
+    { title: '2. 按步骤完成', desc: '4 个步骤都由你手动点击完成。仪式感来自「我做了」，而不是「它替我做了」。' },
+    { title: '3. 不必追求完美', desc: '指令是建议不是 KPI。没有完成也没关系，重要的是你出门了、感受了。' },
+    { title: '4. 记录即留下', desc: '哪怕只有一句话，写下你的感受。它会在时间线里慢慢长成一棵树。' },
+    { title: '5. 允许失败', desc: '找不到指定的颜色？走错了路？这些意外本身就是出逃的一部分。' },
+    { title: '6. 分享是可选的', desc: '你可以独自出逃，也可以邀请朋友。社区动态永远不是必须项。' }
+  ];
+  const itemsHtml = rules.map(r => `<div class="card" style="margin:0 24px 12px;padding:20px;">
+    <div style="font-family:var(--serif);font-weight:700;font-size:14px;color:var(--ink);margin-bottom:8px;">${r.title}</div>
+    <div style="font-size:13px;color:var(--ink-soft);line-height:1.7;">${r.desc}</div>
+  </div>`).join('');
+  app.innerHTML = pageShell({
+    name: 'escape-rules',
+    title: '出逃规则',
+    body: `<div style="padding:16px 0 0;">
+      <div style="padding:0 24px 16px;">
+        <div class="tip-box">
+          <div class="tip-dot">${I.feather}</div>
+          <div>
+            <div class="tip-label">出逃守则</div>
+            <div class="tip-text">出逃不是任务，是给自己的一次小小出走。</div>
+          </div>
+        </div>
+      </div>
+      ${itemsHtml}
+    </div>`
+  });
+}
+
+/* ============================================================
+   事件处理（事件委托：data-action 统一分发）
+   ============================================================ */
+const ACTIONS = {
+  // 导航类
+  back() { history.back(); if (!history.length) navigate('index'); },
+  navigate(el) {
+    const route = el.dataset.route;
+    if (route) navigate(route);
+  },
+  'view-onboarding'() {
+    appState.onboardStep = 0;
+    appState.onboarded = false;
+    Storage.save();
+    navigate('onboarding');
+  },
+  'reset-onboarding'() {
+    appState.onboardStep = 0;
+    appState.onboarded = false;
+    Storage.save();
+    navigate('onboarding');
+    showToast('已重置引导流程');
+  },
+  // 引导
+  'onboard-next'() {
+    if (appState.onboardStep < 3) {
+      appState.onboardStep++;
+      onRouteChange();
+    }
+  },
+  'onboard-finish'() {
+    appState.onboarded = true;
+    appState.onboardStep = 0;
+    Storage.save();
+    navigate('index');
+    showToast('欢迎来到出逃指令 🌿');
+  },
+  // 首页
+  'open-mode-sheet'() {
+    renderModeSheet();
+    openSheet('modeSheet');
+  },
+  'roll-dice'() {
+    if (appState.rerollCount <= 0) {
+      // 用完摇骰，弹自定义
+      openSheet('customSheet');
+      showToast('摇骰次数已用完，试试自定义任务');
+      return;
+    }
+    appState.rerollCount--;
+    appState.currentCommand = rollCommand(appState.currentMode);
+    vibrate([10, 30, 10]);
+    // 骰子动画
+    const diceEl = $('#diceEl');
+    if (diceEl) {
+      diceEl.classList.add('shaking');
+      setTimeout(() => diceEl.classList.remove('shaking'), 500);
+    }
+    showLoading('正在为你摇一颗骰子…');
+    setTimeout(() => {
+      hideLoading();
+      navigate('generating');
+    }, 600);
+    Storage.save();
+  },
+  'reroll'() {
+    if (appState.rerollCount <= 0) {
+      openSheet('customSheet');
+      showToast('摇骰次数已用完，试试自定义任务');
+      return;
+    }
+    appState.rerollCount--;
+    appState.currentCommand = rollCommand(appState.currentMode);
+    vibrate([10, 30, 10]);
+    showLoading('正在为你换一个…');
+    setTimeout(() => {
+      hideLoading();
+      onRouteChange(); // 重新渲染当前页
+    }, 600);
+    Storage.save();
+  },
+  'reroll-daily'() {
+    appState.dailySeed = Math.floor(Math.random() * 10000);
+    appState.dailyCommands = pickDailyCommands();
+    Storage.save();
+    onRouteChange();
+    showToast('已换一批推荐');
+  },
+  'view-command'(el) {
+    const id = el.dataset.id;
+    const cmd = findCommand(id);
+    if (cmd) {
+      appState.currentCommand = cmd;
+      Storage.save();
+      navigate('command-detail');
+    }
+  },
+  'toggle-fav'(el) {
+    const id = el.dataset.id;
+    const idx = appState.favorites.indexOf(id);
+    if (idx >= 0) {
+      appState.favorites.splice(idx, 1);
+      el.classList.remove('active');
+      showToast('已取消收藏');
+    } else {
+      appState.favorites.push(id);
+      el.classList.add('active');
+      showToast('已加入收藏');
+    }
+    vibrate(8);
+    Storage.save();
+  },
+  'close-cmd'() {
+    closeAllSheets();
+    appState.currentCommand = null;
+    navigate('index');
+  },
+  'invite-friend'() {
+    navigate('invite');
+  },
+  'start-escape'() {
+    // 重置执行步骤
+    const cmd = appState.currentCommand;
+    if (!cmd) { navigate('index'); return; }
+    appState.execSteps = getStepsForCommand(cmd).map(text => ({ text, done: false }));
+    appState.execStepsDone = 0;
+    appState.prepItems = [false, false, false, false];
+    Storage.save();
+    navigate('escape-prep');
+  },
+  // 执行页
+  'toggle-step'(el) {
+    const idx = parseInt(el.dataset.idx);
+    const step = appState.execSteps[idx];
+    if (!step) return;
+    step.done = !step.done;
+    appState.execStepsDone = appState.execSteps.filter(s => s.done).length;
+    vibrate(12);
+    Storage.save();
+    // 局部更新
+    el.classList.toggle('done', step.done);
+    // 检查是否全部完成
+    const allDone = appState.execSteps.every(s => s.done);
+    const finishWrap = $('.exec-finish-wrap');
+    if (finishWrap) finishWrap.classList.toggle('show', allDone);
+    // 更新计数
+    const countEl = $('.steps-title .count');
+    if (countEl) countEl.textContent = `${appState.execStepsDone}/${appState.execSteps.length}`;
+  },
+  'finish-escape'() {
+    const cmd = appState.currentCommand;
+    if (!cmd) return;
+    // 保存记录
+    const record = {
+      id: 'r' + Date.now(),
+      content: cmd.content,
+      type: cmd.type,
+      mode: cmd.mode,
+      date: Date.now(),
+      mood: appState.currentMood,
+      note: ''
+    };
+    appState.records.unshift(record);
+    appState.totalEscapes++;
+    appState.totalDistance += cmd.duration * 60; // 模拟距离（米）
+    appState.totalPhotos++;
+    // 连续天数
+    const today = new Date().toDateString();
+    if (appState.lastCompleteDate !== today) {
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      appState.streakDays = appState.lastCompleteDate === yesterday || appState.lastCompleteDate === today
+        ? appState.streakDays + 1
+        : 1;
+      appState.lastCompleteDate = today;
+    }
+    // 解锁徽章
+    if (appState.totalEscapes === 1) unlockBadge('first_escape');
+    if (appState.streakDays >= 7) unlockBadge('seven_streak');
+    if (appState.streakDays >= 30) unlockBadge('thirty_streak');
+    if (cmd.type === 'color' && appState.records.filter(r => r.type === 'color').length >= 10) unlockBadge('color_hunter');
+    if (cmd.type === 'culture' && appState.records.filter(r => r.type === 'culture').length >= 5) unlockBadge('culture_lover');
+    if (cmd.mode === 'night' && appState.records.filter(r => r.mode === 'night').length >= 5) unlockBadge('night_walker');
+    if (cmd.mode === 'rainy' && appState.records.filter(r => r.mode === 'rainy').length >= 3) unlockBadge('rainy_walker');
+    if (cmd.mode === 'micro' && appState.records.filter(r => r.mode === 'micro').length >= 10) unlockBadge('micro_master');
+    if (cmd.mode === 'walk' && appState.records.filter(r => r.mode === 'walk').length >= 10) unlockBadge('walk_master');
+    if (cmd.mode === 'double' && appState.records.filter(r => r.mode === 'double').length >= 5) unlockBadge('double_master');
+    if (appState.favorites.length >= 20) unlockBadge('collector');
+    // 完成今日挑战
+    const todayChallenge = CHALLENGES[Math.floor(Date.now() / 86400000) % CHALLENGES.length];
+    if (!appState.todayChallenges.includes(todayChallenge.id)) {
+      // 简单匹配：按类型匹配
+      if (todayChallenge.type === cmd.type || todayChallenge.type === cmd.mode || todayChallenge.type === 'mode' || todayChallenge.type === 'time' || todayChallenge.type === 'mood' || todayChallenge.type === 'special') {
+        appState.todayChallenges.push(todayChallenge.id);
+        if (appState.todayChallenges.length >= 7) unlockBadge('challenge_king');
+      }
+    }
+    // 重置执行状态
+    appState.execSteps = [];
+    appState.execStepsDone = 0;
+    appState.currentCommand = null;
+    Storage.save();
+    showToast('出逃完成！记录已保存 🎉');
+    vibrate([10, 50, 30, 50, 30]);
+    setTimeout(() => navigate('timeline'), 800);
+  },
+  // 出逃准备
+  'toggle-prep'(el) {
+    const idx = parseInt(el.dataset.idx);
+    appState.prepItems[idx] = !appState.prepItems[idx];
+    el.classList.toggle('done', appState.prepItems[idx]);
+    vibrate(10);
+    Storage.save();
+  },
+  // 模式选择
+  'select-mode'(el) {
+    const id = el.dataset.id;
+    appState.currentMode = id;
+    Storage.save();
+    renderModeSheet();
+    setTimeout(() => {
+      closeSheet('modeSheet');
+      onRouteChange();
+    }, 200);
+    showToast(`已切换到「${getMode(id).name}」`);
+  },
+  // 自定义任务
+  'customCancel'() {
+    closeSheet('customSheet');
+  },
+  'customConfirm'() {
+    const input = $('#customInput');
+    const text = input.value.trim();
+    if (!text) { showToast('请先写下一个任务'); return; }
+    appState.currentCommand = {
+      id: 'custom' + Date.now(),
+      content: text,
+      type: 'custom',
+      duration: 15,
+      mode: appState.currentMode,
+      tip: '自定义任务，由你定义节奏'
+    };
+    closeSheet('customSheet');
+    Storage.save();
+    navigate('command-detail');
+  },
+  // 地图
+  'map-mode'(el) {
+    appState.mapMode = el.dataset.id;
+    Storage.save();
+    onRouteChange();
+  },
+  'map-filter'(el) {
+    appState.mapFilter = el.dataset.id;
+    Storage.save();
+    $$('.map-filter').forEach(f => f.classList.toggle('active', f.dataset.id === el.dataset.id));
+  },
+  'map-locate'() { showToast('已定位到当前位置'); vibrate(10); },
+  'map-set-home'() { showToast('请到「我的 → 编辑资料」设置家的位置'); },
+  'map-zoom-in'() {
+    const canvas = $('#mapCanvas');
+    if (canvas) {
+      const cur = parseFloat(canvas.style.transform?.match(/scale\(([\d.]+)\)/)?.[1] || 1);
+      canvas.style.transform = `scale(${Math.min(2, cur + 0.2)})`;
+      canvas.style.transformOrigin = 'center';
+    }
+  },
+  'view-pin'(el) {
+    const id = el.dataset.id;
+    const pinInfo = {
+      p1: '颜色探索 · 蓝色招牌发现地',
+      p2: '美食探索 · 深夜便利店',
+      p3: '感官体验 · 安静公园角落',
+      p4: '漫步发现 · 老巷子入口',
+      p5: '文化漫游 · 老书店',
+      p6: '收藏拼贴 · 涂鸦墙',
+      home: '家的位置'
+    };
+    showToast(pinInfo[id] || '出逃地点');
+    vibrate(10);
+  },
+  // 徽章
+  'view-badge'(el) {
+    appState.viewingBadgeId = el.dataset.id;
+    Storage.save();
+    navigate('badge-detail');
+  },
+  // 记录
+  'view-record'(el) {
+    appState.viewingRecordId = el.dataset.id;
+    Storage.save();
+    navigate('record-detail');
+  },
+  // 主题
+  'select-theme'(el) {
+    const id = el.dataset.id;
+    applyTheme(id);
+    onRouteChange();
+    showToast(`已应用「${getTheme(id).name}」主题`);
+  },
+  // 设置 toggle
+  'select-mood'(el) {
+    appState.currentMood = el.dataset.id;
+    Storage.save();
+    onRouteChange();
+  },
+  'save-mood'() {
+    const input = $('#moodInput');
+    if (!input || !input.value.trim()) { showToast('请写下一句话'); return; }
+    const mood = appState.currentMood;
+    appState.moodEntries.unshift({
+      id: Date.now(),
+      mood,
+      text: input.value.trim(),
+      date: Date.now()
+    });
+    appState.currentMood = null;
+    Storage.save();
+    showToast('心情已记录 💭');
+    onRouteChange();
+  },
+  // 编辑资料
+  'save-profile'() {
+    const name = $('#editName')?.value.trim() || appState.user.name;
+    const city = $('#editCity')?.value.trim() || appState.user.city;
+    const bio = $('#editBio')?.value.trim() || appState.user.bio;
+    appState.user.name = name;
+    appState.user.city = city;
+    appState.user.bio = bio;
+    Storage.save();
+    showToast('资料已保存');
+    navigate('profile');
+  },
+  // 城市选择
+  'select-city'(el) {
+    appState.user.city = el.dataset.id;
+    Storage.save();
+    showToast(`已切换到${el.dataset.id}`);
+    navigate('edit-profile');
+  },
+  // 数据导出
+  'copy-data'() {
+    const data = $('.export-preview')?.textContent || '';
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(data).then(() => showToast('已复制到剪贴板'));
+    } else {
+      showToast('请手动选择文本复制');
+    }
+  },
+  'clear-data'() {
+    if (confirm('确定要清空所有出逃数据吗？此操作不可恢复。')) {
+      Storage.clear();
+      location.reload();
+    }
+  },
+  'clear-data-confirm'() { ACTIONS['clear-data'](); },
+  // 社区
+  'like-feed'(el) {
+    const id = parseInt(el.dataset.id);
+    const feed = appState.feed.find(f => f.id === id);
+    if (!feed) return;
+    feed.liked = !feed.liked;
+    feed.likes += feed.liked ? 1 : -1;
+    el.classList.toggle('liked', feed.liked);
+    el.querySelector('span').textContent = feed.likes;
+    vibrate(8);
+  },
+  'comment-feed'() { showToast('评论功能开发中'); },
+  'share-feed'() { showToast('分享功能开发中'); },
+  'invite-partner'() { showToast('已发送邀请'); },
+  'copy-code'(el) {
+    const code = el.dataset.code;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(() => showToast('邀请码已复制'));
+    } else {
+      showToast(`邀请码：${code}`);
+    }
+  },
+  // 照片
+  'select-filter'(el) {
+    $$('.filter-item').forEach(f => f.classList.remove('active'));
+    el.classList.add('active');
+    vibrate(8);
+  },
+  'save-photo'() { showToast('照片已保存'); navigate('records'); },
+  // FAQ
+  'toggle-faq'(el) {
+    el.classList.toggle('open');
+  },
+  // 提示
+  'show-toast'(el) {
+    const msg = el.dataset.msg || '功能开发中';
+    showToast(msg);
+  },
+  // TabBar 切换
+  'tab-switch'(el) {
+    const route = el.dataset.route;
+    if (route) navigate(route);
+  }
+};
+
+// 全局点击委托
+function handleClick(e) {
+  let el = e.target;
+  // 向上找到带 data-action 的元素
+  while (el && el !== document.body) {
+    if (el.dataset && el.dataset.action) {
+      const action = el.dataset.action;
+      const handler = ACTIONS[action];
+      if (handler) {
+        e.preventDefault();
+        handler(el);
+        return;
+      }
+    }
+    // 特殊：tab 点击
+    if (el.classList && el.classList.contains('tab')) {
+      e.preventDefault();
+      const route = el.dataset.route;
+      if (route) navigate(route);
+      return;
+    }
+    el = el.parentElement;
+  }
+}
+
+// sheet overlay 点击关闭
+function handleOverlayClick(e) {
+  if (e.target.classList.contains('sheet-overlay')) {
+    e.target.classList.remove('show');
+  }
+  if (e.target.id === 'badgeOverlay') {
+    e.target.classList.remove('show');
+  }
+}
+
+// 全局 input/focus 防止冒泡到 click
+function setupGlobalListeners() {
+  document.addEventListener('click', handleClick);
+  document.addEventListener('click', handleOverlayClick);
+  // 关闭按钮
+  $('#modeClose')?.addEventListener('click', () => closeSheet('modeSheet'));
+  $('#customCancel')?.addEventListener('click', () => closeSheet('customSheet'));
+  $('#customConfirm')?.addEventListener('click', ACTIONS['customConfirm']);
+  $('#badgeClose')?.addEventListener('click', () => $('#badgeOverlay').classList.remove('show'));
+  // hash 路由
+  window.addEventListener('hashchange', onRouteChange);
+  // 城市搜索
+  document.addEventListener('input', (e) => {
+    if (e.target.id === 'citySearch') {
+      const keyword = e.target.value.trim();
+      $$('.city-item').forEach(item => {
+        const name = item.querySelector('.city-name')?.textContent || '';
+        item.style.display = name.includes(keyword) ? 'flex' : 'none';
+      });
+    }
+  });
+}
+
+/* ============================================================
+   初始化
+   ============================================================ */
+function init() {
+  initState();
+  // 应用主题
+  applyTheme(appState.themeId);
+  // 渲染 mode sheet 初始内容
+  renderModeSheet();
+  // 设置全局监听
+  setupGlobalListeners();
+  // 状态栏时间
+  const updateTime = () => {
+    const now = new Date();
+    const time = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+    const timeEl = $('.statusbar .time');
+    if (timeEl) timeEl.textContent = time;
+  };
+  updateTime();
+  setInterval(updateTime, 30000);
+  // 路由初始化
+  if (!location.hash || location.hash === '#/') {
+    if (!appState.onboarded) {
+      location.hash = '#/onboarding';
+    } else {
+      location.hash = '#/index';
+    }
+  } else {
+    onRouteChange();
+  }
+}
+
+// 启动
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">出逃回顾</text>
+  </view>
+
+  <scroll-view
+    scroll-y
+    class="page-scroll"
+    style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);"
+    enhanced
+    show-scrollbar="{{false}}"
+  >
+    <!-- 顶部 Tab + 区间切换 -->
+    <view class="review-hero">
+      <view class="hero-tab-row">
+        <view class="hero-tab {{activeTab === 'year' ? 'active' : ''}}" bindtap="onTabTap" data-tab="year">
+          <text>年度</text>
+        </view>
+        <view class="hero-tab {{activeTab === 'month' ? 'active' : ''}}" bindtap="onTabTap" data-tab="month">
+          <text>月度</text>
+        </view>
+      </view>
+
+      <view class="hero-range-row">
+        <view class="range-nav" bindtap="onPrevRange">
+          <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+        </view>
+        <view class="range-label" bindtap="toggleMonthSelector">
+          <text wx:if="{{activeTab === 'year'}}">{{yearLabel}} 年</text>
+          <text wx:else>{{monthLabel}}</text>
+          <view wx:if="{{activeTab === 'month'}}" class="range-caret"></view>
+        </view>
+        <view class="range-nav" bindtap="onNextRange">
+          <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit" style="transform: rotate(180deg);"></image>
+        </view>
+      </view>
+
+      <!-- 月份选择面板 -->
+      <view wx:if="{{monthSelectorOpen && activeTab === 'month'}}" class="month-panel">
+        <view
+          wx:for="{{monthOptions}}"
+          wx:key="id"
+          class="month-cell {{month === item.id ? 'active' : ''}}"
+          bindtap="onMonthSelect"
+          data-id="{{item.id}}"
+        >
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{isEmpty}}" class="empty-state">
+      <view class="empty-illust">
+        <view class="empty-bar"></view>
+        <view class="empty-bar short"></view>
+      </view>
+      <text class="empty-title">这一年还没有出逃记录</text>
+      <text class="empty-desc">出门走走，把第一次出逃留在这里</text>
+      <view class="empty-btn" bindtap="goHome">去首页开始出逃</view>
+    </view>
+
+    <block wx:if="{{!isEmpty}}">
+      <view class="review-body">
+        <!-- 数据统计卡 -->
+        <view class="stats-card solid-card">
+          <view class="stats-cell" wx:for="{{stats}}" wx:key="label">
+            <view class="stats-num-row">
+              <text class="stats-value font-mono">{{item.value}}</text>
+              <text wx:if="{{item.unit}}" class="stats-unit">{{item.unit}}</text>
+            </view>
+            <text class="stats-label">{{item.label}}</text>
+          </view>
+        </view>
+
+        <!-- 心情分布 -->
+        <view class="chart-card solid-card">
+          <view class="card-head">
+            <text class="card-title">心情分布</text>
+            <text class="card-sub">最近出逃的情绪切片</text>
+          </view>
+          <view class="mood-bars">
+            <view
+              wx:for="{{moodBars}}"
+              wx:key="id"
+              class="mood-bar-row"
+            >
+              <view class="mood-bar-label">
+                <text class="mood-emoji">{{item.emoji}}</text>
+                <text class="mood-name">{{item.name}}</text>
+              </view>
+              <view class="mood-bar-track">
+                <view
+                  class="mood-bar-fill"
+                  style="width: {{item.width}}%; background: {{item.color}};"
+                ></view>
+              </view>
+              <view class="mood-bar-meta">
+                <text class="mood-count">{{item.count}}</text>
+                <text class="mood-percent">{{item.percent}}%</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 类型偏好 -->
+        <view class="chart-card solid-card">
+          <view class="card-head">
+            <text class="card-title">类型偏好</text>
+            <text class="card-sub">你最爱哪种出逃</text>
+          </view>
+          <view class="type-bars">
+            <view
+              wx:for="{{typeBars}}"
+              wx:key="id"
+              class="type-bar-col"
+            >
+              <view class="type-bar-track">
+                <view
+                  class="type-bar-fill"
+                  style="height: {{item.height}}%; background: linear-gradient(to top, {{item.color}}, {{item.color}}CC);"
+                ></view>
+              </view>
+              <text class="type-bar-name">{{item.name}}</text>
+              <text class="type-bar-count">{{item.count}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 月度趋势 -->
+        <view class="chart-card solid-card">
+          <view class="card-head">
+            <text wx:if="{{activeTab === 'year'}}" class="card-title">月度趋势</text>
+            <text wx:else class="card-title">每日趋势</text>
+            <text class="card-sub">{{activeTab === 'year' ? '每个月的出逃节奏' : '这个月每天的出逃'}}</text>
+          </view>
+          <view class="trend-chart">
+            <view class="trend-bars">
+              <view
+                wx:for="{{monthTrend}}"
+                wx:key="id"
+                class="trend-bar-col"
+              >
+                <view class="trend-bar-track">
+                  <view
+                    wx:if="{{item.count > 0}}"
+                    class="trend-bar-fill"
+                    style="height: {{item.height}}%;"
+                  ></view>
+                  <view wx:else class="trend-bar-empty"></view>
+                </view>
+                <text class="trend-bar-label">{{item.label}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 精选拍立得 Top9 -->
+        <view class="chart-card solid-card" wx:if="{{top9.length > 0}}">
+          <view class="card-head">
+            <text class="card-title">精选拍立得</text>
+            <text class="card-sub">最近 9 张出逃瞬间</text>
+          </view>
+          <view class="top9-grid">
+            <view
+              wx:for="{{top9}}"
+              wx:key="id"
+              class="top9-cell"
+              bindtap="onTop9Tap"
+              data-id="{{item.id}}"
+            >
+              <view class="top9-polaroid" style="transform: rotate({{item.rotation}}deg);">
+                <image class="top9-photo" src="{{item.photo}}" mode="aspectFill"></image>
+                <view class="top9-tape" style="background: {{item.typeColor}}33;"></view>
+              </view>
+            </view>
+          </view>
+          <view wx:if="{{top9.length < 9}}" class="top9-hint">
+            <text>再记录 {{9 - top9.length}} 次出逃，凑齐九宫格</text>
+          </view>
+        </view>
+
+        <view class="bottom-spacer"></view>
+      </view>
+    </block>
+  </scroll-view>
+</view>

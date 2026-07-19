@@ -1,0 +1,134 @@
+<view class="page-container settings-page paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">设置</text>
+  </view>
+
+  <scroll-view scroll-y class="settings-scroll">
+    <!-- 偏好设置 -->
+    <view class="settings-section">
+      <text class="section-label">偏好设置</text>
+      <view class="setting-group">
+        <view class="setting-item">
+          <view class="setting-text">
+            <text class="setting-name">音效</text>
+            <text class="setting-desc">摇骰子、盖章时的音效</text>
+          </view>
+          <switch checked="{{soundEnabled}}" bindchange="toggleSound" color="#5cbf9e"/>
+        </view>
+        <view class="setting-divider"></view>
+        <view class="setting-item notification-item">
+          <view class="setting-text">
+            <text class="setting-name">每日出逃提醒</text>
+            <text class="setting-desc">傍晚提醒你该出去走走</text>
+          </view>
+          <view class="notification-controls">
+            <picker mode="time" value="{{notificationTime}}" bindchange="onNotificationTimeChange" class="time-picker">
+              <view class="time-display">{{notificationTime}}</view>
+            </picker>
+            <switch checked="{{notificationEnabled}}" bindchange="toggleNotification" color="#5cbf9e"/>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 主题选择 -->
+    <view class="settings-section">
+      <text class="section-label">主题</text>
+      <view class="theme-cards">
+        <view
+          wx:for="{{themeList}}"
+          wx:key="id"
+          class="theme-card {{currentTheme === item.id ? 'active' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="switchTheme"
+        >
+          <view class="theme-preview" style="background: {{item.preview}};"></view>
+          <view class="theme-card-body">
+            <text class="theme-card-name">{{item.name}}</text>
+            <text class="theme-card-desc">{{item.desc}}</text>
+          </view>
+          <view wx:if="{{currentTheme === item.id}}" class="theme-check">
+            <image src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 定位模式 -->
+    <view class="settings-section">
+      <text class="section-label">定位模式</text>
+      <view class="setting-group">
+        <view
+          wx:for="{{locationModes}}"
+          wx:key="id"
+          class="setting-item {{locationMode === item.id ? 'active' : ''}}"
+          data-mode="{{item.id}}"
+          bindtap="selectLocationMode"
+        >
+          <view class="setting-text">
+            <text class="setting-name">{{item.name}}</text>
+            <text class="setting-desc">{{item.desc}}</text>
+          </view>
+          <image wx:if="{{locationMode === item.id}}" class="check-ico" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+        </view>
+      </view>
+    </view>
+
+    <!-- 更多 -->
+    <view class="settings-section">
+      <text class="section-label">更多</text>
+      <view class="setting-group">
+        <view class="setting-item" bindtap="navigateToAbout">
+          <view class="setting-text">
+            <text class="setting-name">隐私说明</text>
+            <text class="setting-desc">了解我们如何保护你的数据</text>
+          </view>
+          <image class="arrow-ico" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+        </view>
+        <view class="setting-divider"></view>
+        <view class="setting-item" bindtap="clearCache">
+          <view class="setting-text">
+            <text class="setting-name">缓存管理</text>
+            <text class="setting-desc">{{cacheSize}} · {{cacheKeys}} 项</text>
+          </view>
+          <image class="arrow-ico" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+        </view>
+        <view class="setting-divider"></view>
+        <view class="setting-item" wx:if="{{hasHomePoint}}" bindtap="clearHomePoint">
+          <view class="setting-text">
+            <text class="setting-name">清除家位置</text>
+            <text class="setting-desc">路线模式不再以家为固定出发点</text>
+          </view>
+          <image class="arrow-ico" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+        </view>
+        <view class="setting-divider" wx:if="{{hasHomePoint}}"></view>
+        <view class="setting-item" bindtap="showAbout">
+          <text class="setting-name">关于</text>
+          <image class="arrow-ico" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+        </view>
+        <view class="setting-divider"></view>
+        <view class="setting-item" bindtap="replayOnboarding">
+          <view class="setting-text">
+            <text class="setting-name">重新查看引导</text>
+            <text class="setting-desc">重新了解出逃模式与玩法</text>
+          </view>
+          <image class="arrow-ico" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+        </view>
+        <view class="setting-divider"></view>
+        <view class="setting-item danger-item" bindtap="clearData">
+          <text class="setting-name danger-text">清空所有数据</text>
+          <image class="arrow-ico" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+        </view>
+      </view>
+    </view>
+
+    <text class="version-info">出逃指令 v3.0.0</text>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+</view>

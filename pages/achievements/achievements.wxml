@@ -1,0 +1,119 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">成就系统</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" enhanced show-scrollbar="{{false}}" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+    <view class="ach-body">
+
+      <!-- 顶部总览 -->
+      <view class="overview-card">
+        <view class="overview-glow"></view>
+        <text class="overview-eyebrow">你的出逃之旅</text>
+        <view class="overview-row">
+          <text class="overview-big font-mono">{{recordsCount}}</text>
+          <text class="overview-unit">次出逃</text>
+        </view>
+        <text class="overview-sub">已解锁 {{unlockedBadges}} 枚徽章 · 当前连击 {{continuousDays}} 天</text>
+      </view>
+
+      <!-- 里程碑 -->
+      <view class="section-title-row">
+        <text class="section-title-text">里程碑</text>
+        <text class="section-title-meta">{{milestoneUnlocked}}/{{milestones.length}}</text>
+      </view>
+
+      <view class="milestone-list">
+        <view wx:for="{{milestones}}" wx:key="id" class="milestone-card {{item.unlocked ? 'unlocked' : 'locked'}}">
+          <view class="milestone-icon-wrap" style="background: {{item.unlocked ? 'linear-gradient(135deg, #FFF0D4, #FFD36B)' : 'var(--canvas)'}};">
+            <image wx:if="{{item.unlocked}}" src="/assets/icons/check-brand.svg" mode="aspectFit"></image>
+            <image wx:else src="/assets/icons/lock-coral.svg" mode="aspectFit"></image>
+          </view>
+          <view class="milestone-body">
+            <view class="milestone-head">
+              <text class="milestone-title">{{item.title}}</text>
+              <text wx:if="{{item.unlocked}}" class="milestone-tag">已达成</text>
+              <text wx:else class="milestone-tag ghost">{{item.currentText}}/{{item.target}}</text>
+            </view>
+            <text class="milestone-desc">{{item.desc}}</text>
+            <view wx:if="{{!item.unlocked}}" class="milestone-progress">
+              <view class="milestone-track">
+                <view class="milestone-fill" style="width: {{item.percent}}%;"></view>
+              </view>
+              <text class="milestone-percent font-mono">{{item.percent}}%</text>
+            </view>
+            <text wx:else class="milestone-date">达成于 {{item.date}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 连击记录 -->
+      <view class="section-title-row">
+        <text class="section-title-text">连击记录</text>
+        <text class="section-title-meta">最长 {{maxStreak}} 天</text>
+      </view>
+
+      <view class="streak-card">
+        <view class="streak-top">
+          <view class="streak-block">
+            <text class="streak-label">当前连击</text>
+            <view class="streak-num-row">
+              <text class="streak-num font-mono">{{continuousDays}}</text>
+              <text class="streak-num-unit">天</text>
+            </view>
+          </view>
+          <view class="streak-divider"></view>
+          <view class="streak-block">
+            <text class="streak-label">最长连击</text>
+            <view class="streak-num-row">
+              <text class="streak-num font-mono">{{maxStreak}}</text>
+              <text class="streak-num-unit">天</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="streak-week">
+          <view wx:for="{{weekView}}" wx:key="key" class="streak-day {{item.has ? 'on' : ''}}">
+            <view class="streak-dot" style="background: {{item.has ? 'var(--brand)' : 'var(--canvas)'}};">
+              <image wx:if="{{item.has}}" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+            </view>
+            <text class="streak-day-label">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 统计数据 -->
+      <view class="section-title-row">
+        <text class="section-title-text">统计数据</text>
+      </view>
+
+      <view class="stats-grid">
+        <view class="stats-cell">
+          <text class="stats-value font-mono">{{stats.totalEscapes}}</text>
+          <text class="stats-label">总出逃次数</text>
+        </view>
+        <view class="stats-cell">
+          <text class="stats-value font-mono">{{stats.totalHours}}</text>
+          <text class="stats-value-sub">小时 {{stats.totalMinutes}} 分</text>
+          <text class="stats-label">总探索时长</text>
+        </view>
+        <view class="stats-cell">
+          <text class="stats-value font-mono">{{stats.collected}}</text>
+          <text class="stats-label">收藏指令数</text>
+        </view>
+        <view class="stats-cell">
+          <text class="stats-value font-mono">{{stats.badgesUnlocked}}</text>
+          <text class="stats-value-sub">/ {{stats.badgesTotal}}</text>
+          <text class="stats-label">解锁徽章数</text>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+</view>

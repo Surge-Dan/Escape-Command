@@ -1,0 +1,68 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">出逃搭档</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+
+    <!-- Hero -->
+    <view class="partner-hero">
+      <text class="hero-num">{{totalCount}}</text>
+      <text class="hero-label">和你一起出逃过的人</text>
+    </view>
+
+    <!-- 统计汇总 -->
+    <view class="stats-summary">
+      <view class="stat-cell">
+        <text class="stat-num">{{totalCount}}</text>
+        <text class="stat-label">总搭档数</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-cell">
+        <text class="stat-num">{{totalCollab}}</text>
+        <text class="stat-label">一起出逃次数</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-cell stat-cell-name">
+        <text class="stat-num-name">{{topPartnerName}}</text>
+        <text class="stat-label">最默契搭档</text>
+      </view>
+    </view>
+
+    <!-- 空态 -->
+    <view wx:if="{{isEmpty}}" class="empty-state">
+      <image class="empty-ico" src="/assets/icons/empty-collection.svg" mode="aspectFit"></image>
+      <text class="empty-title">还没有搭档</text>
+      <text class="empty-desc">去双人模式认识你的第一个出逃搭档</text>
+      <view class="empty-btn" bindtap="goDoubleMode">前往双人模式</view>
+    </view>
+
+    <!-- 搭档列表 -->
+    <view wx:else class="partner-list">
+      <view wx:for="{{partners}}" wx:key="name" class="partner-card" bindtap="tapPartner" data-name="{{item.name}}">
+        <view class="rank-badge rank-{{item.rankBadge}}" wx:if="{{item.rankBadge}}">
+          <text class="rank-badge-text">{{item.rank}}</text>
+        </view>
+        <view class="rank-num" wx:else>
+          <text class="rank-num-text">{{item.rank}}</text>
+        </view>
+        <image class="partner-avatar" src="{{item.avatar}}" mode="aspectFit"></image>
+        <view class="partner-info">
+          <view class="partner-name-row">
+            <text class="partner-name">{{item.name}}</text>
+            <view class="mode-dot" style="background: {{item.favModeColor}};"></view>
+          </view>
+          <text class="partner-meta">合作 {{item.count}} 次 · 上次 {{item.lastDate}}</text>
+        </view>
+        <image class="arrow-ico" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+      </view>
+    </view>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+</view>

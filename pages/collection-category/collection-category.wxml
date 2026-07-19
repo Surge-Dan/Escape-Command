@@ -1,0 +1,161 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">收藏分类</text>
+    <view class="nav-header-right">
+      <text class="total-count">{{totalCollected}} 条</text>
+    </view>
+  </view>
+
+  <view class="cat-tabbar">
+    <view class="cat-tab {{activeTab === 'type' ? 'active' : ''}}" bindtap="switchTab" data-tab="type">
+      <text>按类型</text>
+      <view wx:if="{{activeTab === 'type'}}" class="cat-tab-underline"></view>
+    </view>
+    <view class="cat-tab {{activeTab === 'mood' ? 'active' : ''}}" bindtap="switchTab" data-tab="mood">
+      <text>按心情</text>
+      <view wx:if="{{activeTab === 'mood'}}" class="cat-tab-underline"></view>
+    </view>
+    <view class="cat-tab {{activeTab === 'season' ? 'active' : ''}}" bindtap="switchTab" data-tab="season">
+      <text>按季节</text>
+      <view wx:if="{{activeTab === 'season'}}" class="cat-tab-underline"></view>
+    </view>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx - 96rpx);">
+    <!-- 按类型 -->
+    <view wx:if="{{activeTab === 'type'}}" class="tab-content">
+      <view wx:if="{{totalCollected === 0}}" class="empty-state">
+        <image class="empty-illust" src="/assets/icons/empty-collection.svg" mode="aspectFit"></image>
+        <text class="empty-title">还没有收藏任何指令</text>
+        <text class="empty-desc">去首页摇一个，把它收藏起来吧</text>
+        <view class="empty-btn" bindtap="goBrowse">去首页摇一个</view>
+      </view>
+
+      <block wx:for="{{typeSections}}" wx:key="id" wx:for-item="section">
+        <view class="section-header">
+          <view class="section-dot" style="background: {{section.color}};"></view>
+          <image class="section-icon" src="{{section.icon}}" mode="aspectFit"></image>
+          <text class="section-title">{{section.name}}</text>
+          <view class="section-count" style="color: {{section.color}}; background: {{section.color}}14;">{{section.count}}</view>
+        </view>
+
+        <view wx:if="{{section.commands.length > 0}}" class="card-grid">
+          <view
+            wx:for="{{section.commands}}"
+            wx:key="id"
+            wx:for-item="cmd"
+            class="cmd-card"
+            bindtap="onCommandTap"
+            data-id="{{cmd.id}}"
+          >
+            <view class="cmd-card-accent" style="background: {{cmd.typeColor}};"></view>
+            <text class="cmd-card-title">{{cmd.title}}</text>
+            <view class="cmd-card-meta">
+              <image src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+              <text>{{cmd.duration}} 分钟</text>
+            </view>
+          </view>
+        </view>
+
+        <view wx:else class="section-empty">
+          <view class="section-empty-dot" style="background: {{section.color}}33;"></view>
+          <text>这个类型还没有收藏</text>
+        </view>
+      </block>
+    </view>
+
+    <!-- 按心情 -->
+    <view wx:if="{{activeTab === 'mood'}}" class="tab-content">
+      <view wx:if="{{!hasMoodRecords}}" class="empty-state">
+        <image class="empty-illust" src="/assets/icons/empty-collection.svg" mode="aspectFit"></image>
+        <text class="empty-title">还没有心情记录</text>
+        <text class="empty-desc">完成指令时记录心情，就能在这里看到分类</text>
+        <view class="empty-btn" bindtap="goBrowse">去出逃一次</view>
+      </view>
+
+      <block wx:for="{{moodSections}}" wx:key="id" wx:for-item="section">
+        <view class="section-header mood-header" style="background: {{section.tint}};">
+          <image class="section-icon mood-icon" src="{{section.icon}}" mode="aspectFit"></image>
+          <text class="section-title" style="color: {{section.color}};">{{section.name}}</text>
+          <view class="section-count" style="color: {{section.color}}; background: {{section.color}}1F;">{{section.count}}</view>
+        </view>
+
+        <view wx:if="{{section.commands.length > 0}}" class="card-grid">
+          <view
+            wx:for="{{section.commands}}"
+            wx:key="id"
+            wx:for-item="cmd"
+            class="cmd-card"
+            bindtap="onCommandTap"
+            data-id="{{cmd.id}}"
+          >
+            <view class="cmd-card-accent" style="background: {{cmd.typeColor}};"></view>
+            <text class="cmd-card-title">{{cmd.title}}</text>
+            <view class="cmd-card-meta">
+              <image src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+              <text>{{cmd.duration}} 分钟</text>
+            </view>
+          </view>
+        </view>
+
+        <view wx:else class="section-empty">
+          <view class="section-empty-dot" style="background: {{section.color}}33;"></view>
+          <text>还没有以「{{section.name}}」心情完成过指令</text>
+        </view>
+      </block>
+    </view>
+
+    <!-- 按季节 -->
+    <view wx:if="{{activeTab === 'season'}}" class="tab-content">
+      <view wx:if="{{totalCollected === 0}}" class="empty-state">
+        <image class="empty-illust" src="/assets/icons/empty-collection.svg" mode="aspectFit"></image>
+        <text class="empty-title">还没有收藏任何指令</text>
+        <text class="empty-desc">收藏时带上季节标签，就能按季节翻看</text>
+        <view class="empty-btn" bindtap="goBrowse">去首页摇一个</view>
+      </view>
+
+      <block wx:for="{{seasonSections}}" wx:key="id" wx:for-item="section">
+        <view class="section-header season-header" style="background: {{section.tint}};">
+          <view class="season-mark" style="background: {{section.tint}}; border-color: {{section.tint}};">
+            <text class="season-mark-text">{{section.name}}</text>
+          </view>
+          <view class="season-meta">
+            <text class="section-title">{{section.name}}季</text>
+            <text class="season-desc">{{section.desc}}</text>
+          </view>
+          <view class="section-count season-count">{{section.count}}</view>
+        </view>
+
+        <view wx:if="{{section.commands.length > 0}}" class="card-grid">
+          <view
+            wx:for="{{section.commands}}"
+            wx:key="id"
+            wx:for-item="cmd"
+            class="cmd-card"
+            bindtap="onCommandTap"
+            data-id="{{cmd.id}}"
+          >
+            <view class="cmd-card-accent" style="background: {{cmd.typeColor}};"></view>
+            <text class="cmd-card-title">{{cmd.title}}</text>
+            <view class="cmd-card-meta">
+              <image src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+              <text>{{cmd.duration}} 分钟</text>
+            </view>
+          </view>
+        </view>
+
+        <view wx:else class="section-empty">
+          <view class="section-empty-dot" style="background: #C9C9C9;"></view>
+          <text>这个季节还没有收藏的指令</text>
+        </view>
+      </block>
+    </view>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+</view>

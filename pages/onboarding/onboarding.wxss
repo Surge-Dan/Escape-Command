@@ -1,0 +1,277 @@
+/* ===== v3 首次引导页 · 3 屏 swiper ===== */
+.page-container.onb-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--canvas);
+  overflow: hidden;
+}
+
+.status-bar {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* v7: nav-header 风格 —— onboarding 顶部透明轻量 */
+.nav-header {
+  flex-shrink: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+}
+
+.onb-header-title {
+  flex: 1;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 2rpx;
+}
+
+.onb-skip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 56rpx;
+  padding: 0 24rpx;
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow-float);
+  transition: all 200ms var(--ease-standard);
+}
+
+.onb-skip:active {
+  transform: scale(0.94);
+  background: var(--brand-tint);
+  border-color: var(--brand);
+}
+
+.onb-skip text {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  font-weight: 500;
+  letter-spacing: 1rpx;
+}
+
+/* swiper 占满剩余空间 */
+.onb-swiper {
+  flex: 1;
+  height: 0;
+}
+
+/* 每个 swiper-item 全屏 + 居中 */
+.onb-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--canvas);
+}
+
+.onb-screen-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx 56rpx calc(48rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* ===== Screen 1: 产品哲学 ===== */
+.onb-illust-wrap {
+  width: 320rpx;
+  height: 320rpx;
+  border-radius: 50%;
+  background: var(--brand-weak);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 64rpx;
+  box-shadow: var(--shadow-float);
+}
+
+.onb-illust {
+  width: 180rpx;
+  height: 180rpx;
+}
+
+.onb-title {
+  font-size: 64rpx;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: 4rpx;
+  line-height: 1.2;
+}
+
+.onb-subtitle {
+  margin-top: 16rpx;
+  font-size: 30rpx;
+  color: var(--brand-dark);
+  font-weight: 500;
+  letter-spacing: 2rpx;
+}
+
+.onb-desc {
+  margin-top: 56rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.onb-desc-line {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ===== Screen 2: 6 模式介绍 ===== */
+.onb-screen-title {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 48rpx;
+  letter-spacing: 2rpx;
+}
+
+.onb-mode-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+  margin-bottom: 56rpx;
+}
+
+.onb-mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28rpx 16rpx;
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+  min-height: 180rpx;
+  transition: transform 150ms var(--ease-standard);
+}
+
+.onb-mode-card:active { transform: scale(0.97); }
+
+.onb-mode-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12rpx;
+}
+
+.onb-mode-icon image { width: 40rpx; height: 40rpx; }
+
+.onb-mode-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.onb-mode-desc {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: var(--ink-soft);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ===== Screen 3: 首次出逃指引 ===== */
+.onb-guide-text {
+  margin-top: 24rpx;
+  font-size: 28rpx;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  text-align: center;
+  max-width: 480rpx;
+}
+
+.onb-mock-card {
+  margin: 56rpx 0;
+  width: 440rpx;
+  height: 440rpx;
+  border-radius: var(--radius-xl);
+  background: var(--white);
+  box-shadow: var(--shadow-popup);
+  border: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-2deg);
+  animation: mockFloat 3.5s ease-in-out infinite;
+}
+
+@keyframes mockFloat {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  50% { transform: rotate(-2deg) translateY(-12rpx); }
+}
+
+.onb-mock-card-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.onb-mock-icon {
+  width: 120rpx;
+  height: 120rpx;
+  opacity: 0.85;
+}
+
+.onb-mock-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 16rpx;
+}
+
+.onb-mock-sub {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+}
+
+/* ===== CTA 按钮（通用） ===== */
+.onb-cta {
+  margin-top: 64rpx;
+  width: 100%;
+  max-width: 480rpx;
+  min-height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-float);
+  transition: all 200ms var(--ease-standard);
+}
+
+.onb-cta.primary {
+  background: var(--brand-dark);
+}
+
+.onb-cta:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.onb-cta text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 2rpx;
+}

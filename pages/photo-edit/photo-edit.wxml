@@ -1,0 +1,68 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">编辑照片</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+    <!-- 空状态：没有传入照片 -->
+    <view wx:if="{{notFound}}" class="empty-state">
+      <image class="empty-illust" src="/assets/icons/empty-collection.svg" mode="aspectFit"></image>
+      <text class="empty-title">还没有可编辑的照片</text>
+      <text class="empty-desc">先去执行指令时拍一张吧</text>
+      <view class="empty-btn btn-secondary" bindtap="goBack">返回</view>
+    </view>
+
+    <view wx:if="{{!notFound}}" class="edit-body">
+      <!-- 照片预览区：实时应用滤镜 + 贴纸叠加 -->
+      <view class="preview-area">
+        <image class="preview-photo" src="{{photo}}" mode="aspectFill" style="filter: {{selectedCss}};"></image>
+        <view wx:for="{{placed}}" wx:key="id" class="placed-sticker" style="left: {{item.x}}%; top: {{item.y}}%;" data-id="{{item.id}}" catchtap="removeSticker">
+          <text>{{item.emoji}}</text>
+        </view>
+        <view wx:if="{{placed.length > 0}}" class="preview-hint caption-text">点贴纸可移除</view>
+      </view>
+
+      <!-- 滤镜 -->
+      <view class="section">
+        <text class="section-title h3">滤镜</text>
+        <scroll-view scroll-x class="filter-scroll" enhanced show-scrollbar="{{false}}">
+          <view class="filter-list">
+            <view wx:for="{{filters}}" wx:key="id" class="filter-thumb {{filterIndex === index ? 'on' : ''}}" data-id="{{item.id}}" bindtap="selectFilter">
+              <view class="thumb-img-wrap" style="background: {{item.tint}};">
+                <image class="thumb-img" src="{{photo}}" mode="aspectFill" style="filter: {{item.css}};"></image>
+              </view>
+              <text class="thumb-name">{{item.name}}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- 贴纸 -->
+      <view class="section">
+        <view class="section-head">
+          <text class="section-title h3">贴纸</text>
+          <text wx:if="{{placed.length > 0}}" class="clear-btn caption-text" bindtap="clearStickers">清除</text>
+        </view>
+        <scroll-view scroll-x class="sticker-scroll" enhanced show-scrollbar="{{false}}">
+          <view class="sticker-list">
+            <view wx:for="{{stickers}}" wx:key="*this" class="sticker-item" data-emoji="{{item}}" bindtap="addSticker">
+              <text>{{item}}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{!notFound}}" class="bottom-bar">
+    <view class="btn-primary finish-btn" bindtap="finish">
+      <image src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+      <text>完成</text>
+    </view>
+  </view>
+</view>

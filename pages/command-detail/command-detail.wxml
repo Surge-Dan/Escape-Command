@@ -1,0 +1,141 @@
+<view class="page-container command-detail-page paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">{{command.title || '指令详情'}}</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+    <!-- 空状态：未找到指令 -->
+    <view wx:if="{{notFound}}" class="empty-state">
+      <image class="empty-illust" src="/assets/icons/empty-collection.svg" mode="aspectFit"></image>
+      <text class="empty-title">这条指令不见了</text>
+      <text class="empty-desc">它可能已被更新，回首页摇一个吧</text>
+      <view class="empty-btn btn-secondary" bindtap="goBack">返回</view>
+    </view>
+
+    <view wx:if="{{command}}" class="detail-body">
+      <!-- 类型标签 -->
+      <view class="type-row">
+        <view class="type-chip" style="background: {{command.typeColor}}14; color: {{command.typeColor}};">
+          <image class="type-ico" src="{{command.typeIcon}}" mode="aspectFit"></image>
+          <text>{{command.typeName}}</text>
+        </view>
+      </view>
+
+      <!-- 大标题 -->
+      <text class="detail-title h1">{{command.title}}</text>
+      <text wx:if="{{command.content && command.content !== command.title}}" class="detail-content body-text">{{command.content}}</text>
+
+      <!-- v4: 场景插画 —— 改为 AI 动态生成，sceneUrl 由 onLoad 异步赋值；占位渐变底 + 类型图标始终兜底 -->
+      <view class="scene-wrap {{sceneReady ? 'scene-ready' : ''}} {{sceneGenerating ? 'scene-loading' : ''}}">
+        <view class="cmd-image-bg" style="background: linear-gradient(135deg, {{command.typeColor}}40, {{command.typeColor}}10);">
+          <image class="cmd-image-icon" src="{{command.typeIcon}}" mode="aspectFit"></image>
+        </view>
+        <image wx:if="{{sceneUrl}}" class="scene-img" src="{{sceneUrl}}" mode="aspectFill"></image>
+        <view wx:if="{{sceneGenerating}}" class="scene-loading-mask">
+          <view class="scene-loading-dot"></view>
+          <view class="scene-loading-dot delay1"></view>
+          <view class="scene-loading-dot delay2"></view>
+        </view>
+        <view class="scene-badge" style="background: {{command.typeColor}};">
+          <image class="badge-ico" src="{{command.typeIcon}}" mode="aspectFit"></image>
+        </view>
+      </view>
+
+      <!-- 插画区下方内容：白底卡片 -->
+      <view class="detail-content-card">
+        <!-- 元信息 -->
+        <view class="meta-grid">
+          <view class="meta-cell">
+            <image src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+            <view class="meta-cell-text">
+              <text class="meta-value font-mono">{{command.duration}}</text>
+              <text class="meta-label">分钟</text>
+            </view>
+          </view>
+          <view class="meta-divider"></view>
+          <view class="meta-cell">
+            <image src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+            <view class="meta-cell-text">
+              <text class="meta-value font-mono">{{command.distance}}</text>
+              <text class="meta-label">距离</text>
+            </view>
+          </view>
+          <view class="meta-divider"></view>
+          <view class="meta-cell">
+            <image src="/assets/icons/user-brand.svg" mode="aspectFit"></image>
+            <view class="meta-cell-text">
+              <text class="meta-value">{{command.people}}</text>
+              <text class="meta-label">人数</text>
+            </view>
+          </view>
+          <view class="meta-divider"></view>
+          <view class="meta-cell">
+            <image src="/assets/icons/coffee.svg" mode="aspectFit"></image>
+            <view class="meta-cell-text">
+              <text class="meta-value">{{costText}}</text>
+              <text class="meta-label">花费</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 完成步骤 -->
+        <view wx:if="{{steps.length > 0}}" class="section">
+          <text class="section-title h3">完成步骤</text>
+          <view class="steps-card">
+            <view wx:for="{{steps}}" wx:key="index" class="step-row">
+              <view class="step-main" data-index="{{index}}" bindtap="toggleStep">
+                <view class="step-num font-mono" style="background: {{command.typeColor}}14; color: {{command.typeColor}};">{{index + 1}}</view>
+                <text class="step-text body-text">{{item.text}}</text>
+                <image class="step-chevron {{item.expanded ? 'up' : ''}}" src="/assets/icons/chevron-down-ink.svg" mode="aspectFit"></image>
+              </view>
+              <view wx:if="{{item.expanded}}" class="step-hint">
+                <text class="step-hint-text caption-text">{{item.hint}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 物品清单（仅当 cmd.checklist 存在时展示） -->
+        <view wx:if="{{command.checklist && command.checklist.length > 0}}" class="section">
+          <text class="section-title h3">物品清单</text>
+          <view class="checklist-card">
+            <view wx:for="{{command.checklist}}" wx:key="*this" class="checklist-row">
+              <view class="checklist-dot"></view>
+              <text class="checklist-text body-text">{{item}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 小贴士 -->
+        <view class="tip-box">
+          <view class="tip-head">
+            <view class="tip-icon-dot" style="background: {{command.typeColor}};"></view>
+            <text class="tip-label">小贴士</text>
+          </view>
+          <text class="tip-text body-text">{{command.tip || '慢慢走，留意街边的细节。'}}</text>
+        </view>
+      </view>
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部操作栏：收藏 / 分享 / 不感兴趣 -->
+  <view wx:if="{{command}}" class="action-bar">
+    <view class="action-btn {{collected ? 'on' : ''}}" bindtap="toggleCollect">
+      <image src="{{collected ? '/assets/icons/bookmark-brand.svg' : '/assets/icons/bookmark.svg'}}" mode="aspectFit"></image>
+      <text>{{collected ? '已收藏' : '收藏'}}</text>
+    </view>
+    <button class="action-btn share-btn" open-type="share">
+      <image src="/assets/icons/share-2-ink-soft.svg" mode="aspectFit"></image>
+      <text>分享</text>
+    </button>
+    <view class="action-btn dismiss-btn" bindtap="dismiss">
+      <image src="/assets/icons/x-ink-faint.svg" mode="aspectFit"></image>
+      <text>不感兴趣</text>
+    </view>
+  </view>
+</view>

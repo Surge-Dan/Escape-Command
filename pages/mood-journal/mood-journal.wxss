@@ -1,0 +1,501 @@
+/* ===== 心情日记 ===== */
+.status-bar { flex-shrink: 0; }
+
+.page-scroll {
+  padding: 0 40rpx;
+}
+
+.journal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  padding: 16rpx 0 24rpx;
+}
+
+/* 通用图表卡 */
+.chart-card {
+  padding: 28rpx;
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.card-head-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.card-sub {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+/* 趋势摘要 */
+.trend-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2rpx;
+}
+
+.trend-avg {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: var(--brand-dark);
+  font-family: "SF Mono", monospace;
+  line-height: 1;
+}
+
+.trend-avg-label {
+  font-size: 20rpx;
+  color: var(--ink-faint);
+}
+
+/* 折线图 */
+.trend-chart {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 12rpx;
+}
+
+.trend-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 32rpx;
+  padding: 8rpx 0 28rpx;
+  font-size: 20rpx;
+  color: var(--ink-faint);
+  font-family: "SF Mono", monospace;
+}
+
+.y-tick {
+  line-height: 1;
+}
+
+.trend-plot {
+  flex: 1;
+  position: relative;
+  height: 280rpx;
+  padding-bottom: 28rpx;
+}
+
+.grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2rpx;
+  background: var(--line);
+  pointer-events: none;
+}
+
+/* 连线段 */
+.trend-segment {
+  position: absolute;
+  height: 4rpx;
+  background: linear-gradient(to right, var(--brand), var(--brand-dark));
+  border-radius: 2rpx;
+  transform-origin: 0 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 数据点 */
+.trend-dot-wrap {
+  position: absolute;
+  width: 0;
+  height: 0;
+  z-index: 2;
+  animation: dotPop 400ms var(--ease-bounce) backwards;
+}
+
+@keyframes dotPop {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.trend-dot {
+  position: absolute;
+  left: -22rpx;
+  top: -22rpx;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: var(--white);
+  border: 4rpx solid var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(200, 149, 110, 0.24);
+  transition: transform 150ms var(--ease-standard);
+}
+
+.trend-dot.today {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  box-shadow: 0 2rpx 12rpx rgba(212, 138, 90, 0.32);
+}
+
+.trend-dot-emoji {
+  font-size: 22rpx;
+  line-height: 1;
+}
+
+.trend-x-axis {
+  position: absolute;
+  left: 44rpx;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 20rpx;
+  color: var(--ink-faint);
+  font-family: "SF Mono", monospace;
+}
+
+.x-tick {
+  flex: 1;
+  text-align: center;
+  line-height: 1;
+}
+
+.x-tick.today {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 无数据 */
+.trend-empty {
+  padding: 40rpx 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.trend-empty-text {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+}
+
+.trend-empty-sub {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+/* 趋势摘要底部 */
+.trend-meta-row {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 2rpx solid var(--line);
+}
+
+.trend-meta-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.meta-num {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: "SF Mono", monospace;
+}
+
+.meta-label {
+  font-size: 22rpx;
+  color: var(--ink-soft);
+}
+
+/* 心情统计 5 张卡 */
+.mood-stat-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.mood-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 24rpx;
+  border-radius: var(--radius-lg);
+  border: 2rpx solid transparent;
+  transition: transform 150ms var(--ease-standard);
+}
+
+.mood-stat-card:active {
+  transform: scale(0.98);
+}
+
+.mood-stat-emoji {
+  font-size: 40rpx;
+  width: 56rpx;
+  text-align: center;
+}
+
+.mood-stat-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.mood-stat-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.mood-stat-count {
+  font-size: 22rpx;
+  color: var(--ink-soft);
+}
+
+.mood-stat-percent {
+  font-size: 32rpx;
+  font-weight: 700;
+  font-family: "SF Mono", monospace;
+}
+
+/* 心情关联指令 */
+.mood-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.mood-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.mood-group-head {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 16rpx 20rpx;
+  border-radius: var(--radius-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.group-emoji {
+  font-size: 32rpx;
+  width: 44rpx;
+  text-align: center;
+}
+
+.group-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.group-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.group-count {
+  font-size: 22rpx;
+  color: var(--ink-soft);
+}
+
+.group-bar-mini {
+  width: 8rpx;
+  height: 36rpx;
+  border-radius: 4rpx;
+  opacity: 0.8;
+}
+
+.group-records {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  padding-left: 8rpx;
+}
+
+.group-record {
+  display: flex;
+  align-items: stretch;
+  gap: 14rpx;
+  padding: 16rpx 18rpx 16rpx 0;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  border: var(--border);
+  transition: all 150ms var(--ease-standard);
+}
+
+.group-record:active {
+  transform: scale(0.98);
+  background: var(--canvas);
+}
+
+.rec-type-bar {
+  width: 6rpx;
+  border-radius: 3rpx;
+  flex-shrink: 0;
+}
+
+.rec-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  min-width: 0;
+}
+
+.rec-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+}
+
+.rec-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.rec-type-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4rpx 12rpx;
+  border-radius: var(--radius-sm);
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.rec-date {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  font-family: "SF Mono", monospace;
+}
+
+.rec-duration {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+.rec-feeling {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-top: 4rpx;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+}
+
+.rec-arrow {
+  width: 32rpx;
+  height: 32rpx;
+  align-self: center;
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.bottom-spacer {
+  height: 60rpx;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 0 40rpx;
+  text-align: center;
+}
+
+.empty-illust-wrap {
+  margin-bottom: 32rpx;
+}
+
+.empty-mood-circle {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 50%;
+  background: var(--white);
+  border: 4rpx dashed var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-card);
+  animation: floatSoft 3s var(--ease-standard) infinite;
+}
+
+@keyframes floatSoft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12rpx); }
+}
+
+.empty-mood-emoji {
+  font-size: 80rpx;
+  line-height: 1;
+}
+
+.empty-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  margin-top: 12rpx;
+}
+
+.empty-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 48rpx;
+  padding: 22rpx 60rpx;
+  min-height: 88rpx;
+  background: var(--brand);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  font-size: 28rpx;
+  font-weight: 600;
+  box-shadow: 0 4rpx 16rpx rgba(200, 149, 110, 0.24);
+  transition: transform 150ms var(--ease-standard);
+}
+
+.empty-btn:active {
+  transform: scale(0.97);
+}

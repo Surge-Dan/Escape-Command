@@ -1,0 +1,113 @@
+<view class="record-page paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">保存记录</text>
+  </view>
+
+  <scroll-view scroll-y class="record-scroll" enhanced show-scrollbar="{{false}}">
+    <view class="record-body">
+      <!-- 拍立得卡片 -->
+      <view class="polaroid-card">
+        <view class="polaroid-photo-area">
+          <image class="polaroid-photo" src="{{photos.length > 0 ? photos[mainPhoto] : (command.illustration || command.scene || '/assets/images/empty-collection.webp')}}" mode="aspectFill" style="filter: {{filters[filterIndex].css}};"></image>
+          <view class="photo-mood-sticker" style="background: {{moods[moodIndex].tint}};">
+            <image src="{{moods[moodIndex].icon}}" mode="aspectFit"></image>
+          </view>
+          <!-- v3: 已添加的贴纸叠加层（点击移除） -->
+          <view wx:for="{{selectedStickers}}" wx:key="index" class="photo-emoji-sticker" data-index="{{index}}" style="left: {{item.x}}%; top: {{item.y}}%;" catchtap="removeSticker">{{item.emoji}}</view>
+        </view>
+        <!-- v3: 感受输入直接放在拍立得卡片内（inline 手写风） -->
+        <textarea class="feeling-input" maxlength="200" value="{{feeling}}" bindinput="onFeelingInput" placeholder="写一句今天的感受" auto-height></textarea>
+        <view class="polaroid-meta font-mono">
+          <text>{{dateStr}} {{timeStr}}</text>
+          <text>{{weatherText}}</text>
+        </view>
+      </view>
+
+      <!-- v3: 位置卡片 -->
+      <view class="location-card">
+        <image src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+        <text class="location-name">{{locationText}}</text>
+      </view>
+
+      <!-- v3: 照片缩略图横滑（最多 9 张，点击切换主图，点 × 删除） -->
+      <view class="section">
+        <text class="section-title">照片 {{photos.length}} / 9</text>
+        <scroll-view scroll-x class="photo-strip" enhanced show-scrollbar="{{false}}">
+          <view class="photo-strip-list">
+            <view wx:for="{{photos}}" wx:key="*this" class="photo-strip-thumb {{mainPhoto === index ? 'active' : ''}}" data-index="{{index}}" bindtap="selectMainPhoto">
+              <image src="{{item}}" mode="aspectFill"></image>
+              <view class="photo-strip-remove" catchtap="removePhoto" data-index="{{index}}">×</view>
+            </view>
+            <view wx:if="{{photos.length < 9}}" class="photo-strip-add" bindtap="addPhoto">
+              <text>+</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- 滤镜选择（v3: 6 种，120rpx 缩略图预览） -->
+      <view class="section">
+        <text class="section-title">滤镜</text>
+        <scroll-view scroll-x class="filter-row" enhanced show-scrollbar="{{false}}">
+          <view class="filter-row-list">
+            <view wx:for="{{filters}}" wx:key="id" class="filter-thumb {{filter === item.id ? 'active' : ''}}" data-id="{{item.id}}" bindtap="selectFilter">
+              <image class="filter-thumb-img" src="{{photos.length > 0 ? photos[mainPhoto] : (command.illustration || command.scene || '/assets/images/empty-collection.webp')}}" mode="aspectFill" style="filter: {{item.css}};"></image>
+              <text class="filter-thumb-name">{{item.name}}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- v3: 贴纸库（单组横滑，64rpx emoji） -->
+      <view class="section">
+        <text class="section-title">贴纸</text>
+        <scroll-view scroll-x class="sticker-row" enhanced show-scrollbar="{{false}}">
+          <view class="sticker-list">
+            <view wx:for="{{stickers}}" wx:key="*this" class="sticker-item" data-emoji="{{item}}" bindtap="addSticker">{{item}}</view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- 心情贴纸 -->
+      <view class="section">
+        <text class="section-title">心情贴纸</text>
+        <view class="mood-row">
+          <view wx:for="{{moods}}" wx:key="id" class="mood-item {{moodIndex === index ? 'active' : ''}}" data-id="{{item.id}}" bindtap="selectMood">
+            <view class="mood-circle {{moodIndex === index ? 'picked' : ''}}" style="background: {{item.tint}};">
+              <image src="{{item.icon}}" mode="aspectFit"></image>
+            </view>
+            <text>{{item.name}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部全宽主按钮 -->
+  <view class="save-bar">
+    <view class="save-btn {{saving ? 'loading' : ''}}" bindtap="onSave">
+      <image wx:if="{{!saving}}" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+      <text>{{saving ? '保存中...' : '保存记录'}}</text>
+    </view>
+  </view>
+
+  <canvas id="shareCanvas" type="2d" class="share-canvas"></canvas>
+
+  <view wx:if="{{saved}}" class="saved-overlay">
+    <view class="saved-card">
+      <view class="saved-check"><image src="/assets/icons/check-white.svg" mode="aspectFit"></image></view>
+      <text class="saved-title">已保存</text>
+      <text class="saved-sub">第 {{recordCount}} 张出逃记忆</text>
+      <view class="saved-actions">
+        <view class="saved-btn ghost" bindtap="saveShareImage">保存到相册</view>
+        <button class="saved-btn primary" open-type="share">分享给朋友</button>
+      </view>
+      <view class="saved-later" bindtap="goMap">去地图看看</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,116 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">指令社区</text>
+  </view>
+
+  <view class="comm-tabs">
+    <view class="comm-tab {{activeTab === 'hot' ? 'active' : ''}}" bindtap="switchTab" data-tab="hot">
+      <text>热门</text>
+      <view wx:if="{{activeTab === 'hot'}}" class="comm-tab-underline"></view>
+    </view>
+    <view class="comm-tab {{activeTab === 'new' ? 'active' : ''}}" bindtap="switchTab" data-tab="new">
+      <text>最新</text>
+      <view wx:if="{{activeTab === 'new'}}" class="comm-tab-underline"></view>
+    </view>
+    <view class="comm-tab {{activeTab === 'following' ? 'active' : ''}}" bindtap="switchTab" data-tab="following">
+      <text>关注</text>
+      <view wx:if="{{activeTab === 'following'}}" class="comm-tab-underline"></view>
+    </view>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx - 96rpx);">
+
+    <!-- 关注 tab 空态 -->
+    <view wx:if="{{activeTab === 'following'}}" class="empty-state">
+      <image class="empty-illust" src="/assets/icons/empty-collection.svg" mode="aspectFit"></image>
+      <text class="empty-title">暂无关注用户</text>
+      <text class="empty-desc">在社区里多逛逛，遇到喜欢的作者可以关注</text>
+      <view class="empty-btn" bindtap="switchTab" data-tab="hot">看看热门</view>
+    </view>
+
+    <!-- 命令流 -->
+    <view wx:else class="feed-list">
+      <view
+        wx:for="{{feed}}"
+        wx:key="id"
+        class="feed-card {{item.featured ? 'feed-card-featured' : ''}}"
+      >
+        <!-- 精选标签 -->
+        <view wx:if="{{item.featured}}" class="featured-flag">
+          <image src="/assets/icons/star-lemon.svg" mode="aspectFit"></image>
+          <text>精选</text>
+        </view>
+
+        <!-- 作者行 -->
+        <view class="feed-author">
+          <image class="author-avatar" src="{{item.authorAvatar}}" mode="aspectFill"></image>
+          <view class="author-info">
+            <text class="author-name">{{item.author}}</text>
+            <text class="author-meta">{{item.createdAt}}</text>
+          </view>
+          <view class="type-tag" style="background: {{item.typeColor}}14; color: {{item.typeColor}};">
+            <image src="{{item.typeIcon}}" mode="aspectFit"></image>
+            <text>{{item.typeName}}</text>
+          </view>
+        </view>
+
+        <!-- 指令正文 -->
+        <text class="feed-content">{{item.content}}</text>
+
+        <!-- 标签 -->
+        <view wx:if="{{item.tags.length > 0}}" class="feed-tags">
+          <text wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag" class="feed-tag">#{{tag}}</text>
+        </view>
+
+        <!-- 时长 -->
+        <view class="feed-meta-row">
+          <view class="meta-item">
+            <image src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+            <text>约 {{item.duration}} 分钟</text>
+          </view>
+        </view>
+
+        <!-- 互动行 -->
+        <view class="feed-actions">
+          <view
+            class="action-item like-action {{item.liked ? 'liked' : ''}}"
+            catchtap="toggleLike"
+            data-id="{{item.id}}"
+          >
+            <view class="heart-wrap {{item.liked ? 'heart-on' : ''}}">
+              <image class="action-icon" src="/assets/icons/heart{{item.liked ? '-lavender' : ''}}.svg" mode="aspectFit"></image>
+            </view>
+            <text class="action-count">{{item.likeCount}}</text>
+          </view>
+
+          <view
+            class="action-item {{item.isCollected ? 'collected' : ''}}"
+            catchtap="collectCommand"
+            data-id="{{item.id}}"
+          >
+            <image class="action-icon" src="/assets/icons/bookmark{{item.isCollected ? '-brand' : ''}}.svg" mode="aspectFit"></image>
+            <text class="action-count">{{item.isCollected ? '已收藏' : '收藏'}}</text>
+          </view>
+
+          <view class="action-item" catchtap="shareCommand" data-id="{{item.id}}">
+            <image class="action-icon" src="/assets/icons/share-2.svg" mode="aspectFit"></image>
+            <text class="action-count">分享</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="feed-end">
+        <view class="feed-end-line"></view>
+        <text>已经到底啦，下拉刷新看看</text>
+        <view class="feed-end-line"></view>
+      </view>
+    </view>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+</view>

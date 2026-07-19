@@ -1,0 +1,114 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">出逃准备</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 88rpx);">
+    <!-- 空状态 -->
+    <view wx:if="{{notFound}}" class="empty-state">
+      <image class="empty-illust" src="/assets/icons/empty-collection.svg" mode="aspectFit"></image>
+      <text class="empty-title">没找到要准备的指令</text>
+      <text class="empty-desc">回首页重新摇一个吧</text>
+      <view class="empty-btn btn-secondary" bindtap="goBack">返回</view>
+    </view>
+
+    <view wx:if="{{command}}" class="prep-body">
+      <!-- 指令简述 -->
+      <view class="brief-card solid-card">
+        <view class="brief-type" style="background: {{command.typeColor}}14; color: {{command.typeColor}};">
+          <image class="brief-type-ico" src="{{command.typeIcon}}" mode="aspectFit"></image>
+          <text>{{command.typeName}}</text>
+        </view>
+        <text class="brief-title h3">{{command.title}}</text>
+        <view class="brief-meta">
+          <view class="meta-item">
+            <image src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+            <text>约 {{command.duration}} 分钟</text>
+          </view>
+          <view class="meta-item">
+            <image src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+            <text>{{command.distance}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 天气卡 -->
+      <view class="section">
+        <text class="section-title h3">今日天气</text>
+        <view class="weather-card solid-card">
+          <view class="weather-main">
+            <view class="weather-icon-wrap" style="background: {{weatherTint}};">
+              <image class="weather-icon" src="{{weatherIcon}}" mode="aspectFit"></image>
+            </view>
+            <view class="weather-text">
+              <view class="weather-temp-row">
+                <text class="weather-temp font-mono">{{weather.temperature || 26}}</text>
+                <text class="weather-unit">℃</text>
+                <text class="weather-desc">{{weather.description || '晴'}}</text>
+              </view>
+              <text class="weather-suggestion">{{weatherSuggestion}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 物品清单 -->
+      <view class="section">
+        <view class="section-head">
+          <text class="section-title h3">物品清单</text>
+          <text class="section-sub caption-text">{{checkedCount}} / {{checklist.length}} 已备齐</text>
+        </view>
+        <view class="checklist-card solid-card">
+          <view wx:for="{{checklist}}" wx:key="index" class="check-row" data-index="{{index}}" bindtap="toggleItem">
+            <view class="check-box {{item.checked ? 'on' : ''}}">
+              <image wx:if="{{item.checked}}" class="check-ico" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+            </view>
+            <text class="check-text {{item.checked ? 'on' : ''}}">{{item.text}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 路线预览（视觉占位） -->
+      <view class="section">
+        <text class="section-title h3">路线预览</text>
+        <view class="route-card solid-card">
+          <view class="route-illus">
+            <image class="route-bg" src="/assets/images/map-bg.webp" mode="aspectFill"></image>
+            <view class="route-pin start">
+              <view class="pin-dot"></view>
+              <text class="pin-label">出发</text>
+            </view>
+            <view class="route-dash"></view>
+            <view class="route-pin end">
+              <image class="pin-ico" src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <view class="route-text-row">
+            <view class="route-end-point">
+              <text class="route-label">出发地</text>
+              <text class="route-name">{{locationName}}</text>
+            </view>
+            <image class="route-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+            <view class="route-end-point">
+              <text class="route-label">探索区域</text>
+              <text class="route-name">{{command.distance}} 内</text>
+            </view>
+          </view>
+          <text class="route-tip caption-text">实际路线由你随机决定，迷路也是风景</text>
+        </view>
+      </view>
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{command}}" class="bottom-bar">
+    <view class="btn-primary depart-btn" bindtap="depart">
+      <image src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+      <text>出发</text>
+    </view>
+  </view>
+</view>

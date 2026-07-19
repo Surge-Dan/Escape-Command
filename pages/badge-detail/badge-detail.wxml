@@ -1,0 +1,102 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">徽章详情</text>
+  </view>
+
+  <scroll-view scroll-y class="page-scroll" enhanced show-scrollbar="{{false}}" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
+
+    <!-- 空状态：徽章未找到 -->
+    <view wx:if="{{!badge}}" class="empty-state">
+      <view class="empty-circle">
+        <image src="/assets/icons/lock-coral.svg" mode="aspectFit"></image>
+      </view>
+      <text class="empty-title">徽章不见了</text>
+      <text class="empty-sub">这枚徽章可能被风吹走了，回到徽章墙再看看</text>
+      <view class="empty-back btn-secondary" bindtap="goBack">返回徽章墙</view>
+    </view>
+
+    <view wx:else class="detail-body">
+
+      <!-- 大徽章视觉 -->
+      <view class="hero-wrap">
+        <view class="hero-glow {{unlocked ? 'glow-on' : ''}} {{replayClass}}" style="background: {{unlocked ? badge.gradient : 'transparent'}};"></view>
+        <view class="hero-badge {{unlocked ? 'unlocked' : 'locked'}} {{replayClass}}" style="background: {{unlocked ? badge.gradient : 'var(--canvas)'}};">
+          <image wx:if="{{unlocked}}" class="hero-icon" src="{{badge.icon}}" mode="aspectFit" style="color: {{badge.color}};"></image>
+          <image wx:else class="hero-lock" src="/assets/icons/lock-coral.svg" mode="aspectFit"></image>
+          <view wx:if="{{unlocked}}" class="hero-shine"></view>
+        </view>
+        <view wx:if="{{unlocked}}" class="hero-sparkle sparkle-1"></view>
+        <view wx:if="{{unlocked}}" class="hero-sparkle sparkle-2"></view>
+        <view wx:if="{{unlocked}}" class="hero-sparkle sparkle-3"></view>
+      </view>
+
+      <!-- 名称 + 简介 -->
+      <view class="title-block">
+        <text class="badge-h1">{{badge.name}}</text>
+        <text class="badge-caption">{{badge.desc}}</text>
+        <view class="category-pill" style="color: {{unlocked ? badge.color : 'var(--ink-faint)'}}; background: {{unlocked ? badge.gradient : 'var(--canvas)'}};">
+          <text>{{categoryLabel}}</text>
+        </view>
+      </view>
+
+      <!-- 解锁状态 -->
+      <view class="section-card status-card {{unlocked ? 'is-unlocked' : 'is-locked'}}">
+        <view class="status-icon-wrap" style="background: {{unlocked ? 'var(--brand-tint)' : 'var(--canvas)'}};">
+          <image wx:if="{{unlocked}}" src="/assets/icons/check-brand.svg" mode="aspectFit"></image>
+          <image wx:else src="/assets/icons/lock-coral.svg" mode="aspectFit"></image>
+        </view>
+        <view class="status-text">
+          <text class="status-title">{{unlocked ? '已解锁' : '尚未解锁'}}</text>
+          <text wx:if="{{unlocked}}" class="status-sub">解锁于 {{unlockedDate}}</text>
+          <text wx:else class="status-sub">继续出逃，故事就会发生</text>
+        </view>
+      </view>
+
+      <!-- 徽章故事 -->
+      <view class="section-card story-card">
+        <view class="section-head">
+          <view class="section-dot" style="background: {{badge.color}};"></view>
+          <text class="section-label">徽章故事</text>
+        </view>
+        <view class="story-body">
+          <view wx:for="{{story}}" wx:key="index" class="story-paragraph">
+            <text>{{item}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 解锁条件 -->
+      <view class="section-card condition-card">
+        <view class="section-head">
+          <view class="section-dot" style="background: {{badge.color}};"></view>
+          <text class="section-label">解锁条件</text>
+        </view>
+        <text class="condition-text">{{conditionText}}</text>
+
+        <view wx:if="{{showProgress}}" class="progress-block">
+          <view class="progress-row">
+            <text class="progress-label">当前进度</text>
+            <text class="progress-count font-mono">{{currentCount}} / {{targetCount}}</text>
+          </view>
+          <view class="progress-track">
+            <view class="progress-fill" style="width: {{progressPercent}}%; background: {{badge.gradient}};"></view>
+          </view>
+          <text class="progress-hint">{{progressHint}}</text>
+        </view>
+      </view>
+
+      <!-- 重放解锁动画 -->
+      <view wx:if="{{unlocked}}" class="replay-btn btn-secondary" bindtap="replayUnlock">
+        <image src="/assets/icons/sparkles-coral.svg" mode="aspectFit"></image>
+        <text>重放解锁动画</text>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+</view>

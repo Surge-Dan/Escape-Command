@@ -1,0 +1,63 @@
+# ======================
+# 微信小程序输出
+# ======================
+miniprogram_npm/
+miniprogramRoot_backup/
+
+# ======================
+# 演示资料（截图/录屏/演示页）
+# 规则：放仓库外，不进 git，不进 release-check
+# 历史教训：2026-07-28 demo/ 6.25MB 未忽略导致开发者工具 source size 7126KB 爆 2MB
+# 备份位置：C:/Users/22585/AppData/Local/Temp/escape-command-backup/
+# ======================
+demo/
+screenshots/
+recordings/
+
+# ======================
+# Spec / 文档（团队文档托管在飞书，仓库里只留索引）
+# ======================
+.trae/specs/*/drafts/
+.trae/specs/*/notes/
+
+# ======================
+# IDE / 工具
+# ======================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ======================
+# Node（如果未来加 npm 构建）
+# ======================
+node_modules/
+package-lock.json
+
+# ======================
+# 临时 / 备份
+# ======================
+*.bak
+*.tmp
+*.log
+*.local
+.cache/
+
+# ======================
+# 敏感配置（绝不能进 git）
+# ======================
+project.private.config.json
+.env
+.env.local
+secrets/
+*.pem
+*.key
+
+# ======================
+# AI 协作产物
+# ======================
+# 协作规范/功能表等由团队维护，xlsx 放仓库外
+*.xlsx
+!docs/**/*.xlsx

@@ -123,124 +123,120 @@
   text-overflow: ellipsis;
 }
 
-/* ===== 核心出逃卡片：v9 收紧高度，让今日推荐进入首屏 ===== */
-.shake-card {
-  min-height: 460rpx;
+/* ===== home-dice-entry-01: 3 骰子 Cover Flow ===== */
+.dice-carousel {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32rpx 24rpx;
+  margin-top: 16rpx;
+  padding: 32rpx 24rpx 24rpx;
   background: var(--white);
   border: var(--border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card);
   overflow: hidden;
-  margin-top: 16rpx;
 }
 
-.shake-card:active {
-  transform: scale(0.98);
-  transition: transform 150ms var(--ease-standard);
-}
-
-/* v4: 模式 Tag —— 出逃卡顶部的小型胶囊，10rpx 圆角 */
-.mode-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 10rpx;
-  height: 64rpx;
-  padding: 0 22rpx 0 18rpx;
-  background: rgba(255, 255, 255, 0.85);
-  border: var(--border);
-  border-radius: var(--radius-pill);
-  margin-bottom: 32rpx;
-  z-index: 2;
-  transition: all 200ms var(--ease-standard);
-  box-shadow: var(--shadow-float);
-}
-
-.mode-tag:active { transform: scale(0.97); }
-.mode-tag-ico { width: 36rpx; height: 36rpx; }
-.mode-tag-text { font-size: 28rpx; color: var(--ink); font-weight: 600; letter-spacing: 1rpx; flex: 1; }
-.mode-tag-arrow {
-  width: 24rpx;
-  height: 24rpx;
-  transition: transform 250ms var(--ease-standard);
-  transform-origin: center;
-}
-.mode-tag-arrow.up { transform: scaleY(-1); }
-
-/* 脉冲环：两层错开 */
-.pulse-ring {
-  position: absolute;
-  width: 300rpx;
-  height: 300rpx;
-  border-radius: 50%;
-  border: 3rpx solid var(--brand-tint);
-  animation: tapPulse 2500ms ease-in-out infinite;
-}
-
-.pulse-ring-delay {
-  animation-delay: 1250ms;
-}
-
-@keyframes tapPulse {
-  0%, 100% { opacity: 0; transform: scale(0.96); }
-  50% { opacity: 0.5; transform: scale(1.06); }
-}
-
-/* 骰子容器：更大、更有重量 */
-.dice-box {
-  width: 160rpx;
-  height: 160rpx;
+.dice-track {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-lg);
-  background: transparent;
+  gap: 24rpx;
+  min-height: 280rpx;
+}
+
+.dice-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+  transition: transform 300ms var(--ease-standard), opacity 300ms var(--ease-standard);
+  /* 点击区域 ≥ 88rpx：整cell宽 200rpx 已远超阈值 */
+  min-width: 200rpx;
+  min-height: 200rpx;
+}
+
+.dice-cell.active {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.dice-cell.side {
+  transform: scale(0.7);
+  opacity: 0.5;
+}
+
+.dice-cell-inner {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-shadow: var(--shadow-float);
-  z-index: 1;
 }
 
-.dice-bounce {
-  animation: diceBounce 400ms var(--ease-bounce);
+.dice-ico {
+  width: 120rpx;
+  height: 120rpx;
 }
 
+.dice-name {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.5rpx;
+}
+
+/* 圆点指示器 */
+.dice-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+
+.dice-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--line);
+  transition: all 250ms var(--ease-standard);
+}
+
+.dice-dot.active {
+  width: 24rpx;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+}
+
+/* 中间骰子信息区 */
+.dice-info {
+  margin-top: 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.dice-info-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 1rpx;
+}
+
+.dice-info-desc {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  letter-spacing: 0.5rpx;
+}
+
+/* 兼容旧引用：保留 dice-bounce 关键帧以备其他页面或后续动画使用 */
 @keyframes diceBounce {
   0% { transform: scale(0.85); }
   45% { transform: scale(1.05); }
   100% { transform: scale(1); }
-}
-
-.dice-ico { width: 120rpx; height: 120rpx; }
-
-.shake-title {
-  margin-top: 36rpx;
-  font-size: 44rpx;
-  font-weight: 700;
-  color: var(--ink);
-  z-index: 1;
-}
-
-.shake-sub {
-  margin-top: 8rpx;
-  font-size: 28rpx;
-  color: var(--ink-soft);
-  z-index: 1;
-}
-
-.remain-row {
-  margin-top: 24rpx;
-  font-size: 24rpx;
-  color: var(--ink-faint);
-  z-index: 1;
-}
-
-.remain-num {
-  color: var(--brand);
-  font-weight: 700;
 }
 
 /* ===== v9 收藏入口：0 条时改为极简一行，首屏空间优先给今日推荐 ===== */
@@ -631,8 +627,8 @@
 /* v9: 收紧底部空白，避免头重脚轻视觉失重 */
 .bottom-spacer { height: calc(var(--tabbar-floating-height) + var(--tabbar-bottom-gap) + var(--safe-bottom)); }
 
-/* ===== v4 模式选择 Sheet ===== */
-.mode-sheet-mask {
+/* ===== home-dice-entry-01: 微逃时长细分弹窗 ===== */
+.micro-sheet-mask {
   position: fixed;
   inset: 0;
   background: rgba(46, 47, 51, 0.4);
@@ -647,7 +643,7 @@
   to { opacity: 1; }
 }
 
-.mode-sheet {
+.micro-sheet {
   width: 100%;
   background: var(--white);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
@@ -660,7 +656,7 @@
   to { transform: translateY(0); }
 }
 
-.mode-sheet-handle {
+.micro-sheet-handle {
   width: 56rpx;
   height: 6rpx;
   background: var(--line);
@@ -668,7 +664,7 @@
   margin: 0 auto 24rpx;
 }
 
-.mode-sheet-title {
+.micro-sheet-title {
   display: block;
   text-align: center;
   font-size: 32rpx;
@@ -677,70 +673,94 @@
   margin-bottom: 24rpx;
 }
 
-.mode-sheet-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
+.micro-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
 }
 
-.mode-option {
+.micro-option {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 20rpx;
-  padding: 20rpx;
+  justify-content: center;
+  gap: 4rpx;
+  padding: 24rpx 12rpx;
   border-radius: var(--radius-md);
   background: var(--canvas);
+  border: 2rpx solid transparent;
   transition: all 150ms var(--ease-standard);
 }
 
-.mode-option.active {
+.micro-option.active {
+  border-color: var(--brand);
   background: var(--brand-tint);
 }
 
-.mode-option:active { transform: scale(0.98); }
+.micro-option.recommended {
+  border-color: var(--brand);
+}
 
-.mode-option-ico-wrap {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: var(--radius-md);
+.micro-option:active { transform: scale(0.97); }
+
+.micro-option-num {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+  font-family: 'SourceHanSerifBold', "Source Han Serif SC", "Noto Serif SC", serif;
+}
+
+.micro-option-unit {
+  font-size: 22rpx;
+  color: var(--ink-soft);
+  letter-spacing: 0.5rpx;
+}
+
+.micro-option-tag {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  padding: 2rpx 10rpx;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: var(--white);
+  font-size: 18rpx;
+  font-weight: 600;
+  letter-spacing: 0.5rpx;
+}
+
+.micro-start-btn {
+  margin-top: 24rpx;
+  height: 96rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-}
-
-.mode-option-ico { width: 40rpx; height: 40rpx; }
-
-.mode-option-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-}
-
-.mode-option-name {
+  border-radius: var(--radius-md);
   font-size: 30rpx;
   font-weight: 600;
-  color: var(--ink);
+  letter-spacing: 1rpx;
+  transition: all 200ms var(--ease-standard);
 }
 
-.mode-option-desc {
-  font-size: 24rpx;
-  color: var(--ink-soft);
+.micro-start-btn.enabled {
+  background: var(--brand);
+  color: var(--white);
+  box-shadow: var(--shadow-button);
 }
 
-.mode-option-check {
-  width: 36rpx;
-  height: 36rpx;
-  flex-shrink: 0;
+.micro-start-btn.enabled:active {
+  transform: scale(0.98);
+  background: var(--brand-dark);
 }
 
-.mode-option-check image {
-  width: 100%;
-  height: 100%;
+.micro-start-btn.disabled {
+  background: var(--canvas);
+  color: var(--ink-faint);
 }
 
-.mode-sheet-cancel {
+.micro-cancel {
   margin-top: 16rpx;
   height: 88rpx;
   display: flex;
@@ -753,7 +773,7 @@
   font-weight: 600;
 }
 
-.mode-sheet-cancel:active {
+.micro-cancel:active {
   background: var(--brand-tint);
 }
 

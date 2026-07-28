@@ -2,12 +2,21 @@ const app = getApp()
 
 Page({
   data: {
-    statusBarHeight: 20
+    statusBarHeight: 20,
+    requestMode: '',
+    requestDuration: 0
   },
 
-  onLoad() {
+  onLoad(options) {
     const nav = app.getNavMetrics ? app.getNavMetrics() : {}
     this.setData({ statusBarHeight: nav.statusBarHeight || 20 })
+    if (options && options.mode) {
+      this.setData({ requestMode: options.mode })
+    }
+    if (options && options.duration) {
+      const d = parseInt(options.duration, 10)
+      if (!isNaN(d)) this.setData({ requestDuration: d })
+    }
     this.timer = setTimeout(() => this.advance(), 1500)
   },
 

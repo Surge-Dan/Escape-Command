@@ -22,27 +22,28 @@
       <text class="hero-sub">用 15 分钟，给城市一个随机出口</text>
     </view>
 
-    <!-- 空闲态：核心出逃卡片（v9 精简：高度收紧） -->
-    <view wx:if="{{!selectedCommand}}" class="shake-card" bindtap="rollCommand">
-      <view class="pulse-ring"></view>
-      <view class="pulse-ring pulse-ring-delay"></view>
-
-      <!-- v9.1: 模式 Tag — 去掉副标题，保持简洁 -->
-      <view class="mode-tag" catchtap="onModeTagTap">
-        <image class="mode-tag-ico" src="{{currentModeMeta.icon}}" mode="aspectFit"></image>
-        <text class="mode-tag-text">{{currentModeMeta.name}}</text>
-        <image class="mode-tag-arrow {{showModeSheet ? 'up' : ''}}" src="/assets/icons/chevron-down-ink.svg" mode="aspectFit"></image>
+    <!-- home-dice-entry-01: 3 骰子 Cover Flow 横滑切换 -->
+    <view wx:if="{{!selectedCommand}}" class="dice-carousel"
+          bindtouchstart="onTouchStart"
+          bindtouchend="onTouchEnd">
+      <view class="dice-track">
+        <view wx:for="{{diceList}}" wx:key="id"
+              class="dice-cell {{currentDiceIndex === index ? 'active' : 'side'}}"
+              data-index="{{index}}"
+              bindtap="onDiceTap">
+          <view class="dice-cell-inner" style="background: {{item.color}}1A;">
+            <image class="dice-ico" src="{{item.icon}}" mode="aspectFit"></image>
+          </view>
+          <text class="dice-name">{{item.name}}</text>
+        </view>
       </view>
-
-      <view class="dice-box {{isBouncing ? 'dice-bounce' : ''}}">
-        <image class="dice-ico" src="/assets/icons/dice-5-white.svg" mode="aspectFit"></image>
+      <view class="dice-dots">
+        <view wx:for="{{diceList}}" wx:key="id"
+              class="dice-dot {{currentDiceIndex === index ? 'active' : ''}}"></view>
       </view>
-      <text class="shake-title">出逃一下</text>
-      <text class="shake-sub">点击卡片，开始出逃</text>
-      <view class="remain-row">
-        <text>今日剩余 </text>
-        <text class="remain-num font-mono">{{remainCount}}</text>
-        <text> 次 · 次日 0 点刷新</text>
+      <view class="dice-info">
+        <text class="dice-info-name">{{diceList[currentDiceIndex].name}}</text>
+        <text class="dice-info-desc">{{diceList[currentDiceIndex].desc}}</text>
       </view>
     </view>
 
@@ -162,32 +163,28 @@
     <view class="bottom-spacer"></view>
   </scroll-view>
 
-  <!-- 自定义 TabBar -->
-  <custom-tab-bar selected="{{0}}"></custom-tab-bar>
-
-  <!-- v4: 模式选择 Sheet（底部弹层） -->
-  <view wx:if="{{showModeSheet}}" class="mode-sheet-mask" bindtap="closeModeSheet">
-    <view class="mode-sheet" catchtap="">
-      <view class="mode-sheet-handle"></view>
-      <text class="mode-sheet-title">选择出逃模式</text>
-      <view class="mode-sheet-list">
-        <view wx:for="{{sheetModes}}" wx:key="id"
-              class="mode-option {{selectedMode === item.id ? 'active' : ''}}"
-              data-id="{{item.id}}"
-              bindtap="onModeOptionTap">
-          <view class="mode-option-ico-wrap" style="background: {{item.color}}1A;">
-            <image class="mode-option-ico" src="{{item.icon}}" mode="aspectFit"></image>
-          </view>
-          <view class="mode-option-text">
-            <text class="mode-option-name">{{item.name}}</text>
-            <text class="mode-option-desc">{{item.desc}}</text>
-          </view>
-          <view wx:if="{{selectedMode === item.id}}" class="mode-option-check">
-            <image src="/assets/icons/check-brand.svg" mode="aspectFit"></image>
-          </view>
+  <!-- home-dice-entry-01: 微逃时长细分弹窗 -->
+  <view wx:if="{{showMicroSheet}}" class="micro-sheet-mask" bindtap="onMicroCancel">
+    <view class="micro-sheet" catchtap="">
+      <view class="micro-sheet-handle"></view>
+      <text class="micro-sheet-title">选择出逃时长</text>
+      <view class="micro-options">
+        <view wx:for="{{[5, 10, 15, 20]}}" wx:key="*this"
+              class="micro-option {{selectedDuration === item ? 'active' : ''}} {{isRecommended && recommendedDuration === item ? 'recommended' : ''}}"
+              data-duration="{{item}}"
+              bindtap="onMicroOptionTap">
+          <text class="micro-option-num">{{item}}</text>
+          <text class="micro-option-unit">分钟</text>
+          <text wx:if="{{isRecommended && recommendedDuration === item}}" class="micro-option-tag">推荐</text>
         </view>
       </view>
-      <view class="mode-sheet-cancel" bindtap="closeModeSheet">取消</view>
+      <view class="micro-start-btn {{selectedDuration ? 'enabled' : 'disabled'}}" bindtap="onMicroStart">
+        <text>开始出逃</text>
+      </view>
+      <view class="micro-cancel" bindtap="onMicroCancel">取消</view>
     </view>
   </view>
+
+  <!-- 自定义 TabBar -->
+  <custom-tab-bar selected="{{0}}"></custom-tab-bar>
 </view>

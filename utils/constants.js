@@ -35,6 +35,13 @@ const SHEET_MODES = [
   { id: 'walk',  name: '城市漫游', icon: '/assets/icons/footprints-coral.svg',    color: '#D98A5C', desc: '户外长线，深度探索' }
 ]
 
+// home-dice-entry-01: 首页骰子入口三选项（微逃 / 破圈 / 同频）
+const HOME_DICE_LIST = [
+  { id: 'micro',       name: '微出逃',   icon: '/assets/icons/sprout-brand-strong.svg',  color: '#7BAE7F', desc: '碎片时间，快速出逃' },
+  { id: 'breakthrough', name: '破圈出逃', icon: '/assets/icons/footprints-coral.svg',    color: '#D98A5C', desc: '走出舒适，新鲜探索' },
+  { id: 'sync',        name: '同频组局', icon: '/assets/icons/dice-5-brand-strong.svg', color: '#5CBF9E', desc: '约上朋友，一起出逃' }
+]
+
 const FILTERS = [
   { id: 'day', name: '日光', tint: '#FFF7DE', fg: '#B98A1E', icon: '/assets/icons/sun-lemon-fg.svg' },
   { id: 'rain', name: '阴雨天', tint: '#EAF4FF', fg: '#5B8FB9', icon: '/assets/icons/cloud-rain-sky-fg.svg' },
@@ -82,4 +89,4 @@ function getTypeMeta(type) {
   return TYPE_META[normalizeType(type)] || TYPE_META.walk
 }
 
-module.exports = { TYPE_ALIASES, TYPE_META, MODE_LIST, SHEET_MODES, FILTERS, MOODS, BADGES, DEFAULT_STEPS, TYPE_STEPS, normalizeType, getTypeMeta }
+module.exports = { TYPE_ALIASES, TYPE_META, MODE_LIST, SHEET_MODES, HOME_DICE_LIST, FILTERS, MOODS, BADGES, DEFAULT_STEPS, TYPE_STEPS, normalizeType, getTypeMeta }

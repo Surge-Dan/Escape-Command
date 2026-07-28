@@ -1,5 +1,6 @@
 const app = getApp()
-const { MODE_LIST, SHEET_MODES, getTypeMeta } = require('../../utils/constants.js')
+const { MODE_LIST, SHEET_MODES, HOME_DICE_LIST, getTypeMeta } = require('../../utils/constants.js')
+const { recommendDuration } = require('../../utils/duration-recommender.js')
 
 Page({
   data: {
@@ -10,7 +11,6 @@ Page({
     // v4: 模式选择 —— 仅展示 3 个核心模式 Sheet
     selectedMode: 'smart',
     sheetModes: SHEET_MODES,
-    showModeSheet: false,
     currentModeMeta: SHEET_MODES[0],
     // 保留 6 个 MODE_LIST 给 hero / 双人 / 雨天等状态切换使用
     modes: MODE_LIST,
@@ -37,7 +37,17 @@ Page({
     heroDesc: '算法懂你，随机推荐',
     nightHint: false,
     // v3 每日推荐
-    dailyRecommend: []
+    dailyRecommend: [],
+    // home-dice-entry-01: 3 骰子 Cover Flow 状态机
+    diceList: HOME_DICE_LIST,
+    currentDiceIndex: 0,
+    isSliding: false,
+    touchStartX: 0,
+    // home-dice-entry-01: 微逃细分弹窗
+    showMicroSheet: false,
+    selectedDuration: 0,
+    recommendedDuration: 15,
+    isRecommended: false
   },
 
   onLoad(options) {
@@ -72,50 +82,36 @@ Page({
     this.refreshState()
     this.loadDailyRecommend()
     this.loadFontFace()
+    // home-dice-entry-01: 恢复上次选中的骰子位置
+    this.restoreLastDiceIndex()
     if (options && options.mode === 'double' && options.cmd) this.applyInvitation(options.cmd)
   },
 
-  loadFontFace() {
-    // v12: 优先加载 Source Han Serif CN Bold 专用子集，解决真机粗体合成问题。
-    // 保留 v10/v11 的 9 个 Regular 分片作为兜底覆盖。
-    wx.loadFontFace({
-      family: 'SourceHanSerifBold',
-      source: 'url("/assets/fonts/source-han-serif-cn-bold.woff2")',
-      global: true,
-      success: () => {
-        this.setData({ fontLoaded: true })
-      },
-      fail: (err) => {
-        console.error('SourceHanSerifBold 加载失败', err)
-      },
-      complete: (res) => {
-        console.log('SourceHanSerifBold load complete', res.errMsg || 'ok')
+  // home-dice-entry-01: 读取持久化的骰子 index，兼容旧值与越界
+  restoreLastDiceIndex() {
+    try {
+      const last = wx.getStorageSync('lastDiceIndex')
+      const list = this.data.diceList || []
+      if (typeof last === 'number' && last >= 0 && last < list.length) {
+        this.setData({ currentDiceIndex: last })
       }
-    })
+    } catch (e) {}
+  },
 
-    // v10: 使用本地字体分片，按常用字覆盖范围组织为多个 family。
-    // 小程序会按 font-family 列表顺序回退，从而覆盖全部首页 Hero 汉字。
-    const fontFiles = [
-      { family: 'SourceHanSerifCN1', file: 'L1_4e3f_256.woff2' },
-      { family: 'SourceHanSerifCN2', file: 'L1_5166_256.woff2' },
-      { family: 'SourceHanSerifCN3', file: 'L1_7684_256.woff2' },
-      { family: 'SourceHanSerifCN4', file: 'L1_821f_232.woff2' },
-      { family: 'SourceHanSerifCN5', file: 'L2_654d_128.woff2' },
-      { family: 'SourceHanSerifCN6', file: 'L2_6808_128.woff2' },
-      { family: 'SourceHanSerifCN7', file: 'L2_6cba_128.woff2' },
-      { family: 'SourceHanSerifCN8', file: 'L2_7ed4_128.woff2' },
-      { family: 'SourceHanSerifCN9', file: 'L2_8d8c_128.woff2' }
-    ]
-    fontFiles.forEach(item => {
-      wx.loadFontFace({
-        family: item.family,
-        source: `url("/assets/fonts/${item.file}")`,
-        global: true,
-        fail: (err) => {
-          console.error(`字体 ${item.family} 加载失败`, err)
-        }
-      })
-    })
+  loadFontFace() {
+    // 包体瘦身（2026-07-28）：fonts/ 已从仓库移走（主包减重 1.4MB）。
+    // 字体文件目前走系统字体兜底（见 index.wxss 字体栈）。
+    // TODO 后续 Spec：将字体放到云存储 / CDN，改为远程 URL：
+    //   source: 'url("https://your-cdn.example.com/fonts/source-han-serif-cn-bold.woff2")'
+    // 当前实现：直接跳过 wx.loadFontFace，避免 console 噪音。
+    this.setData({ fontLoaded: true })
+
+    // 历史 v10/v11/v12 实现（暂时禁用，保留作为恢复参考）
+    // wx.loadFontFace({
+    //   family: 'SourceHanSerifBold',
+    //   source: 'url("/assets/fonts/source-han-serif-cn-bold.woff2")',
+    //   ...
+    // })
   },
 
   applyInvitation(cmdId) {
@@ -208,34 +204,77 @@ Page({
     this.setData({ nightHint: isNight })
   },
 
-  // v4: 模式 Tag 点击 —— 打开 Sheet
-  onModeTagTap() {
-    this.setData({ showModeSheet: true })
+  // ===== home-dice-entry-01: Cover Flow 滑动状态机 =====
+  onTouchStart(e) {
+    if (!e.touches || !e.touches.length) return
+    this.data.touchStartX = e.touches[0].clientX
   },
 
-  // v4: 关闭 Sheet
-  closeModeSheet() {
-    this.setData({ showModeSheet: false })
+  onTouchEnd(e) {
+    if (this.data.isSliding) return
+    if (!e.changedTouches || !e.changedTouches.length) return
+    const endX = e.changedTouches[0].clientX
+    const dx = endX - this.data.touchStartX
+    // 小于阈值不触发，避免误触
+    if (Math.abs(dx) < 40) return
+    this.setData({ isSliding: true })
+    let newIndex = this.data.currentDiceIndex
+    if (dx < 0) {
+      // 手指向左滑：下一骰子
+      newIndex = Math.min(this.data.currentDiceIndex + 1, this.data.diceList.length - 1)
+    } else {
+      // 手指向右滑：上一骰子
+      newIndex = Math.max(this.data.currentDiceIndex - 1, 0)
+    }
+    if (newIndex !== this.data.currentDiceIndex) {
+      this.setData({ currentDiceIndex: newIndex })
+      try { wx.setStorageSync('lastDiceIndex', newIndex) } catch (e) {}
+      try { wx.vibrateShort({ type: 'light' }) } catch (e) {}
+    }
+    setTimeout(() => this.setData({ isSliding: false }), 300)
   },
 
-  // v4: 模式选项点击 —— 切换模式
-  onModeOptionTap(e) {
-    const id = e.currentTarget.dataset.id
-    const meta = this.resolveModeMeta(id)
-    if (!meta) return
-    this.setData({
-      selectedMode: id,
-      currentModeMeta: meta,
-      heroColor: meta.color,
-      heroDesc: meta.desc,
-      showModeSheet: false
-    })
-    try { wx.vibrateShort({ type: 'light' }) } catch (e) {}
-    wx.showToast({ title: '已切换到 ' + meta.name, icon: 'none', duration: 900 })
+  // ===== home-dice-entry-01: 骰子点击分流 =====
+  onDiceTap(e) {
+    if (this.data.isSliding) return
+    const index = this.data.currentDiceIndex
+    const dice = this.data.diceList[index]
+    if (!dice) return
+    if (dice.id === 'micro') {
+      // 微逃：弹细分窗，并按历史推荐时长
+      let records = []
+      try { records = wx.getStorageSync('records') || [] } catch (e) {}
+      const rec = recommendDuration(records)
+      this.setData({
+        showMicroSheet: true,
+        recommendedDuration: rec.duration,
+        isRecommended: rec.isRecommended,
+        selectedDuration: rec.duration
+      })
+    } else if (dice.id === 'breakthrough') {
+      wx.navigateTo({ url: '/pages/generating/generating?mode=breakthrough' })
+    } else if (dice.id === 'sync') {
+      wx.navigateTo({
+        url: '/pages/group/create',
+        fail: () => wx.showToast({ title: '同频组局即将开放', icon: 'none' })
+      })
+    }
   },
 
-  resolveModeMeta(id) {
-    return this.data.sheetModes.find(m => m.id === id) || this.data.sheetModes[0]
+  // ===== home-dice-entry-01: 微逃细分弹窗 =====
+  onMicroOptionTap(e) {
+    this.setData({ selectedDuration: e.currentTarget.dataset.duration })
+  },
+
+  onMicroStart() {
+    if (!this.data.selectedDuration) return
+    const duration = this.data.selectedDuration
+    this.setData({ showMicroSheet: false })
+    wx.navigateTo({ url: `/pages/generating/generating?mode=micro&duration=${duration}` })
+  },
+
+  onMicroCancel() {
+    this.setData({ showMicroSheet: false })
   },
 
   rollCommand() {

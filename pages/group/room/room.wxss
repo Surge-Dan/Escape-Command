@@ -1,0 +1,333 @@
+.group-room-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, #FFF0E4 0%, #FFF6F0 18%, #F5F3EF 55%, #F5F3EF 100%);
+}
+
+.group-room-page .nav-header {
+  flex-shrink: 0;
+  background: transparent;
+}
+
+/* loading 骨架屏 */
+.room-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+}
+
+.room-loading-spinner {
+  width: 56rpx;
+  height: 56rpx;
+  border: 4rpx solid rgba(92, 191, 158, 0.2);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: roomLoadingSpin 800ms linear infinite;
+}
+
+@keyframes roomLoadingSpin {
+  to { transform: rotate(360deg); }
+}
+
+.room-loading-text {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  letter-spacing: 0.5rpx;
+}
+
+/* 房间内容 */
+.room-scroll {
+  flex: 1;
+  height: 0;
+  padding: 0 40rpx;
+}
+
+/* hero 区 */
+.room-hero {
+  padding: 32rpx 0 28rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.room-id-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+  padding: 8rpx 24rpx;
+}
+
+.room-id-wrap:active {
+  opacity: 0.7;
+}
+
+.room-id {
+  font-size: 64rpx;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: 6rpx;
+  font-family: 'SF Mono', 'Menlo', monospace;
+}
+
+.room-id-hint {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  letter-spacing: 1rpx;
+}
+
+.room-topic {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 1rpx;
+}
+
+.room-meta {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.room-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 6rpx 16rpx;
+  background: rgba(92, 191, 158, 0.12);
+  border-radius: var(--radius-pill);
+}
+
+.room-status-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--brand);
+  animation: statusPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.room-status-tag text {
+  font-size: 22rpx;
+  color: var(--brand);
+  font-weight: 600;
+  letter-spacing: 0.5rpx;
+}
+
+.room-meta-text {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  letter-spacing: 0.5rpx;
+}
+
+/* 成员区 */
+.members-section {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: 28rpx;
+  margin-top: 12rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.5rpx;
+}
+
+.section-sub {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+}
+
+.members-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24rpx;
+}
+
+.member-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.member-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.host-avatar {
+  background: var(--brand);
+  box-shadow: 0 4rpx 16rpx rgba(92, 191, 158, 0.35);
+}
+
+.host-avatar image {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.empty-avatar {
+  background: transparent;
+  border: 2rpx dashed var(--line);
+  color: var(--ink-faint);
+}
+
+.empty-avatar text {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+
+.member-name {
+  font-size: 22rpx;
+  color: var(--ink-soft);
+  letter-spacing: 0.3rpx;
+}
+
+.member-slot.host .member-name {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+/* 等待提示 */
+.members-waiting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  margin-top: 28rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid var(--line);
+}
+
+.waiting-dots {
+  display: flex;
+  gap: 8rpx;
+}
+
+.waiting-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  opacity: 0.4;
+  animation: waitingBounce 1.4s ease-in-out infinite;
+}
+
+.waiting-dot:nth-child(2) { animation-delay: 0.2s; }
+.waiting-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes waitingBounce {
+  0%, 80%, 100% { opacity: 0.4; transform: scale(1); }
+  40% { opacity: 1; transform: scale(1.3); }
+}
+
+.waiting-text {
+  font-size: 24rpx;
+  color: var(--ink-faint);
+  letter-spacing: 0.5rpx;
+}
+
+/* 操作区 */
+.room-actions {
+  margin-top: 36rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.invite-btn {
+  height: 96rpx;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 1rpx;
+  box-shadow: 0 4rpx 16rpx rgba(92, 191, 158, 0.3);
+  transition: transform 200ms var(--ease-standard);
+}
+
+.invite-btn:active {
+  transform: scale(0.98);
+}
+
+.invite-btn image {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.cancel-btn {
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  color: var(--ink-faint);
+  letter-spacing: 0.5rpx;
+}
+
+.cancel-btn:active {
+  opacity: 0.6;
+}
+
+.cancel-btn.loading {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* 房间不存在 */
+.room-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32rpx;
+}
+
+.room-empty-text {
+  font-size: 28rpx;
+  color: var(--ink-soft);
+}
+
+.room-empty-btn {
+  padding: 20rpx 56rpx;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: var(--white);
+  font-size: 28rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+.bottom-spacer { height: 80rpx; }

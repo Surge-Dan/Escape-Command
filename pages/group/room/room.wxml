@@ -1,0 +1,79 @@
+<view class="page-container group-room-page">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" catchtap="onBackTap">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">同频组局</text>
+    <view class="nav-header-divider"></view>
+  </view>
+
+  <!-- loading 骨架屏 -->
+  <view wx:if="{{loading}}" class="room-loading">
+    <view class="room-loading-spinner"></view>
+    <text class="room-loading-text">加载房间...</text>
+  </view>
+
+  <!-- 房间内容 -->
+  <scroll-view wx:if="{{!loading && room}}" scroll-y class="room-scroll">
+    <view class="room-hero">
+      <view class="room-id-wrap" bindtap="onCopyRoomId">
+        <text class="room-id">{{room.roomId}}</text>
+        <text class="room-id-hint">点击复制</text>
+      </view>
+      <text class="room-topic">{{room.topic}}</text>
+      <view class="room-meta">
+        <view class="room-status-tag">
+          <view class="room-status-dot"></view>
+          <text>{{statusText}}</text>
+        </view>
+        <text class="room-meta-text">{{room.maxMembers}} 人组局</text>
+      </view>
+    </view>
+
+    <view class="members-section">
+      <view class="section-header">
+        <text class="section-title">成员</text>
+        <text class="section-sub">{{membersCount}}/{{room.maxMembers}}</text>
+      </view>
+      <view class="members-grid">
+        <view wx:for="{{memberSlots}}" wx:key="index"
+              class="member-slot {{item.isHost ? 'host' : 'empty'}}">
+          <view wx:if="{{item.isHost}}" class="member-avatar host-avatar">
+            <image src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+          </view>
+          <view wx:else class="member-avatar empty-avatar">
+            <text>?</text>
+          </view>
+          <text class="member-name">{{item.isHost ? '你' : '等待加入'}}</text>
+        </view>
+      </view>
+      <view class="members-waiting">
+        <view class="waiting-dots">
+          <view class="waiting-dot"></view>
+          <view class="waiting-dot"></view>
+          <view class="waiting-dot"></view>
+        </view>
+        <text class="waiting-text">等待朋友加入...</text>
+      </view>
+    </view>
+
+    <view class="room-actions">
+      <view class="invite-btn" bindtap="onInviteTap">
+        <image src="/assets/icons/users-white.svg" mode="aspectFit"></image>
+        <text>邀请朋友</text>
+      </view>
+      <view class="cancel-btn {{cancelling ? 'loading' : ''}}" bindtap="onCancelTap">
+        <text>{{cancelling ? '取消中...' : '取消组局'}}</text>
+      </view>
+    </view>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+
+  <!-- 房间不存在 / 已取消 -->
+  <view wx:if="{{!loading && !room}}" class="room-empty">
+    <text class="room-empty-text">房间不存在或已关闭</text>
+    <view class="room-empty-btn" bindtap="onBackTap">返回首页</view>
+  </view>
+</view>

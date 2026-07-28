@@ -1,0 +1,195 @@
+.group-create-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, #FFF0E4 0%, #FFF6F0 18%, #F5F3EF 55%, #F5F3EF 100%);
+}
+
+.group-create-page .nav-header {
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.create-scroll {
+  flex: 1;
+  height: 0;
+  padding: 0 40rpx;
+}
+
+/* hero 区 */
+.create-hero {
+  padding: 32rpx 0 28rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.create-hero-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 1rpx;
+}
+
+.create-hero-sub {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  letter-spacing: 0.5rpx;
+}
+
+/* 表单卡片 */
+.create-card {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: 8rpx 28rpx;
+}
+
+.form-row {
+  position: relative;
+  padding: 28rpx 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.form-label {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.5rpx;
+}
+
+.form-input {
+  height: 80rpx;
+  font-size: 30rpx;
+  color: var(--ink);
+  padding: 0 4rpx;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.form-input-ph {
+  color: var(--ink-faint);
+  font-size: 28rpx;
+}
+
+.form-counter {
+  position: absolute;
+  right: 4rpx;
+  top: 28rpx;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+.form-divider {
+  height: 1rpx;
+  background: var(--line);
+}
+
+.form-picker {
+  width: 100%;
+}
+
+.form-picker-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80rpx;
+  padding: 0 4rpx;
+  font-size: 30rpx;
+  color: var(--ink);
+  border-bottom: 1rpx solid var(--line);
+}
+
+.form-picker-arrow {
+  width: 28rpx;
+  height: 28rpx;
+  transform: rotate(90deg);
+  opacity: 0.6;
+}
+
+.form-hint {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  letter-spacing: 0.5rpx;
+}
+
+/* 小贴士 */
+.create-tips {
+  margin-top: 28rpx;
+  padding: 24rpx 28rpx;
+  background: rgba(92, 191, 158, 0.06);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.tips-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--brand);
+  letter-spacing: 0.5rpx;
+}
+
+.tips-text {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  letter-spacing: 0.3rpx;
+}
+
+/* 底部按钮区 */
+.create-footer {
+  flex-shrink: 0;
+  padding: 24rpx 40rpx 48rpx;
+  background: rgba(245, 243, 239, 0.92);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+}
+
+.create-btn {
+  height: 96rpx;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 1rpx;
+  transition: opacity 200ms var(--ease-standard), transform 200ms var(--ease-standard);
+}
+
+.create-btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.create-btn:active {
+  transform: scale(0.98);
+}
+
+.create-btn.loading {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.create-btn-loading {
+  width: 32rpx;
+  height: 32rpx;
+  border: 3rpx solid rgba(255, 255, 255, 0.4);
+  border-top-color: var(--white);
+  border-radius: 50%;
+  animation: btnSpin 700ms linear infinite;
+}
+
+@keyframes btnSpin {
+  to { transform: rotate(360deg); }
+}
+
+.bottom-spacer { height: 80rpx; }

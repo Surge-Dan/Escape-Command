@@ -37,6 +37,13 @@ node_modules/
 package-lock.json
 
 # ======================
+# 云函数依赖（云函数本地 npm install 后产生，部署时云端会重新安装）
+# ======================
+cloudfunctions/*/node_modules/
+cloudfunctions/*/.fun/
+cloudfunctions/*/.envrc
+
+# ======================
 # 临时 / 备份
 # ======================
 *.bak

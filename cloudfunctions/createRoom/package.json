@@ -1,0 +1,9 @@
+{
+  "name": "createRoom",
+  "version": "1.0.0",
+  "description": "group-create-01: 创建同频组局房间",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

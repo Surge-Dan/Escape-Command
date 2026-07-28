@@ -35,7 +35,9 @@
     "pages/data-export/data-export",
     "pages/invite/invite",
     "pages/partner-list/partner-list",
-    "pages/leaderboard/leaderboard"
+    "pages/leaderboard/leaderboard",
+    "pages/group/create/create",
+    "pages/group/room/room"
   ],
   "lazyCodeLoading": "requiredComponents",
   "window": {

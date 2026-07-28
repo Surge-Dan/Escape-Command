@@ -42,10 +42,13 @@ App({
     currentChallenge: null,
     theme: wx.getStorageSync('currentTheme') || 'default',
     currentCity: wx.getStorageSync('currentCity') || '',
-    partnerRecords: wx.getStorageSync('partnerRecords') || []
+    partnerRecords: wx.getStorageSync('partnerRecords') || [],
+    // group-create-01: 云开发初始化状态
+    cloudReady: false
   },
 
   onLaunch() {
+    this.initCloud()
     this.initSystemInfo()
     this.loadLocalData()
     this.initCommandPool()
@@ -54,6 +57,27 @@ App({
     this.checkContinuousDays()
     // v4: 清理过期 AI 场景插画缓存
     try { aiImage.clearExpiredCache() } catch (e) { console.warn('[app] AI 缓存清理失败：', e) }
+  },
+
+  // group-create-01: 云开发初始化
+  // env id 需要在微信开发者工具「云开发」控制台创建环境后回填
+  // 当前为占位字符串，跑通前必须回填真实 env id
+  initCloud() {
+    if (!wx.cloud) {
+      console.error('[app] 当前基础库不支持云开发，请更新微信开发者工具')
+      this.globalData.cloudReady = false
+      return
+    }
+    try {
+      wx.cloud.init({
+        env: 'escape-command-prod',  // TODO: 回填真实 env id
+        traceUser: true
+      })
+      this.globalData.cloudReady = true
+    } catch (e) {
+      console.error('[app] 云开发初始化失败：', e)
+      this.globalData.cloudReady = false
+    }
   },
 
   onShow() {

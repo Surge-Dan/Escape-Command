@@ -43,6 +43,8 @@ Page({
     currentDiceIndex: 0,
     isSliding: false,
     touchStartX: 0,
+    // home-dice-entry-01: 点击掷骰转动动画
+    isRolling: false,
     // home-dice-entry-01: 微逃细分弹窗
     showMicroSheet: false,
     selectedDuration: 0,
@@ -234,12 +236,27 @@ Page({
     setTimeout(() => this.setData({ isSliding: false }), 300)
   },
 
-  // ===== home-dice-entry-01: 骰子点击分流 =====
+  // ===== home-dice-entry-01: 骰子点击分流（先转动再路由） =====
   onDiceTap(e) {
     if (this.data.isSliding) return
+    if (this.data.isRolling) return  // 转动中禁止重复点击
     const index = this.data.currentDiceIndex
     const dice = this.data.diceList[index]
     if (!dice) return
+
+    // 触发酷炫转动动画
+    this.setData({ isRolling: true })
+    try { wx.vibrateShort({ type: 'medium' }) } catch (e) {}
+
+    // 800ms 动画结束后执行分流
+    setTimeout(() => {
+      this.setData({ isRolling: false })
+      this.routeDice(dice)
+    }, 800)
+  },
+
+  // 实际路由逻辑（转动动画结束后调用）
+  routeDice(dice) {
     if (dice.id === 'micro') {
       // 微逃：弹细分窗，并按历史推荐时长
       let records = []

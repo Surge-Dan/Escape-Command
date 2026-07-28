@@ -22,19 +22,20 @@
       <text class="hero-sub">用 15 分钟，给城市一个随机出口</text>
     </view>
 
-    <!-- home-dice-entry-01: 3 骰子 Cover Flow 横滑切换 -->
-    <view wx:if="{{!selectedCommand}}" class="dice-carousel"
+    <!-- home-dice-entry-01: 单骰居中 + 右划切换 + 点击转动 -->
+    <view wx:if="{{!selectedCommand}}" class="dice-stage"
           bindtouchstart="onTouchStart"
           bindtouchend="onTouchEnd">
-      <view class="dice-track">
+      <view class="dice-stage-inner">
         <view wx:for="{{diceList}}" wx:key="id"
-              class="dice-cell {{currentDiceIndex === index ? 'active' : 'side'}}"
+              class="dice-card {{currentDiceIndex === index ? 'active' : (index < currentDiceIndex ? 'prev' : 'next')}} {{isRolling && currentDiceIndex === index ? 'rolling' : ''}}"
               data-index="{{index}}"
               bindtap="onDiceTap">
-          <view class="dice-cell-inner" style="background: {{item.color}}1A;">
+          <view class="dice-card-inner" style="background: {{item.color}}1A;">
             <image class="dice-ico" src="{{item.icon}}" mode="aspectFit"></image>
           </view>
           <text class="dice-name">{{item.name}}</text>
+          <text class="dice-hint">点击掷骰</text>
         </view>
       </view>
       <view class="dice-dots">

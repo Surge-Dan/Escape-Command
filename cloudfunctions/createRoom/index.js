@@ -4,7 +4,7 @@
 // 出参：{ ok: true, roomId } 或 { ok: false, errCode }
 
 const cloud = require('wx-server-sdk')
-cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+cloud.init({ env: 'dev1-d2gchwpba51a6091b' })
 
 const db = cloud.database()
 

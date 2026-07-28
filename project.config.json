@@ -69,8 +69,9 @@
   },
   "compileType": "miniprogram",
   "libVersion": "2.33.0",
-  "appid": "wx3d1d1ed3a5006b0f",
+  "appid": "wx9917324651f1c264",
   "projectname": "escape-command",
+  "cloudfunctionRoot": "cloudfunctions/",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",

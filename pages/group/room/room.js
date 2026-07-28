@@ -1,4 +1,9 @@
 const app = getApp()
+const roomStore = require('../../../utils/group-room-store.js')
+
+// 开关：true = 本地存储 demo 模式，false = 云函数模式
+// 与 create.js 保持一致，云开发修好后两个文件一起改成 false
+const USE_LOCAL_MODE = true
 
 Page({
   data: {
@@ -34,6 +39,28 @@ Page({
 
   // 加载房间数据
   loadRoom(roomId) {
+    if (USE_LOCAL_MODE) {
+      this.loadRoomLocal(roomId)
+    } else {
+      this.loadRoomCloud(roomId)
+    }
+  },
+
+  // ===== 本地存储模式（demo）=====
+  loadRoomLocal(roomId) {
+    // 模拟 500ms 网络延迟
+    setTimeout(() => {
+      const result = roomStore.loadRoom(roomId)
+      if (result.ok && result.room) {
+        this.applyRoom(result.room)
+      } else {
+        this.setData({ loading: false, room: null })
+      }
+    }, 500)
+  },
+
+  // ===== 云函数模式（云开发修好后启用）=====
+  loadRoomCloud(roomId) {
     if (!app.globalData.cloudReady) {
       this.setData({ loading: false, room: null })
       wx.showToast({ title: '云开发未就绪', icon: 'none' })
@@ -48,8 +75,7 @@ Page({
           this.setData({ loading: false, room: null })
           return
         }
-        const room = list[0]
-        this.applyRoom(room)
+        this.applyRoom(list[0])
       },
       fail: (err) => {
         console.error('[room] 查询失败', err)
@@ -121,12 +147,41 @@ Page({
   },
 
   doCancel() {
+    this.setData({ cancelling: true })
+
+    if (USE_LOCAL_MODE) {
+      this.doCancelLocal()
+    } else {
+      this.doCancelCloud()
+    }
+  },
+
+  // ===== 本地存储模式（demo）=====
+  doCancelLocal() {
+    setTimeout(() => {
+      const result = roomStore.cancelRoom(this.data.room.roomId)
+      if (result.ok) {
+        wx.showToast({ title: '组局已取消', icon: 'success' })
+        setTimeout(() => {
+          wx.navigateBack({
+            fail: () => wx.switchTab({ url: '/pages/index/index' })
+          })
+        }, 800)
+      } else {
+        this.setData({ cancelling: false })
+        const msg = this.mapCancelErrMsg(result.errCode)
+        wx.showToast({ title: msg, icon: 'none' })
+      }
+    }, 500)
+  },
+
+  // ===== 云函数模式（云开发修好后启用）=====
+  doCancelCloud() {
     if (!app.globalData.cloudReady) {
+      this.setData({ cancelling: false })
       wx.showToast({ title: '云开发未就绪', icon: 'none' })
       return
     }
-
-    this.setData({ cancelling: true })
 
     wx.cloud.callFunction({
       name: 'cancelRoom',
@@ -142,8 +197,7 @@ Page({
           }, 800)
         } else {
           this.setData({ cancelling: false })
-          const errCode = result && result.errCode
-          const msg = this.mapCancelErrMsg(errCode)
+          const msg = this.mapCancelErrMsg(result && result.errCode)
           wx.showToast({ title: msg, icon: 'none' })
         }
       },

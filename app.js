@@ -70,7 +70,7 @@ App({
     }
     try {
       wx.cloud.init({
-        env: 'escape-command-prod',  // TODO: 回填真实 env id
+        env: 'dev1-d2gchwpba51a6091b',
         traceUser: true
       })
       this.globalData.cloudReady = true

@@ -272,7 +272,7 @@ Page({
       wx.navigateTo({ url: '/pages/generating/generating?mode=breakthrough' })
     } else if (dice.id === 'sync') {
       wx.navigateTo({
-        url: '/pages/group/create',
+        url: '/pages/group/create/create',
         fail: () => wx.showToast({ title: '同频组局即将开放', icon: 'none' })
       })
     }

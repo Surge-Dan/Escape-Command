@@ -1,4 +1,9 @@
 const app = getApp()
+const roomStore = require('../../../utils/group-room-store.js')
+
+// 开关：true = 本地存储 demo 模式，false = 云函数模式
+// 云开发环境修好后，把这个改成 false 即可切回云函数
+const USE_LOCAL_MODE = true
 
 Page({
   data: {
@@ -56,15 +61,40 @@ Page({
       return
     }
 
-    // 云开发就绪检查
+    this.setData({ creating: true })
+
+    if (USE_LOCAL_MODE) {
+      this.createRoomLocal(topic, maxMembers)
+    } else {
+      this.createRoomCloud(topic, maxMembers)
+    }
+  },
+
+  // ===== 本地存储模式（demo）=====
+  createRoomLocal(topic, maxMembers) {
+    // 模拟 800ms 网络延迟，让 loading 效果可见
+    setTimeout(() => {
+      const result = roomStore.createRoom(topic, maxMembers)
+      if (result.ok && result.roomId) {
+        wx.redirectTo({
+          url: '/pages/group/room/room?roomId=' + result.roomId
+        })
+      } else {
+        this.setData({ creating: false })
+        const msg = this.mapErrMsg(result.errCode)
+        wx.showToast({ title: msg, icon: 'none' })
+      }
+    }, 800)
+  },
+
+  // ===== 云函数模式（云开发修好后启用）=====
+  createRoomCloud(topic, maxMembers) {
     if (!app.globalData.cloudReady) {
+      this.setData({ creating: false })
       wx.showToast({ title: '云开发未就绪，请稍后', icon: 'none' })
       return
     }
 
-    this.setData({ creating: true })
-
-    // 5 秒超时
     let timeoutHit = false
     const timer = setTimeout(() => {
       timeoutHit = true
@@ -85,8 +115,7 @@ Page({
           })
         } else {
           this.setData({ creating: false })
-          const errCode = result && result.errCode
-          const msg = this.mapErrMsg(errCode)
+          const msg = this.mapErrMsg(result && result.errCode)
           wx.showToast({ title: msg, icon: 'none' })
         }
       },

@@ -134,8 +134,256 @@ check('VOTE_OPTIONS.style 有 3 项', store.VOTE_OPTIONS.style.length === 3, 'er
 check('PREFERENCE_OPTIONS.interests 有 6 项', store.PREFERENCE_OPTIONS.interests.length === 6, 'error')
 check('PREFERENCE_OPTIONS.intensity 有 3 项', store.PREFERENCE_OPTIONS.intensity.length === 3, 'error')
 
-// ===== 3b. generator-engine 常量完整性（B-01~B-06）=====
-console.log('\n--- 3b. generator-engine 常量完整性 ---')
+// ===== 3a. C-P2 同频组局收尾函数 + 契约完整性（C-14~C-19）=====
+console.log('\n--- 3a. C-P2 同频组局收尾函数 + 契约完整性 ---')
+const storeJs = fs.readFileSync(path.join(projectRoot, 'utils/group-room-store.js'), 'utf-8')
+// 函数导出
+;['assignRoles', 'generateClues', 'listPublicRooms', 'requestJoin', 'approveJoin', 'rejectJoin', 'submitReview', 'reportRoom'].forEach(fn => {
+  check('store 导出 C-P2 函数: ' + fn, typeof store[fn] === 'function', 'error')
+})
+// _internal 导出（供测试/变异测试使用）
+;['buildRoles', 'buildClues', 'buildReviewSummary', 'generateRequestId'].forEach(fn => {
+  check('store._internal 导出: ' + fn, typeof store._internal[fn] === 'function', 'error')
+})
+check('store._internal 导出 ROLE_LIBRARY', !!store._internal.ROLE_LIBRARY, 'error')
+check('store 顶层导出 ROLE_LIBRARY', !!store.ROLE_LIBRARY, 'error')
+
+// ROLE_LIBRARY 完整性（C-14）
+check('ROLE_LIBRARY 含 relax', Array.isArray(store.ROLE_LIBRARY.relax) && store.ROLE_LIBRARY.relax.length > 0, 'error')
+check('ROLE_LIBRARY 含 adventure', Array.isArray(store.ROLE_LIBRARY.adventure) && store.ROLE_LIBRARY.adventure.length > 0, 'error')
+check('ROLE_LIBRARY 含 social', Array.isArray(store.ROLE_LIBRARY.social) && store.ROLE_LIBRARY.social.length > 0, 'error')
+check('ROLE_LIBRARY relax 至少 3 个角色', store.ROLE_LIBRARY.relax.length >= 3, 'error')
+
+// buildRoles 契约（C-14）
+check('buildRoles 使用 relax 兜底', storeJs.includes('ROLE_LIBRARY[style] || ROLE_LIBRARY.relax'), 'error')
+check('buildRoles 使用轮询 i % pool.length', storeJs.includes('pool[i % pool.length]'), 'error')
+check('buildRoles members 非数组兜底 []', storeJs.includes('Array.isArray(members) ? members : []'), 'error')
+
+// buildClues 契约（C-15）
+check('buildClues 使用轮询 i % sList.length', storeJs.includes('sList[i % sList.length]'), 'error')
+check('buildClues steps 为空兜底「自由发挥」', storeJs.includes("'自由发挥'"), 'error')
+check('buildClues steps 非数组兜底 []', storeJs.includes('Array.isArray(steps) ? steps : []'), 'error')
+
+// assignRoles/generateClues 状态守卫（C-14/C-15）
+check('assignRoles 仅 FINISHED 可调', storeJs.includes("room.status !== ROOM_STATUS.FINISHED") && storeJs.includes('剧本未生成，无法分配角色'), 'error')
+check('generateClues 仅 FINISHED 可调', storeJs.includes('剧本未生成，无法生成线索'), 'error')
+
+// listPublicRooms 契约（C-16）
+check('listPublicRooms 过滤 visibility === public', storeJs.includes("r.visibility === 'public'"), 'error')
+check('listPublicRooms 排除 cancelled', storeJs.includes("r.status !== 'cancelled'"), 'error')
+check('listPublicRooms 排除 FINISHED', storeJs.includes('r.status !== ROOM_STATUS.FINISHED'), 'error')
+check('listPublicRooms 按 createdAt 倒序', storeJs.includes('(b.createdAt || 0) - (a.createdAt || 0)'), 'error')
+check('listPublicRooms 精简字段 membersCount', storeJs.includes('membersCount:'), 'error')
+check('listPublicRooms 精简字段不含 members 数组', !storeJs.includes('membersCount: r.members'), 'warn')
+check('createRoom 支持 options.visibility', storeJs.includes("opts.visibility === 'public'"), 'error')
+check('createRoom 默认 visibility private', storeJs.includes("'private'"), 'error')
+
+// requestJoin 契约（C-17）
+check('requestJoin 仅 public 可申请 (NOT_PUBLIC)', storeJs.includes("room.visibility !== 'public'") && storeJs.includes("'NOT_PUBLIC'"), 'error')
+check('requestJoin 防已是成员 (ALREADY_JOINED)', storeJs.includes("'ALREADY_JOINED'"), 'error')
+check('requestJoin 防重复申请 (ALREADY_REQUESTED)', storeJs.includes("'ALREADY_REQUESTED'"), 'error')
+check('requestJoin 房间满检查 (ROOM_FULL)', storeJs.includes("'ROOM_FULL'"), 'error')
+check('requestJoin 拒绝 VOTING/GENERATING/FINISHED', storeJs.includes("room.status === ROOM_STATUS.VOTING || room.status === ROOM_STATUS.GENERATING || room.status === ROOM_STATUS.FINISHED"), 'error')
+check('requestJoin 返回 requestId', storeJs.includes('return { ok: true, requestId }'), 'error')
+
+// approveJoin/rejectJoin 契约（C-18）
+check('approveJoin 仅房主可调 (NOT_HOST)', storeJs.includes("'NOT_HOST'") && storeJs.includes('只有发起人可以审核'), 'error')
+check('approveJoin 从 joinRequests 移除', storeJs.includes("reqs.filter(r => r.requestId !== requestId)"), 'error')
+check('approveJoin 加入 members', storeJs.includes('room.members.push({'), 'error')
+check('approveJoin 新成员 isHost=false', storeJs.includes('isHost: false'), 'error')
+check('approveJoin 房间满检查 (ROOM_FULL)', storeJs.includes("'ROOM_FULL'") && storeJs.includes('房间已满'), 'error')
+check('approveJoin 申请不存在 (REQUEST_NOT_FOUND)', storeJs.includes("'REQUEST_NOT_FOUND'"), 'error')
+check('rejectJoin 仅房主可调', (storeJs.match(/rejectJoin[\s\S]{0,600}NOT_HOST/) || []).length > 0, 'error')
+
+// submitReview 契约（C-19）
+check('submitReview rating 整数校验 Number.isInteger', storeJs.includes('Number.isInteger(review.rating)'), 'error')
+check('submitReview rating 范围 1-5', storeJs.includes('review.rating < 1 || review.rating > 5'), 'error')
+check('submitReview comment 截断 100 字', storeJs.includes('.slice(0, 100)'), 'error')
+check('submitReview 仅 FINISHED 可评价', storeJs.includes('完成后才能评价'), 'error')
+check('submitReview 仅成员可评价 (NOT_MEMBER)', storeJs.includes("'NOT_MEMBER'"), 'error')
+check('submitReview 防重复 (ALREADY_REVIEWED)', storeJs.includes("'ALREADY_REVIEWED'"), 'error')
+check('submitReview 返回 reviewSummary', storeJs.includes('reviewSummary: buildReviewSummary(reviews)'), 'error')
+
+// buildReviewSummary 契约（C-19 纯函数）
+check('buildReviewSummary rating 范围 [1,5]', storeJs.includes('rating >= 1 && rating <= 5'), 'error')
+check('buildReviewSummary average 保留一位小数', storeJs.includes('Math.round((sum / total) * 10) / 10'), 'error')
+check('buildReviewSummary 空数组 average=0', storeJs.includes('total > 0 ?'), 'error')
+check('buildReviewSummary distribution 含 1-5', storeJs.includes('distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }'), 'error')
+
+// reportRoom 契约（C-19）
+check('reportRoom 理由范围 1-100 字', storeJs.includes('r.length > 100'), 'error')
+check('reportRoom 防重复 (ALREADY_REPORTED)', storeJs.includes("'ALREADY_REPORTED'"), 'error')
+check('reportRoom 函数存在', typeof store.reportRoom === 'function', 'error')
+check('reportRoom 记录 reportedBy + reportedAt', storeJs.includes('room.reportedBy') && storeJs.includes('room.reportedAt'), 'error')
+
+// room 数据结构字段（C-16~C-19 扩展字段）
+check('createRoom 初始化 visibility 字段', storeJs.includes('visibility,'), 'error')
+check('createRoom 初始化 joinRequests 字段', storeJs.includes('joinRequests: []'), 'error')
+check('createRoom 初始化 reviews 字段', storeJs.includes('reviews: []'), 'error')
+check('createRoom 初始化 reported 字段', storeJs.includes('reported: false'), 'error')
+check('generateScript 自动分配 roles', storeJs.includes('room.roles = buildRoles'), 'error')
+check('generateScript 自动生成 clues', storeJs.includes('room.clues = buildClues'), 'error')
+
+// C-P2 安全性：无 eval/Function 注入
+check('store.js 无 eval() (C-P2)', !storeJs.includes('eval('), 'error')
+check('store.js 无 new Function() (C-P2)', !storeJs.includes('new Function('), 'error')
+
+// ===== 3b. C-P3 任务大厅与搭子匹配契约完整性 =====
+console.log('\n--- 3b. C-P3 任务大厅数据层契约 ---')
+// A. 数据文件存在性
+check('guangzhou-districts.js 存在', fs.existsSync(path.join(projectRoot, 'data/guangzhou-districts.js')), 'error')
+check('guangzhou-pois.js 存在', fs.existsSync(path.join(projectRoot, 'data/guangzhou-pois.js')), 'error')
+check('escape-master-tasks.js 存在', fs.existsSync(path.join(projectRoot, 'data/escape-master-tasks.js')), 'error')
+check('mock-user-pool.js 存在', fs.existsSync(path.join(projectRoot, 'utils/mock-user-pool.js')), 'error')
+check('task-hall-store.js 存在', fs.existsSync(path.join(projectRoot, 'utils/task-hall-store.js')), 'error')
+
+// B. 数据文件导出与完整性
+const districts = require('../../data/guangzhou-districts.js')
+const pois = require('../../data/guangzhou-pois.js')
+const templates = require('../../data/escape-master-tasks.js')
+const userPool = require('../../utils/mock-user-pool.js')
+
+// 广州区域
+check('GUANGZHOU_DISTRICTS 导出', Array.isArray(districts.GUANGZHOU_DISTRICTS), 'error')
+check('GUANGZHOU_DISTRICTS 6 区', districts.GUANGZHOU_DISTRICTS.length === 6, 'error')
+check('getDistrictByName 导出', typeof districts.getDistrictByName === 'function', 'error')
+check('getDistrictById 导出', typeof districts.getDistrictById === 'function', 'error')
+
+// 广州 POI
+check('GUANGZHOU_POIS 导出', Array.isArray(pois.GUANGZHOU_POIS), 'error')
+check('GUANGZHOU_POIS ≥50 个', pois.GUANGZHOU_POIS.length >= 50, 'error')
+check('POI_TYPES 导出', !!pois.POI_TYPES, 'error')
+check('getPOIsByDistrict 导出', typeof pois.getPOIsByDistrict === 'function', 'error')
+check('getPOIsByType 导出', typeof pois.getPOIsByType === 'function', 'error')
+check('getPOIById 导出', typeof pois.getPOIById === 'function', 'error')
+// POI 字段完整性（抽查第一个）
+const samplePoi = pois.GUANGZHOU_POIS[0]
+check('POI 含 id 字段', !!samplePoi.id, 'error')
+check('POI 含 name 字段', !!samplePoi.name, 'error')
+check('POI 含 district 字段', !!samplePoi.district, 'error')
+check('POI 含 latitude 字段', typeof samplePoi.latitude === 'number', 'error')
+check('POI 含 longitude 字段', typeof samplePoi.longitude === 'number', 'error')
+check('POI 含 type 字段', !!samplePoi.type, 'error')
+
+// 出逃大师模板
+check('ESCAPE_MASTER_TEMPLATES 导出', Array.isArray(templates.ESCAPE_MASTER_TEMPLATES), 'error')
+check('ESCAPE_MASTER_TEMPLATES ≥10 条', templates.ESCAPE_MASTER_TEMPLATES.length >= 10, 'error')
+check('getTemplatesByDistrict 导出', typeof templates.getTemplatesByDistrict === 'function', 'error')
+// 模板字段完整性
+const sampleTpl = templates.ESCAPE_MASTER_TEMPLATES[0]
+check('Template 含 templateId', !!sampleTpl.templateId, 'error')
+check('Template 含 topic', !!sampleTpl.topic, 'error')
+check('Template 含 poiId', !!sampleTpl.poiId, 'error')
+check('Template 含 steps 数组', Array.isArray(sampleTpl.steps), 'error')
+check('Template tags 含官方', sampleTpl.tags.includes('官方'), 'error')
+// POI 引用一致性（所有模板的 poiId 必须在 POI 库中存在）
+const invalidPoiTemplates = templates.ESCAPE_MASTER_TEMPLATES.filter(t => !pois.getPOIById(t.poiId))
+check('Template poiId 引用一致性', invalidPoiTemplates.length === 0, 'error')
+
+// mock 用户池
+check('MOCK_USERS 导出', Array.isArray(userPool.MOCK_USERS), 'error')
+check('MOCK_USERS ≥8 个', userPool.MOCK_USERS.length >= 8, 'error')
+check('getMockUsers 导出', typeof userPool.getMockUsers === 'function', 'error')
+check('getRandomPartner 导出', typeof userPool.getRandomPartner === 'function', 'error')
+check('Mock 用户 avatar 复用', userPool.MOCK_USERS.every(u => u.avatar === '/assets/images/avatar.webp'), 'error')
+
+// C. task-hall-store 函数导出
+const hallStore = require('../../utils/task-hall-store.js')
+;['initHallFromTemplates', 'listTasks', 'getTaskDetail', 'createUserTask', 'joinTask', 'diceMatch', 'linkRoom', 'updateTaskStatus', 'clearAllTasks'].forEach(fn => {
+  check('hallStore 导出函数: ' + fn, typeof hallStore[fn] === 'function', 'error')
+})
+check('hallStore 导出 HALL_TASK_STATUS', !!hallStore.HALL_TASK_STATUS, 'error')
+check('hallStore 导出 VALID_CATEGORIES', Array.isArray(hallStore.VALID_CATEGORIES), 'error')
+check('hallStore 导出 VALID_DISTRICTS', Array.isArray(hallStore.VALID_DISTRICTS), 'error')
+check('hallStore._internal 导出', !!hallStore._internal, 'error')
+;['generateTaskId', 'loadAllTasks', 'saveAllTasks', 'applyFilters', 'pickRandomTask', 'computePartnerCount', 'toCardSummary'].forEach(fn => {
+  check('hallStore._internal 导出: ' + fn, typeof hallStore._internal[fn] === 'function', 'error')
+})
+
+// D. task-hall-store 契约（read source file）
+const hallStoreJs = fs.readFileSync(path.join(projectRoot, 'utils/task-hall-store.js'), 'utf-8')
+check('task-hall 使用 STORAGE_KEY taskHall', hallStoreJs.includes("'taskHall'") || hallStoreJs.includes('"taskHall"'), 'error')
+check('listTasks 默认排除 cancelled', hallStoreJs.includes("'cancelled'"), 'error')
+check('listTasks 精简字段 membersCount', hallStoreJs.includes('membersCount'), 'error')
+check('createUserTask 校验 topic 类型', hallStoreJs.includes("typeof opts.topic !== 'string'"), 'error')
+check('createUserTask 校验 maxMembers 3-6', hallStoreJs.includes('maxMembers < 3') && hallStoreJs.includes('maxMembers > 6'), 'error')
+check('joinTask 满员自动转 ready', hallStoreJs.includes("'ready'"), 'error')
+check('diceMatch 返回 partners', hallStoreJs.includes('partners'), 'error')
+check('diceMatch 空池 NO_MATCH', hallStoreJs.includes("'NO_MATCH'"), 'error')
+check('linkRoom 仅 ready 状态可调', hallStoreJs.includes("INVALID_STATUS"), 'error')
+check('initHallFromTemplates 幂等 force 参数', hallStoreJs.includes('force'), 'error')
+
+// ===== 3c. C-P3 任务大厅页面契约 =====
+console.log('\n--- 3c. C-P3 任务大厅页面契约 ---')
+// E. 页面文件存在性
+const pageFiles = [
+  'pages/group/hall/hall.js',
+  'pages/group/hall/hall.wxml',
+  'pages/group/hall/hall.wxss',
+  'pages/group/hall/hall.json',
+  'pages/group/hall/detail/detail.js',
+  'pages/group/hall/detail/detail.wxml',
+  'pages/group/hall/detail/detail.wxss',
+  'pages/group/hall/detail/detail.json',
+  'pages/group/hall/create-task/create-task.js',
+  'pages/group/hall/create-task/create-task.wxml',
+  'pages/group/hall/create-task/create-task.wxss',
+  'pages/group/hall/create-task/create-task.json'
+]
+pageFiles.forEach(f => {
+  check('页面文件存在: ' + f, fs.existsSync(path.join(projectRoot, f)), 'error')
+})
+
+// F. 页面契约（read source files）
+const hallJs = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/hall.js'), 'utf-8')
+const hallWxml = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/hall.wxml'), 'utf-8')
+const detailJs = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/detail/detail.js'), 'utf-8')
+const createTaskJs = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/create-task/create-task.js'), 'utf-8')
+const indexJs = fs.readFileSync(path.join(projectRoot, 'pages/index/index.js'), 'utf-8')
+
+// hall 页
+check('hall.js 导入 task-hall-store', hallJs.includes('task-hall-store'), 'error')
+check('hall.js 调用 initHallFromTemplates', hallJs.includes('initHallFromTemplates'), 'error')
+check('hall.js 调用 listTasks', hallJs.includes('listTasks'), 'error')
+check('hall.js 调用 diceMatch', hallJs.includes('diceMatch'), 'error')
+check('hall.js 含 nav-header', hallWxml.includes('nav-header'), 'error')
+check('hall.wxml 含筛选 Tag', hallWxml.includes('scroll-x'), 'error')
+check('hall.wxml 含任务卡片', hallWxml.includes('task-card') || hallWxml.includes('hall-card'), 'error')
+check('hall.wxml 含摇骰子按钮', hallWxml.includes('摇骰子') || hallWxml.includes('dice'), 'error')
+
+// detail 页
+check('detail.js 调用 getTaskDetail', detailJs.includes('getTaskDetail'), 'error')
+check('detail.js 调用 joinTask', detailJs.includes('joinTask'), 'error')
+check('detail.js 调用 linkRoom', detailJs.includes('linkRoom'), 'error')
+check('detail.js 含 members[0] host 检查', detailJs.includes('members[0]'), 'error')
+
+// create-task 页
+check('create-task.js 调用 createUserTask', createTaskJs.includes('createUserTask'), 'error')
+check('create-task.js 调用 getPOIsByDistrict', createTaskJs.includes('getPOIsByDistrict'), 'error')
+
+// 首页入口分流
+check('index.js 含 showDiceSheet', indexJs.includes('showDiceSheet'), 'error')
+check('index.js 含 onInviteFriendsTap', indexJs.includes('onInviteFriendsTap'), 'error')
+check('index.js 含 onEnterHallTap', indexJs.includes('onEnterHallTap'), 'error')
+check('index.js 跳转 hall 路由', indexJs.includes('/pages/group/hall/hall'), 'error')
+
+// G. 路由注册
+const hallAppJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'app.json'), 'utf-8'))
+;['pages/group/hall/hall', 'pages/group/hall/detail/detail', 'pages/group/hall/create-task/create-task'].forEach(route => {
+  check('app.json 注册路由: ' + route, hallAppJson.pages.includes(route), 'error')
+})
+
+// H. group room 联动
+const hallRoomJs = fs.readFileSync(path.join(projectRoot, 'pages/group/room/room.js'), 'utf-8')
+check('room.js 导入 task-hall-store', hallRoomJs.includes('task-hall-store'), 'error')
+check('room.js onLoad 接收 taskId', /onLoad[\s\S]{0,500}taskId/.test(hallRoomJs), 'error')
+check('room.js 回写 hall task finished', hallRoomJs.includes('updateTaskStatus') && hallRoomJs.includes('finished'), 'error')
+check('hall.js 导入 group-room-store', hallJs.includes('group-room-store'), 'error')
+check('hall.js diceMatch 后 createRoom', hallJs.includes('createRoom'), 'error')
+check('hall.js diceMatch 后 linkRoom', hallJs.includes('linkRoom'), 'error')
+
+// ===== 3d. generator-engine 常量完整性（B-01~B-06）=====
+console.log('\n--- 3d. generator-engine 常量完整性 ---')
 check('FALLBACK_COMMANDS 共 12 条', engine._internal.FALLBACK_COMMANDS.length === 12, 'error')
 check('FALLBACK_COMMANDS 所有 id 以 fb 开头',
   engine._internal.FALLBACK_COMMANDS.every(c => typeof c.id === 'string' && c.id.indexOf('fb') === 0), 'error')
@@ -154,8 +402,8 @@ check('90 天不重复窗口', engineCode.includes('90 * 24 * 60 * 60 * 1000'), 
 check('纯函数零 wx 依赖', !engineCode.includes('wx.') && !engineCode.includes('wx.cloud') && !engineCode.includes('wx.getStorage'), 'error')
 check('使用 strict mode', engineCode.includes('\'use strict\'') || engineCode.includes('"use strict"'), 'warn')
 
-// ===== 3c. record-builder 契约完整性（完成流数据联动）=====
-console.log('\n--- 3c. record-builder 契约完整性 ---')
+// ===== 3e. record-builder 契约完整性（完成流数据联动）=====
+console.log('\n--- 3e. record-builder 契约完整性 ---')
 const rbCode = fs.readFileSync(path.join(projectRoot, 'utils/record-builder.js'), 'utf-8')
 check('buildRecord 纯函数零 wx 依赖', !rbCode.includes('wx.') && !rbCode.includes('wx.cloud') && !rbCode.includes('wx.getStorage'), 'error')
 check('使用 strict mode', rbCode.includes('\'use strict\'') || rbCode.includes('"use strict"'), 'warn')
@@ -173,8 +421,8 @@ check('filter 兜底 day', rbCode.includes("'day'"), 'error')
 check('title 兜底 出逃记忆', rbCode.includes('出逃记忆'), 'error')
 check('无 eval/Function 注入', !rbCode.includes('eval(') && !rbCode.includes('new Function('), 'error')
 
-// ===== 3d. 完成流页面契约（escape-record + app 数据联动）=====
-console.log('\n--- 3d. 完成流页面契约 ---')
+// ===== 3f. 完成流页面契约（escape-record + app 数据联动）=====
+console.log('\n--- 3f. 完成流页面契约 ---')
 const escapeRecordJs = fs.readFileSync(path.join(projectRoot, 'pages/group/escape-record/escape-record.js'), 'utf-8')
 check('escape-record 完成后跳 record 拍照打卡页', escapeRecordJs.includes("navigateTo({ url: '/pages/record/record' })"), 'error')
 check('escape-record 完成流程不直接调 completeCommand（改由 record 页 onSave 触发）', !escapeRecordJs.includes('app.completeCommand'), 'error')
@@ -190,8 +438,8 @@ check('app.completeCommand 写入 records', appJs.includes('records.unshift'), '
 check('app.completeCommand 更新连续天数', appJs.includes('updateContinuousDays'), 'error')
 check('app.completeCommand 解锁徽章', appJs.includes('checkBadges'), 'error')
 
-// ===== 3e. 进度持久化 + POI 指令体系契约 =====
-console.log('\n--- 3e. 进度持久化 + POI 指令体系契约 ---')
+// ===== 3g. 进度持久化 + POI 指令体系契约 =====
+console.log('\n--- 3g. 进度持久化 + POI 指令体系契约 ---')
 const executionProgressMod = require('../../utils/execution-progress.js')
 ;['initProgress', 'markStepDone', 'mergeProgress', 'recompute', 'isAllDone'].forEach(fn => {
   check('executionProgress 导出: ' + fn, typeof executionProgressMod[fn] === 'function', 'error')
@@ -328,8 +576,7 @@ check('wxml 有投票卡片 (C-05/06/07)', roomWxml.includes('voteOptions'), 'er
 check('wxml 有剧本展示 (C-08)', roomWxml.includes('script-title'), 'error')
 check('wxml 有自定义导航栏', roomWxml.includes('nav-header'), 'error')
 
-// 检查 store.js 代码质量
-const storeJs = fs.readFileSync(path.join(projectRoot, 'utils/group-room-store.js'), 'utf-8')
+// 检查 store.js 代码质量（storeJs 在 3a 节已定义）
 check('store.js 有状态机常量', storeJs.includes('ROOM_STATUS'), 'error')
 check('store.js 有剧本模板库', storeJs.includes('SCRIPT_TEMPLATES'), 'error')
 check('store.js 有错误码', storeJs.includes('errCode'), 'error')

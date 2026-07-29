@@ -1,0 +1,193 @@
+<view class="page-container create-task-page">
+  <!-- 统一导航栏：标题居中 + 底部 1rpx 分割线 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="onBackTap">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">创建出逃任务</text>
+    <view class="nav-header-divider"></view>
+  </view>
+
+  <scroll-view scroll-y class="form-scroll" enhanced show-scrollbar="{{false}}">
+    <!-- Hero -->
+    <view class="form-hero">
+      <text class="hero-title">发布你的出逃任务</text>
+      <text class="hero-subtitle">其他用户可以在任务大厅加入你的任务</text>
+    </view>
+
+    <!-- 表单卡片 -->
+    <view class="form-card">
+      <!-- 同频主题 -->
+      <view class="form-field">
+        <text class="field-label">同频主题</text>
+        <text class="field-counter">{{topic.length}}/20</text>
+        <input
+          class="field-input"
+          placeholder="比如：周末探店 / 城市漫游"
+          placeholder-class="field-placeholder"
+          maxlength="20"
+          value="{{topic}}"
+          bindinput="onTopicInput"
+          confirm-type="done"
+        />
+      </view>
+
+      <view class="form-divider"></view>
+
+      <!-- 区域选择 -->
+      <view class="form-field">
+        <text class="field-label">区域选择</text>
+        <scroll-view scroll-x class="tag-row" enhanced show-scrollbar="{{false}}">
+          <view class="tag-list">
+            <view
+              wx:for="{{districts}}"
+              wx:key="name"
+              class="tag {{selectedDistrict === item.name ? 'selected' : ''}}"
+              data-name="{{item.name}}"
+              bindtap="onDistrictTagTap"
+            >{{item.alias}}</view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <view class="form-divider"></view>
+
+      <!-- POI 选择 -->
+      <view class="form-field">
+        <text class="field-label">出逃地点</text>
+
+        <view wx:if="{{!selectedDistrict}}" class="poi-tip">
+          <text class="poi-tip-text">请先选择区域</text>
+        </view>
+
+        <view wx:else class="poi-list">
+          <view
+            wx:for="{{poiOptions}}"
+            wx:key="id"
+            class="poi-card {{selectedPoiId === item.id ? 'selected' : ''}}"
+            data-id="{{item.id}}"
+            bindtap="onPoiTap"
+          >
+            <view class="poi-card-head">
+              <text class="poi-name">{{item.name}}</text>
+              <text class="poi-type-badge">{{poiTypeLabels[item.type]}}</text>
+            </view>
+            <text class="poi-address">{{item.address}}</text>
+            <text wx:if="{{selectedPoiId === item.id}}" class="poi-check">✓</text>
+          </view>
+          <view wx:if="{{poiOptions.length === 0}}" class="poi-tip">
+            <text class="poi-tip-text">该区域暂无出逃地点</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="form-divider"></view>
+
+      <!-- 主题分类 -->
+      <view class="form-field">
+        <text class="field-label">主题分类</text>
+        <scroll-view scroll-x class="tag-row" enhanced show-scrollbar="{{false}}">
+          <view class="tag-list">
+            <view
+              wx:for="{{categories}}"
+              wx:key="key"
+              class="tag {{selectedCategory === item.key ? 'selected' : ''}}"
+              data-key="{{item.key}}"
+              bindtap="onCategoryTagTap"
+            >{{item.label}}</view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <view class="form-divider"></view>
+
+      <!-- 人数上限 -->
+      <view class="form-field" bindtap="onPickerTap">
+        <text class="field-label">人数上限</text>
+        <view class="picker-display">
+          <text class="picker-value">{{maxMembers}} 人</text>
+          <text class="picker-arrow">▾</text>
+        </view>
+        <text class="field-tip">含发起人，3-6 人</text>
+      </view>
+
+      <view class="form-divider"></view>
+
+      <!-- 时间偏好 -->
+      <view class="form-field">
+        <text class="field-label">时间偏好</text>
+        <scroll-view scroll-x class="tag-row" enhanced show-scrollbar="{{false}}">
+          <view class="tag-list">
+            <view
+              wx:for="{{timeOptions}}"
+              wx:key="key"
+              class="tag {{scheduledTime === item.key ? 'selected' : ''}}"
+              data-key="{{item.key}}"
+              bindtap="onTimeTagTap"
+            >{{item.label}}</view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <view class="form-divider"></view>
+
+      <!-- 任务描述 -->
+      <view class="form-field">
+        <text class="field-label">任务描述</text>
+        <text class="field-counter">{{description.length}}/200</text>
+        <textarea
+          class="field-textarea"
+          placeholder="说点什么，吸引同频的人加入（选填）"
+          placeholder-class="field-placeholder"
+          maxlength="200"
+          value="{{description}}"
+          bindinput="onDescriptionInput"
+          auto-height
+        ></textarea>
+      </view>
+    </view>
+
+    <!-- 小贴士 -->
+    <view class="tip-card">
+      <text class="tip-title">小贴士</text>
+      <text class="tip-text">创建后任务会出现在任务大厅，等待其他用户加入。人齐后你可以发起出逃。</text>
+    </view>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+
+  <!-- 底部按钮 -->
+  <view class="footer">
+    <view class="create-btn {{creating ? 'disabled' : ''}}" bindtap="onPublishTap">
+      <text>{{creating ? '发布中...' : '发布任务'}}</text>
+    </view>
+  </view>
+
+  <!-- 自定义人数选择器（底部弹层）-->
+  <view wx:if="{{showPicker}}" class="picker-mask" bindtap="onPickerClose">
+    <view class="picker-panel" catchtap="">
+      <view class="picker-header">
+        <text class="picker-cancel" bindtap="onPickerClose">取消</text>
+        <text class="picker-title">选择人数上限</text>
+        <text class="picker-confirm" bindtap="onPickerConfirm">确定</text>
+      </view>
+      <view class="picker-options">
+        <view
+          wx:for="{{memberOptions}}"
+          wx:key="value"
+          class="picker-option {{tempMembers === item.value ? 'selected' : ''}}"
+          data-value="{{item.value}}"
+          bindtap="onPickerOptionTap"
+        >
+          <view class="picker-option-radio {{tempMembers === item.value ? 'selected' : ''}}"></view>
+          <view class="picker-option-info">
+            <text class="picker-option-label">{{item.label}}</text>
+            <text class="picker-option-desc">{{item.desc}}</text>
+          </view>
+          <text wx:if="{{tempMembers === item.value}}" class="picker-option-check">✓</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

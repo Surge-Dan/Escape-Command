@@ -55,6 +55,13 @@ const PREFERENCE_OPTIONS = {
   ]
 }
 
+// ===== C-14: 角色库（按 style 分类，每类 6 角色）=====
+const ROLE_LIBRARY = {
+  relax: ['咖啡探路者', '甜品鉴赏师', '光线观察员', '发呆顾问', '步速调节员', '氛围记录官'],
+  adventure: ['线索采集员', '路线规划师', '风险预警员', '街景摄影师', '本地解码员', '挑战发起人'],
+  social: ['气氛组组长', '话题引导员', '桌游裁判', '美食分配师', '合照导演', '时间管理员']
+}
+
 // ===== 剧本模板库（C-08）=====
 const SCRIPT_TEMPLATES = [
   {
@@ -154,15 +161,22 @@ function touchRoom(room) {
   room.updatedAt = Date.now()
 }
 
-// ===== C-01: 创建房间 =====
-function createRoom(topic, maxMembers) {
-  const t = (topic || '').trim()
+// ===== C-01/C-16: 创建房间（visibility 默认 private，向后兼容）=====
+function createRoom(topic, maxMembers, options) {
+  // 防御：topic 必须是字符串类型（非字符串一律拒绝，避免 (topic||'').trim 抛异常）
+  if (typeof topic !== 'string') {
+    return { ok: false, errCode: 'INVALID_PARAM', errMsg: '主题需 1-20 字' }
+  }
+  const t = topic.trim()
   if (!t || t.length > 20) {
     return { ok: false, errCode: 'INVALID_PARAM', errMsg: '主题需 1-20 字' }
   }
   if (!Number.isInteger(maxMembers) || maxMembers < 3 || maxMembers > 6) {
     return { ok: false, errCode: 'INVALID_PARAM', errMsg: '人数需 3-6 人' }
   }
+  // C-16: visibility 校验，默认 private
+  const opts = options || {}
+  const visibility = (opts.visibility === 'public') ? 'public' : 'private'
 
   const list = loadAllRooms()
   let roomId = ''
@@ -195,7 +209,14 @@ function createRoom(topic, maxMembers) {
     status: ROOM_STATUS.WAITING,
     script: null,
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
+    // C-16: 公开/私密（默认 private，向后兼容旧房间无此字段按 private）
+    visibility,
+    // C-17: 待审核申请列表
+    joinRequests: [],
+    // C-19: 评价列表 + 举报标记
+    reviews: [],
+    reported: false
   }
 
   list.push(room)
@@ -497,6 +518,7 @@ function generateScript(roomId) {
     duration: template.duration,
     budgetLabel: template.budgetLabel,
     styleLabel: template.styleLabel,
+    style,
     timeLabel: stats.timeWinner ? stats.timeWinner.label : '随时',
     members: room.members.map(m => m.nickname),
     generatedAt: Date.now()
@@ -504,6 +526,9 @@ function generateScript(roomId) {
 
   room.script = script
   room.status = ROOM_STATUS.FINISHED
+  // C-14/C-15: 剧本生成后自动分配角色 + 生成独立线索
+  room.roles = buildRoles(room.members, style)
+  room.clues = buildClues(room.members, script.steps)
   touchRoom(room)
   list[idx] = room
   saveAllRooms(list)
@@ -627,6 +652,277 @@ function leaveRoom(roomId) {
   }
 }
 
+// ===== C-14: 角色分配 =====
+// 纯函数：按 style 从角色库轮询分配，每人一个角色
+// members 非数组 → 返回 []；style 非法 → 用 relax 兜底
+function buildRoles(members, style) {
+  const list = Array.isArray(members) ? members : []
+  const pool = ROLE_LIBRARY[style] || ROLE_LIBRARY.relax
+  return list.map((m, i) => ({
+    openId: m.openId,
+    nickname: m.nickname,
+    role: pool[i % pool.length]
+  }))
+}
+
+// 房间操作：仅 FINISHED 可调，幂等（覆盖重分配）
+function assignRoles(roomId) {
+  if (!roomId) return { ok: false, errCode: 'INVALID_PARAM' }
+  const list = loadAllRooms()
+  const idx = findRoomIndex(list, roomId)
+  if (idx === -1) return { ok: false, errCode: 'ROOM_NOT_FOUND' }
+  const room = list[idx]
+  if (room.status === 'cancelled') return { ok: false, errCode: 'ROOM_CANCELLED' }
+  if (room.status !== ROOM_STATUS.FINISHED) {
+    return { ok: false, errCode: 'INVALID_STATUS', errMsg: '剧本未生成，无法分配角色' }
+  }
+  const style = (room.script && room.script.style) || 'relax'
+  room.roles = buildRoles(room.members, style)
+  touchRoom(room)
+  list[idx] = room
+  saveAllRooms(list)
+  return { ok: true, room }
+}
+
+// ===== C-15: 独立线索 =====
+// 纯函数：steps 轮询分配给成员，steps 为空则每人「自由发挥」
+function buildClues(members, steps) {
+  const mList = Array.isArray(members) ? members : []
+  const sList = Array.isArray(steps) ? steps : []
+  return mList.map((m, i) => ({
+    openId: m.openId,
+    nickname: m.nickname,
+    clue: sList.length > 0 ? sList[i % sList.length] : '自由发挥'
+  }))
+}
+
+// 房间操作：仅 FINISHED 可调，幂等
+function generateClues(roomId) {
+  if (!roomId) return { ok: false, errCode: 'INVALID_PARAM' }
+  const list = loadAllRooms()
+  const idx = findRoomIndex(list, roomId)
+  if (idx === -1) return { ok: false, errCode: 'ROOM_NOT_FOUND' }
+  const room = list[idx]
+  if (room.status === 'cancelled') return { ok: false, errCode: 'ROOM_CANCELLED' }
+  if (room.status !== ROOM_STATUS.FINISHED) {
+    return { ok: false, errCode: 'INVALID_STATUS', errMsg: '剧本未生成，无法生成线索' }
+  }
+  const steps = (room.script && Array.isArray(room.script.steps)) ? room.script.steps : []
+  room.clues = buildClues(room.members, steps)
+  touchRoom(room)
+  list[idx] = room
+  saveAllRooms(list)
+  return { ok: true, room }
+}
+
+// ===== C-16: 公开组局列表 =====
+// 返回 visibility=public 且未完成/未取消的房间，按 createdAt 倒序，精简字段
+function listPublicRooms() {
+  const list = loadAllRooms()
+  const active = list.filter(r =>
+    r.visibility === 'public' &&
+    r.status !== 'cancelled' &&
+    r.status !== ROOM_STATUS.FINISHED
+  )
+  active.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+  const rooms = active.map(r => ({
+    roomId: r.roomId,
+    topic: r.topic,
+    membersCount: Array.isArray(r.members) ? r.members.length : 0,
+    maxMembers: r.maxMembers,
+    status: r.status,
+    createdAt: r.createdAt
+  }))
+  return { ok: true, rooms }
+}
+
+// ===== C-17: 申请加入（公开房间）=====
+function generateRequestId() {
+  return 'req_' + Date.now() + '_' + Math.floor(Math.random() * 100000)
+}
+
+// 仅 public + status∈{waiting,ready} 可申请；防重复（已成员/已申请）
+function requestJoin(roomId, nickname) {
+  if (!roomId) return { ok: false, errCode: 'INVALID_PARAM' }
+  const list = loadAllRooms()
+  const idx = findRoomIndex(list, roomId)
+  if (idx === -1) return { ok: false, errCode: 'ROOM_NOT_FOUND' }
+  const room = list[idx]
+  if (room.status === 'cancelled') return { ok: false, errCode: 'ROOM_CANCELLED' }
+  if (room.visibility !== 'public') {
+    return { ok: false, errCode: 'NOT_PUBLIC', errMsg: '仅公开组局可申请加入' }
+  }
+  if (room.status === ROOM_STATUS.VOTING || room.status === ROOM_STATUS.GENERATING || room.status === ROOM_STATUS.FINISHED) {
+    return { ok: false, errCode: 'INVALID_STATUS', errMsg: '当前阶段无法申请加入' }
+  }
+  const openId = getHostOpenId()
+  if (room.members.some(m => m.openId === openId)) {
+    return { ok: false, errCode: 'ALREADY_JOINED', errMsg: '你已在房间中' }
+  }
+  const reqs = Array.isArray(room.joinRequests) ? room.joinRequests : []
+  if (reqs.some(r => r.openId === openId)) {
+    return { ok: false, errCode: 'ALREADY_REQUESTED', errMsg: '你已申请加入，等待审核' }
+  }
+  if (room.members.length >= room.maxMembers) {
+    return { ok: false, errCode: 'ROOM_FULL', errMsg: '房间已满' }
+  }
+  const requestId = generateRequestId()
+  reqs.push({
+    requestId,
+    openId,
+    nickname: nickname || '申请人',
+    requestedAt: Date.now()
+  })
+  room.joinRequests = reqs
+  touchRoom(room)
+  list[idx] = room
+  saveAllRooms(list)
+  return { ok: true, requestId }
+}
+
+// ===== C-18: 发起人审核 =====
+// 仅房主可调；approve 从 joinRequests 移除并加入 members
+function approveJoin(roomId, requestId) {
+  if (!roomId || !requestId) return { ok: false, errCode: 'INVALID_PARAM' }
+  const list = loadAllRooms()
+  const idx = findRoomIndex(list, roomId)
+  if (idx === -1) return { ok: false, errCode: 'ROOM_NOT_FOUND' }
+  const room = list[idx]
+  if (room.status === 'cancelled') return { ok: false, errCode: 'ROOM_CANCELLED' }
+  const openId = getHostOpenId()
+  if (room.hostOpenId !== openId) {
+    return { ok: false, errCode: 'NOT_HOST', errMsg: '只有发起人可以审核' }
+  }
+  if (room.status === ROOM_STATUS.VOTING || room.status === ROOM_STATUS.GENERATING || room.status === ROOM_STATUS.FINISHED) {
+    return { ok: false, errCode: 'INVALID_STATUS', errMsg: '当前阶段无法审核' }
+  }
+  if (room.members.length >= room.maxMembers) {
+    return { ok: false, errCode: 'ROOM_FULL', errMsg: '房间已满' }
+  }
+  const reqs = Array.isArray(room.joinRequests) ? room.joinRequests : []
+  const reqIdx = reqs.findIndex(r => r.requestId === requestId)
+  if (reqIdx === -1) {
+    return { ok: false, errCode: 'REQUEST_NOT_FOUND', errMsg: '申请不存在' }
+  }
+  const req = reqs[reqIdx]
+  room.joinRequests = reqs.filter(r => r.requestId !== requestId)
+  room.members.push({
+    openId: req.openId,
+    nickname: req.nickname,
+    joinedAt: Date.now(),
+    isHost: false,
+    preference: null,
+    votes: { time: null, budget: null, style: null }
+  })
+  touchRoom(room)
+  list[idx] = room
+  saveAllRooms(list)
+  return { ok: true, room }
+}
+
+// 仅房主可调；reject 仅移除申请
+function rejectJoin(roomId, requestId) {
+  if (!roomId || !requestId) return { ok: false, errCode: 'INVALID_PARAM' }
+  const list = loadAllRooms()
+  const idx = findRoomIndex(list, roomId)
+  if (idx === -1) return { ok: false, errCode: 'ROOM_NOT_FOUND' }
+  const room = list[idx]
+  if (room.status === 'cancelled') return { ok: false, errCode: 'ROOM_CANCELLED' }
+  const openId = getHostOpenId()
+  if (room.hostOpenId !== openId) {
+    return { ok: false, errCode: 'NOT_HOST', errMsg: '只有发起人可以审核' }
+  }
+  const reqs = Array.isArray(room.joinRequests) ? room.joinRequests : []
+  const reqIdx = reqs.findIndex(r => r.requestId === requestId)
+  if (reqIdx === -1) {
+    return { ok: false, errCode: 'REQUEST_NOT_FOUND', errMsg: '申请不存在' }
+  }
+  room.joinRequests = reqs.filter(r => r.requestId !== requestId)
+  touchRoom(room)
+  list[idx] = room
+  saveAllRooms(list)
+  return { ok: true, room }
+}
+
+// ===== C-19: 评价和举报 =====
+// 纯函数：算平均分 + 总数 + 分布
+function buildReviewSummary(reviews) {
+  const list = Array.isArray(reviews) ? reviews : []
+  const total = list.length
+  let sum = 0
+  const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+  list.forEach(r => {
+    const rating = Number(r.rating)
+    if (rating >= 1 && rating <= 5) {
+      sum += rating
+      distribution[rating] = (distribution[rating] || 0) + 1
+    }
+  })
+  const average = total > 0 ? Math.round((sum / total) * 10) / 10 : 0
+  return { total, average, distribution }
+}
+
+// 仅 FINISHED + 成员可评价；每人一次（ALREADY_REVIEWED）
+function submitReview(roomId, review) {
+  if (!roomId) return { ok: false, errCode: 'INVALID_PARAM' }
+  if (!review || !Number.isInteger(review.rating) || review.rating < 1 || review.rating > 5) {
+    return { ok: false, errCode: 'INVALID_PARAM', errMsg: '评价需 1-5 星' }
+  }
+  const comment = (review.comment || '').toString().slice(0, 100)
+  const list = loadAllRooms()
+  const idx = findRoomIndex(list, roomId)
+  if (idx === -1) return { ok: false, errCode: 'ROOM_NOT_FOUND' }
+  const room = list[idx]
+  if (room.status === 'cancelled') return { ok: false, errCode: 'ROOM_CANCELLED' }
+  if (room.status !== ROOM_STATUS.FINISHED) {
+    return { ok: false, errCode: 'INVALID_STATUS', errMsg: '完成后才能评价' }
+  }
+  const openId = getHostOpenId()
+  if (!room.members.some(m => m.openId === openId)) {
+    return { ok: false, errCode: 'NOT_MEMBER', errMsg: '只有成员可以评价' }
+  }
+  const reviews = Array.isArray(room.reviews) ? room.reviews : []
+  if (reviews.some(r => r.openId === openId)) {
+    return { ok: false, errCode: 'ALREADY_REVIEWED', errMsg: '你已评价过' }
+  }
+  reviews.push({
+    openId,
+    rating: review.rating,
+    comment,
+    createdAt: Date.now()
+  })
+  room.reviews = reviews
+  touchRoom(room)
+  list[idx] = room
+  saveAllRooms(list)
+  return { ok: true, room, reviewSummary: buildReviewSummary(reviews) }
+}
+
+// 任何用户可举报；防重复（ALREADY_REPORTED）
+function reportRoom(roomId, reason) {
+  if (!roomId) return { ok: false, errCode: 'INVALID_PARAM' }
+  const r = (reason || '').toString().trim()
+  if (!r || r.length > 100) {
+    return { ok: false, errCode: 'INVALID_PARAM', errMsg: '举报理由需 1-100 字' }
+  }
+  const list = loadAllRooms()
+  const idx = findRoomIndex(list, roomId)
+  if (idx === -1) return { ok: false, errCode: 'ROOM_NOT_FOUND' }
+  const room = list[idx]
+  const openId = getHostOpenId()
+  if (room.reported) {
+    return { ok: false, errCode: 'ALREADY_REPORTED', errMsg: '该组局已被举报' }
+  }
+  room.reported = true
+  room.reportReason = r
+  room.reportedBy = openId
+  room.reportedAt = Date.now()
+  touchRoom(room)
+  list[idx] = room
+  saveAllRooms(list)
+  return { ok: true }
+}
+
 // ===== 状态转换 =====
 function updateRoomStatus(roomId, status) {
   if (!roomId || !status) return { ok: false, errCode: 'INVALID_PARAM' }
@@ -655,6 +951,7 @@ module.exports = {
   ROOM_STATUS,
   VOTE_OPTIONS,
   PREFERENCE_OPTIONS,
+  ROLE_LIBRARY,
   // C-01
   createRoom,
   loadRoom,
@@ -674,9 +971,20 @@ module.exports = {
   confirmReady,
   leaveRoom,
   checkQuorum,
+  // C-14 角色分配 / C-15 独立线索
+  assignRoles,
+  generateClues,
+  // C-16 公开组局 / C-17 申请加入 / C-18 发起人审核
+  listPublicRooms,
+  requestJoin,
+  approveJoin,
+  rejectJoin,
+  // C-19 评价和举报
+  submitReview,
+  reportRoom,
   // 通用
   updateRoomStatus,
   clearAllRooms,
   // 内部导出（供测试用）
-  _internal: { getMostFrequent, getWinner, generateRoomId, findRoomIndex, checkQuorum, MIN_MEMBERS }
+  _internal: { getMostFrequent, getWinner, generateRoomId, findRoomIndex, checkQuorum, MIN_MEMBERS, buildRoles, buildClues, buildReviewSummary, generateRequestId, ROLE_LIBRARY }
 }

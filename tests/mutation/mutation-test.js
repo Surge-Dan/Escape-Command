@@ -79,6 +79,129 @@ const mutations = [
     expectKilled: true
   },
 
+  // ===== group-room-store.js 变异（C-P2 同频组局收尾：C-14~C-19）=====
+  // 每条变异针对 C-P2 函数的关键边界/状态机/守卫，由 unit/property/adversarial 精确断言守护
+  {
+    name: 'CP2-01: buildRoles 移除 relax 兜底（非法 style 时 pool.length 抛错）',
+    file: 'utils/group-room-store.js',
+    find: 'const pool = ROLE_LIBRARY[style] || ROLE_LIBRARY.relax',
+    replace: 'const pool = ROLE_LIBRARY[style]',
+    test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-02: buildRoles 索引 i % pool.length 改为 i + pool.length（越界返回 undefined）',
+    file: 'utils/group-room-store.js',
+    find: 'role: pool[i % pool.length]',
+    replace: 'role: pool[i + pool.length]',
+    test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-03: assignRoles 状态守卫 !== 改为 ===（非 FINISHED 也能分配）',
+    file: 'utils/group-room-store.js',
+    find: "if (room.status !== ROOM_STATUS.FINISHED) {\n    return { ok: false, errCode: 'INVALID_STATUS', errMsg: '剧本未生成，无法分配角色' }",
+    replace: "if (room.status === ROOM_STATUS.FINISHED) {\n    return { ok: false, errCode: 'INVALID_STATUS', errMsg: '剧本未生成，无法分配角色' }",
+    test: 'node tests/unit/store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-04: buildClues 永远返回「自由发挥」（steps 被忽略）',
+    file: 'utils/group-room-store.js',
+    find: "clue: sList.length > 0 ? sList[i % sList.length] : '自由发挥'",
+    replace: "clue: '自由发挥'",
+    test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-05: buildClues steps 非数组兜底移除（.length 抛错）',
+    file: 'utils/group-room-store.js',
+    find: 'const sList = Array.isArray(steps) ? steps : []',
+    replace: 'const sList = steps',
+    test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-06: listPublicRooms visibility 检查反转（返回所有 private 房间）',
+    file: 'utils/group-room-store.js',
+    find: 'r.visibility === \'public\' &&',
+    replace: 'r.visibility !== \'public\' &&',
+    test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-07: listPublicRooms FINISHED 排除反转（包含已完成房间）',
+    file: 'utils/group-room-store.js',
+    find: "r.status !== 'cancelled' &&\n    r.status !== ROOM_STATUS.FINISHED",
+    replace: "r.status !== 'cancelled' &&\n    r.status === ROOM_STATUS.FINISHED",
+    test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-08: listPublicRooms 排序方向反转（升序而非倒序）',
+    file: 'utils/group-room-store.js',
+    find: '(b.createdAt || 0) - (a.createdAt || 0)',
+    replace: '(a.createdAt || 0) - (b.createdAt || 0)',
+    test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-09: requestJoin visibility 守卫反转（非公开也能申请）',
+    file: 'utils/group-room-store.js',
+    find: "if (room.visibility !== 'public') {\n    return { ok: false, errCode: 'NOT_PUBLIC', errMsg: '仅公开组局可申请加入' }",
+    replace: "if (room.visibility === 'public') {\n    return { ok: false, errCode: 'NOT_PUBLIC', errMsg: '仅公开组局可申请加入' }",
+    test: 'node tests/unit/store.test.js && node tests/adversarial/group-attack.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-10: requestJoin ALREADY_JOINED 守卫反转（已是成员可重复申请）',
+    file: 'utils/group-room-store.js',
+    find: "if (room.members.some(m => m.openId === openId)) {\n    return { ok: false, errCode: 'ALREADY_JOINED', errMsg: '你已在房间中' }",
+    replace: "if (!room.members.some(m => m.openId === openId)) {\n    return { ok: false, errCode: 'ALREADY_JOINED', errMsg: '你已在房间中' }",
+    test: 'node tests/unit/store.test.js && node tests/adversarial/group-attack.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-11: requestJoin ROOM_FULL 边界 >= 改为 >（满员+1 才拒绝）',
+    file: 'utils/group-room-store.js',
+    find: "if (room.members.length >= room.maxMembers) {\n    return { ok: false, errCode: 'ROOM_FULL', errMsg: '房间已满' }",
+    replace: "if (room.members.length > room.maxMembers) {\n    return { ok: false, errCode: 'ROOM_FULL', errMsg: '房间已满' }",
+    test: 'node tests/unit/store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-12: approveJoin NOT_HOST 守卫反转（非房主也能审核）',
+    file: 'utils/group-room-store.js',
+    find: "if (room.hostOpenId !== openId) {\n    return { ok: false, errCode: 'NOT_HOST', errMsg: '只有发起人可以审核' }",
+    replace: "if (room.hostOpenId === openId) {\n    return { ok: false, errCode: 'NOT_HOST', errMsg: '只有发起人可以审核' }",
+    test: 'node tests/unit/store.test.js && node tests/adversarial/group-attack.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-13: submitReview rating 上界 > 5 改为 >= 5（5 星被错误拒绝）',
+    file: 'utils/group-room-store.js',
+    find: 'review.rating < 1 || review.rating > 5',
+    replace: 'review.rating < 1 || review.rating >= 5',
+    test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-14: submitReview ALREADY_REVIEWED 守卫反转（未评价者被拒）',
+    file: 'utils/group-room-store.js',
+    find: "if (reviews.some(r => r.openId === openId)) {\n    return { ok: false, errCode: 'ALREADY_REVIEWED', errMsg: '你已评价过' }",
+    replace: "if (!reviews.some(r => r.openId === openId)) {\n    return { ok: false, errCode: 'ALREADY_REVIEWED', errMsg: '你已评价过' }",
+    test: 'node tests/unit/store.test.js && node tests/adversarial/group-attack.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP2-15: buildReviewSummary rating 上界 <= 5 改为 < 5（5 星被过滤）',
+    file: 'utils/group-room-store.js',
+    find: 'if (rating >= 1 && rating <= 5)',
+    replace: 'if (rating >= 1 && rating < 5)',
+    test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
+    expectKilled: true
+  },
+
   // ===== generator-engine.js 变异（B-01~B-06）=====
   {
     name: 'G1: 90 天窗口 90 改为 89（边界）',
@@ -647,7 +770,7 @@ function loadOriginal(filePath) {
 }
 
 console.log('\n' + '='.repeat(60))
-console.log('变异测试：group-room-store + generator-engine + record-builder + execution-progress + poi-command-builder')
+console.log('变异测试：group-room-store(C-01~C-19) + generator-engine + record-builder + execution-progress + poi-command-builder')
 console.log('='.repeat(60))
 
 for (const mutation of mutations) {

@@ -105,6 +105,31 @@
   font-size: 24rpx;
   color: #999;
 }
+/* C-P3 联动：任务大厅出逃地点 */
+.room-poi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20rpx;
+  padding: 16rpx 24rpx;
+  background: #F5F0E8;
+  border-radius: 16rpx;
+}
+.room-poi-label {
+  font-size: 22rpx;
+  color: #999;
+}
+.room-poi-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #2C2C2C;
+  margin-top: 6rpx;
+}
+.room-poi-address {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 4rpx;
+}
 
 /* ===== Stage Section ===== */
 .stage-section {

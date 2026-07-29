@@ -38,6 +38,12 @@
         </view>
         <text class="room-max-members">{{room.maxMembers}} 人组局</text>
       </view>
+      <!-- C-P3 联动：任务大厅出逃地点（仅来自任务大厅时展示） -->
+      <view wx:if="{{hallPoi && hallPoi.name}}" class="room-poi">
+        <text class="room-poi-label">出逃地点</text>
+        <text class="room-poi-name">{{hallPoi.name}}</text>
+        <text wx:if="{{hallPoi.address}}" class="room-poi-address">{{hallPoi.address}}</text>
+      </view>
     </view>
 
     <!-- ===== 阶段 1: 等待成员 ===== -->

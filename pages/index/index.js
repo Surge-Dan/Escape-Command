@@ -49,7 +49,9 @@ Page({
     showMicroSheet: false,
     selectedDuration: 0,
     recommendedDuration: 15,
-    isRecommended: false
+    isRecommended: false,
+    // sync-dice-sheet: 同频骰子入口选择弹层
+    showDiceSheet: false
   },
 
   onLoad(options) {
@@ -271,11 +273,28 @@ Page({
     } else if (dice.id === 'breakthrough') {
       wx.navigateTo({ url: '/pages/generating/generating?mode=breakthrough' })
     } else if (dice.id === 'sync') {
-      wx.navigateTo({
-        url: '/pages/group/create/create',
-        fail: () => wx.showToast({ title: '同频组局即将开放', icon: 'none' })
-      })
+      // sync-dice-sheet: 不再直达创建页，先弹底部 Sheet 让用户选择出逃方式
+      this.setData({ showDiceSheet: true })
     }
+  },
+
+  // ===== sync-dice-sheet: 同频骰子入口 Sheet =====
+  onDiceSheetMaskTap() {
+    this.setData({ showDiceSheet: false })
+  },
+
+  onDiceSheetClose() {
+    this.setData({ showDiceSheet: false })
+  },
+
+  onInviteFriendsTap() {
+    this.setData({ showDiceSheet: false })
+    wx.navigateTo({ url: '/pages/group/create/create' })
+  },
+
+  onEnterHallTap() {
+    this.setData({ showDiceSheet: false })
+    wx.navigateTo({ url: '/pages/group/hall/hall' })
   },
 
   // ===== home-dice-entry-01: 微逃细分弹窗 =====

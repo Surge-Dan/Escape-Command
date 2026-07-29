@@ -186,6 +186,34 @@
     </view>
   </view>
 
+  <!-- sync-dice-sheet: 同频骰子入口选择弹层 -->
+  <view wx:if="{{showDiceSheet}}" class="dice-sheet-mask" bindtap="onDiceSheetMaskTap">
+    <view class="dice-sheet-panel" catchtap="">
+      <view class="dice-sheet-handle"></view>
+      <view class="dice-sheet-header">
+        <text class="dice-sheet-title">选择出逃方式</text>
+        <text class="dice-sheet-close" bindtap="onDiceSheetClose">✕</text>
+      </view>
+      <view class="dice-sheet-option" bindtap="onInviteFriendsTap">
+        <text class="dice-option-icon">👥</text>
+        <view class="dice-option-info">
+          <text class="dice-option-label">邀请好友组局</text>
+          <text class="dice-option-desc">约上熟人，一起掷骰决定今天的出逃任务</text>
+        </view>
+        <text class="dice-option-arrow">›</text>
+      </view>
+      <view class="dice-sheet-option" bindtap="onEnterHallTap">
+        <text class="dice-option-icon">🎲</text>
+        <view class="dice-option-info">
+          <text class="dice-option-label">进入任务大厅找搭子</text>
+          <text class="dice-option-desc">找到官方或用户创建的出逃任务，人齐就出发</text>
+        </view>
+        <text class="dice-option-arrow">›</text>
+      </view>
+      <view class="dice-sheet-cancel" bindtap="onDiceSheetClose">取消</view>
+    </view>
+  </view>
+
   <!-- 自定义 TabBar -->
   <custom-tab-bar selected="{{0}}"></custom-tab-bar>
 </view>

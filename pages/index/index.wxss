@@ -830,6 +830,141 @@
   background: var(--brand-tint);
 }
 
+/* ===== sync-dice-sheet: 同频骰子入口选择弹层（复用 micro-sheet 视觉规范） ===== */
+.dice-sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(46, 47, 51, 0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  animation: maskIn 200ms var(--ease-out);
+}
+
+.dice-sheet-panel {
+  width: 100%;
+  background: var(--white);
+  /* 圆角规范：Sheet 顶部圆角 24rpx */
+  border-radius: 24rpx 24rpx 0 0;
+  padding: 16rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -8rpx 32rpx rgba(0, 0, 0, 0.08);
+  animation: sheetUp 300ms var(--ease-bounce);
+}
+
+.dice-sheet-handle {
+  width: 56rpx;
+  height: 6rpx;
+  background: var(--line);
+  border-radius: var(--radius-xs);
+  margin: 0 auto 20rpx;
+}
+
+.dice-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 20rpx;
+  margin-bottom: 8rpx;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.dice-sheet-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.5rpx;
+}
+
+.dice-sheet-close {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: var(--ink-faint);
+  border-radius: 50%;
+  background: var(--canvas);
+  transition: all 200ms var(--ease-standard);
+}
+
+.dice-sheet-close:active {
+  transform: scale(0.92);
+  background: var(--line);
+}
+
+.dice-sheet-option {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 28rpx 16rpx;
+  margin-top: 8rpx;
+  border-radius: var(--radius-md);
+  border-bottom: 1rpx solid var(--line);
+  transition: background 180ms var(--ease-standard);
+}
+
+.dice-sheet-option:last-of-type {
+  border-bottom: none;
+}
+
+.dice-sheet-option:active {
+  background: var(--canvas);
+}
+
+.dice-option-icon {
+  font-size: 48rpx;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.dice-option-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  min-width: 0;
+}
+
+.dice-option-label {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.5rpx;
+}
+
+.dice-option-desc {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.dice-option-arrow {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink-faint);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.dice-sheet-cancel {
+  margin-top: 16rpx;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--canvas);
+  /* 圆角规范：按钮 16rpx */
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.dice-sheet-cancel:active {
+  background: var(--brand-tint);
+}
+
 /* ===== v4 每日推荐：上下边距修正 ===== */
 .daily-section {
   margin-top: 24rpx;

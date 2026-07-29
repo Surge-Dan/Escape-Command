@@ -1,5 +1,6 @@
 const app = getApp()
 const roomStore = require('../../../utils/group-room-store.js')
+const hallStore = require('../../../utils/task-hall-store.js')
 const { VOTE_OPTIONS, PREFERENCE_OPTIONS, ROOM_STATUS } = roomStore
 
 const USE_LOCAL_MODE = true
@@ -31,14 +32,23 @@ Page({
     // v11: 邀请弹窗状态
     showInvitePopup: false,
     // C-12: FINISHED 状态同频记录入口（groupId 命中的最新记录 id）
-    groupRecordId: ''
+    groupRecordId: '',
+    // C-P3 联动：来自任务大厅的 taskId（用于回写 hall task 状态）
+    taskId: '',
+    // C-P3 联动：任务大厅 POI（出逃地点展示）
+    hallPoi: null
   },
 
   onLoad(options) {
     this.applyNavMetrics()
     const roomId = (options && options.roomId) || ''
     const fromShare = !!(options && options.from === 'share')
-    this.setData({ roomId, fromShare })
+    const taskId = (options && options.taskId) || ''
+    this.setData({ roomId, fromShare, taskId })
+    // C-P3 联动：来自任务大厅时，读取 hall task POI 作为出逃地点展示
+    if (taskId) {
+      this.loadHallTaskPoi(taskId)
+    }
     if (roomId) {
       if (USE_LOCAL_MODE) {
         this.loadRoomLocal(roomId, fromShare)
@@ -47,6 +57,44 @@ Page({
       }
     } else {
       this.setData({ loading: false, room: null })
+    }
+  },
+
+  // ===== C-P3 联动：加载任务大厅 POI =====
+  loadHallTaskPoi(taskId) {
+    try {
+      const result = hallStore.getTaskDetail(taskId)
+      if (result && result.ok && result.task && result.task.poi) {
+        const poi = result.task.poi
+        this.setData({
+          hallPoi: {
+            name: poi.name || '',
+            address: poi.address || '',
+            latitude: poi.latitude || 0,
+            longitude: poi.longitude || 0
+          }
+        })
+      }
+    } catch (e) {
+      console.warn('[room] loadHallTaskPoi 失败', e)
+    }
+  },
+
+  // ===== C-P3 联动：房间完成后回写 hall task 状态为 finished =====
+  syncHallTaskFinished() {
+    const taskId = this.data.taskId
+    if (!taskId) return
+    try {
+      // dice match 路径任务可能还停留在 ready，先推进到 started 再 finished
+      const detail = hallStore.getTaskDetail(taskId)
+      if (detail && detail.ok && detail.task) {
+        if (detail.task.status === 'ready') {
+          hallStore.updateTaskStatus(taskId, 'started')
+        }
+      }
+      hallStore.updateTaskStatus(taskId, 'finished')
+    } catch (e) {
+      console.warn('[room] 回写 hall task 状态失败', e)
     }
   },
 
@@ -390,6 +438,8 @@ Page({
       if (result.ok) {
         this.applyRoom(result.room)
         try { wx.vibrateShort({ type: 'heavy' }) } catch (e) {}
+        // C-P3 联动：房间 finished 后回写 hall task 状态
+        this.syncHallTaskFinished()
       } else {
         wx.showToast({ title: '生成失败', icon: 'none' })
       }

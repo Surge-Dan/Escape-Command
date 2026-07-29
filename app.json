@@ -38,7 +38,10 @@
     "pages/leaderboard/leaderboard",
     "pages/group/create/create",
     "pages/group/room/room",
-    "pages/group/escape-record/escape-record"
+    "pages/group/escape-record/escape-record",
+    "pages/group/hall/hall",
+    "pages/group/hall/detail/detail",
+    "pages/group/hall/create-task/create-task"
   ],
   "lazyCodeLoading": "requiredComponents",
   "window": {

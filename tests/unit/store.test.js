@@ -747,6 +747,549 @@ describe('C-11: checkQuorum', () => {
   })
 })
 
+// 辅助：建一个 FINISHED 房间（含剧本/角色/线索）
+function setupFinishedRoom(topic, maxMembers) {
+  reset()
+  const r = store.createRoom(topic || 'C-P2测试', maxMembers || 4)
+  store.fillMockMembers(r.roomId)
+  store.generateScript(r.roomId)
+  return r.roomId
+}
+
+describe('C-14: 角色分配 buildRoles/assignRoles', () => {
+  it('buildRoles 正常分配每人一个角色', () => {
+    const members = [{ openId: 'a', nickname: 'A' }, { openId: 'b', nickname: 'B' }]
+    const roles = store._internal.buildRoles(members, 'relax')
+    assertEqual(roles.length, 2)
+    assert(roles[0].role === '咖啡探路者', '第一个角色应是咖啡探路者')
+    assert(roles[1].role === '甜品鉴赏师', '第二个角色应是甜品鉴赏师')
+  })
+
+  it('buildRoles style 非法用 relax 兜底', () => {
+    const roles = store._internal.buildRoles([{ openId: 'a', nickname: 'A' }], 'unknown_style')
+    assert(roles[0].role === '咖啡探路者', '非法 style 应兜底 relax')
+  })
+
+  it('buildRoles members 非数组返回 []', () => {
+    assertEqual(store._internal.buildRoles(null, 'relax').length, 0)
+    assertEqual(store._internal.buildRoles(undefined, 'relax').length, 0)
+  })
+
+  it('buildRoles 成员数超过角色库轮询', () => {
+    const members = []
+    for (let i = 0; i < 8; i++) members.push({ openId: 'a' + i, nickname: 'N' + i })
+    const roles = store._internal.buildRoles(members, 'adventure')
+    assertEqual(roles.length, 8)
+    assert(roles[0].role === roles[6].role, '第 0 和第 6 应相同（6 角色轮询）')
+  })
+
+  it('generateScript 自动生成 roles', () => {
+    reset()
+    const r = store.createRoom('自动角色', 4)
+    store.fillMockMembers(r.roomId)
+    const result = store.generateScript(r.roomId)
+    assert(result.ok === true, '生成剧本应成功')
+    assert(Array.isArray(result.room.roles), '应自动生成 roles')
+    assertEqual(result.room.roles.length, 4)
+  })
+
+  it('assignRoles 正常重分配', () => {
+    const roomId = setupFinishedRoom('重分配', 4)
+    const result = store.assignRoles(roomId)
+    assert(result.ok === true, '应成功')
+    assertEqual(result.room.roles.length, 4)
+    assert(typeof result.room.roles[0].role === 'string', '角色应是字符串')
+  })
+
+  it('assignRoles 幂等（重复调用覆盖）', () => {
+    const roomId = setupFinishedRoom('幂等', 4)
+    store.assignRoles(roomId)
+    const result = store.assignRoles(roomId)
+    assert(result.ok === true, '重复调用应成功')
+    assertEqual(result.room.roles.length, 4)
+  })
+
+  it('assignRoles 非 FINISHED 失败', () => {
+    reset()
+    const r = store.createRoom('未完成', 4)
+    const result = store.assignRoles(r.roomId)
+    assert(result.ok === false, '非 FINISHED 应失败')
+    assertEqual(result.errCode, 'INVALID_STATUS')
+  })
+
+  it('assignRoles 房间不存在', () => {
+    const result = store.assignRoles('NOTEXIST')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'ROOM_NOT_FOUND')
+  })
+
+  it('assignRoles 空 roomId', () => {
+    const result = store.assignRoles('')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'INVALID_PARAM')
+  })
+
+  it('ROLE_LIBRARY 三类各 6 角色', () => {
+    assertEqual(store.ROLE_LIBRARY.relax.length, 6)
+    assertEqual(store.ROLE_LIBRARY.adventure.length, 6)
+    assertEqual(store.ROLE_LIBRARY.social.length, 6)
+  })
+})
+
+describe('C-15: 独立线索 buildClues/generateClues', () => {
+  it('buildClues 正常分配', () => {
+    const members = [{ openId: 'a', nickname: 'A' }, { openId: 'b', nickname: 'B' }]
+    const steps = ['步骤一', '步骤二', '步骤三']
+    const clues = store._internal.buildClues(members, steps)
+    assertEqual(clues.length, 2)
+    assertEqual(clues[0].clue, '步骤一')
+    assertEqual(clues[1].clue, '步骤二')
+  })
+
+  it('buildClues steps 为空返回自由发挥', () => {
+    const clues = store._internal.buildClues([{ openId: 'a', nickname: 'A' }], [])
+    assertEqual(clues[0].clue, '自由发挥')
+  })
+
+  it('buildClues steps 非数组返回自由发挥', () => {
+    const clues = store._internal.buildClues([{ openId: 'a', nickname: 'A' }], null)
+    assertEqual(clues[0].clue, '自由发挥')
+  })
+
+  it('buildClues members 非数组返回 []', () => {
+    assertEqual(store._internal.buildClues(null, ['s']).length, 0)
+  })
+
+  it('buildClues 成员数超过 steps 数轮询', () => {
+    const members = [{ openId: 'a', nickname: 'A' }, { openId: 'b', nickname: 'B' }, { openId: 'c', nickname: 'C' }]
+    const steps = ['仅一个步骤']
+    const clues = store._internal.buildClues(members, steps)
+    assertEqual(clues[2].clue, '仅一个步骤', '第 3 个应轮询到 steps[0]')
+  })
+
+  it('generateScript 自动生成 clues', () => {
+    reset()
+    const r = store.createRoom('自动线索', 4)
+    store.fillMockMembers(r.roomId)
+    const result = store.generateScript(r.roomId)
+    assert(Array.isArray(result.room.clues), '应自动生成 clues')
+    assertEqual(result.room.clues.length, 4)
+  })
+
+  it('generateClues 正常重新生成', () => {
+    const roomId = setupFinishedRoom('重生成线索', 4)
+    const result = store.generateClues(roomId)
+    assert(result.ok === true)
+    assertEqual(result.room.clues.length, 4)
+  })
+
+  it('generateClues 幂等', () => {
+    const roomId = setupFinishedRoom('线索幂等', 4)
+    store.generateClues(roomId)
+    const result = store.generateClues(roomId)
+    assert(result.ok === true)
+  })
+
+  it('generateClues 非 FINISHED 失败', () => {
+    reset()
+    const r = store.createRoom('未完成线索', 4)
+    const result = store.generateClues(r.roomId)
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'INVALID_STATUS')
+  })
+
+  it('generateClues 空 roomId', () => {
+    const result = store.generateClues('')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'INVALID_PARAM')
+  })
+})
+
+describe('C-16: 公开组局 listPublicRooms', () => {
+  it('createRoom 默认 private', () => {
+    reset()
+    const r = store.createRoom('默认', 4)
+    const loaded = store.loadRoom(r.roomId)
+    assertEqual(loaded.room.visibility, 'private')
+  })
+
+  it('createRoom visibility=public', () => {
+    reset()
+    const r = store.createRoom('公开', 4, { visibility: 'public' })
+    const loaded = store.loadRoom(r.roomId)
+    assertEqual(loaded.room.visibility, 'public')
+  })
+
+  it('createRoom visibility 非法值兜底 private', () => {
+    reset()
+    const r = store.createRoom('非法', 4, { visibility: 'hack' })
+    const loaded = store.loadRoom(r.roomId)
+    assertEqual(loaded.room.visibility, 'private')
+  })
+
+  it('createRoom 向后兼容（两参调用）', () => {
+    reset()
+    const r = store.createRoom('兼容', 3)
+    assert(r.ok === true, '两参调用应成功')
+  })
+
+  it('listPublicRooms 只返回 public 活跃房间', () => {
+    reset()
+    store.createRoom('私密', 4)
+    store.createRoom('公开1', 4, { visibility: 'public' })
+    store.createRoom('公开2', 4, { visibility: 'public' })
+    const result = store.listPublicRooms()
+    assert(result.ok === true)
+    assertEqual(result.rooms.length, 2)
+    assert(result.rooms.every(r => r.topic.startsWith('公开')), '应只含公开房间')
+  })
+
+  it('listPublicRooms 按 createdAt 倒序', () => {
+    reset()
+    store.createRoom('早', 4, { visibility: 'public' })
+    store.createRoom('晚', 4, { visibility: 'public' })
+    const result = store.listPublicRooms()
+    assert(result.rooms[0].createdAt >= result.rooms[1].createdAt, '应倒序')
+  })
+
+  it('listPublicRooms 精简字段不含 members', () => {
+    reset()
+    store.createRoom('精简', 4, { visibility: 'public' })
+    const result = store.listPublicRooms()
+    const r = result.rooms[0]
+    assert(r.members === undefined, '不应含 members')
+    assert(r.membersCount !== undefined, '应含 membersCount')
+    assert(r.roomId !== undefined)
+    assert(r.topic !== undefined)
+  })
+
+  it('listPublicRooms 不返回已完成房间', () => {
+    reset()
+    const r = store.createRoom('已完成', 4, { visibility: 'public' })
+    store.fillMockMembers(r.roomId)
+    store.generateScript(r.roomId)
+    const result = store.listPublicRooms()
+    assertEqual(result.rooms.length, 0, '已完成不应进列表')
+  })
+
+  it('listPublicRooms 不返回已取消房间', () => {
+    reset()
+    const r = store.createRoom('已取消', 4, { visibility: 'public' })
+    store.cancelRoom(r.roomId)
+    const result = store.listPublicRooms()
+    assertEqual(result.rooms.length, 0)
+  })
+
+  it('旧房间无 visibility 字段不进公开列表（兼容）', () => {
+    reset()
+    // 手动塞一个无 visibility 的旧房间
+    wx.setStorageSync('groupRooms', [{ roomId: 'OLD001', topic: '旧', members: [], status: 'waiting_members', createdAt: 1 }])
+    const result = store.listPublicRooms()
+    assertEqual(result.rooms.length, 0, '无 visibility 字段不应进公开列表')
+  })
+})
+
+describe('C-17: 申请加入 requestJoin', () => {
+  // 辅助：构造一个公开房间，当前 openId 不在 members 中（可申请视角）
+  function setupJoinablePublicRoom(status, membersCount, maxMembers) {
+    reset()
+    const r = store.createRoom('公开', maxMembers || 4, { visibility: 'public' })
+    const loaded = store.loadRoom(r.roomId)
+    // 填充 mock 成员（不含当前 openId）：用一个不同的 openId 占位
+    const members = []
+    for (let i = 0; i < (membersCount || 0); i++) {
+      members.push({ openId: 'other_' + i, nickname: '成员' + i, isHost: i === 0, votes: { time: null, budget: null, style: null } })
+    }
+    loaded.room.members = members
+    loaded.room.hostOpenId = 'other_0' // 把房主身份也转走，当前 openId 完全是外人
+    loaded.room.status = status || store.ROOM_STATUS.WAITING
+    wx.setStorageSync('groupRooms', [loaded.room])
+    return r.roomId
+  }
+
+  it('正常申请返回 requestId', () => {
+    const roomId = setupJoinablePublicRoom(store.ROOM_STATUS.WAITING, 1, 4)
+    const result = store.requestJoin(roomId, '申请人')
+    assert(result.ok === true, '应成功')
+    assert(typeof result.requestId === 'string', '应返回 requestId')
+  })
+
+  it('申请后 joinRequests 含记录', () => {
+    const roomId = setupJoinablePublicRoom(store.ROOM_STATUS.WAITING, 1, 4)
+    store.requestJoin(roomId, '申请人')
+    const loaded = store.loadRoom(roomId)
+    assertEqual(loaded.room.joinRequests.length, 1)
+    assertEqual(loaded.room.joinRequests[0].nickname, '申请人')
+  })
+
+  it('重复申请失败 ALREADY_REQUESTED', () => {
+    const roomId = setupJoinablePublicRoom(store.ROOM_STATUS.WAITING, 1, 4)
+    store.requestJoin(roomId, '申请人')
+    const result = store.requestJoin(roomId, '再次申请')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'ALREADY_REQUESTED')
+  })
+
+  it('private 房间申请失败 NOT_PUBLIC', () => {
+    reset()
+    const r = store.createRoom('私密', 4)
+    // 把当前 openId 移出 members 让它能申请
+    const loaded = store.loadRoom(r.roomId)
+    loaded.room.members = []
+    loaded.room.hostOpenId = 'other'
+    wx.setStorageSync('groupRooms', [loaded.room])
+    const result = store.requestJoin(r.roomId, '申请人')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'NOT_PUBLIC')
+  })
+
+  it('已成员申请返回 ALREADY_JOINED', () => {
+    reset()
+    const r = store.createRoom('公开', 4, { visibility: 'public' })
+    const result = store.requestJoin(r.roomId, '发起人')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'ALREADY_JOINED')
+  })
+
+  it('VOTING 状态申请失败 INVALID_STATUS', () => {
+    const roomId = setupJoinablePublicRoom(store.ROOM_STATUS.VOTING, 1, 4)
+    const result = store.requestJoin(roomId, '申请人')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'INVALID_STATUS')
+  })
+
+  it('FINISHED 状态申请失败', () => {
+    const roomId = setupJoinablePublicRoom(store.ROOM_STATUS.FINISHED, 1, 4)
+    const result = store.requestJoin(roomId, '申请人')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'INVALID_STATUS')
+  })
+
+  it('满员申请失败 ROOM_FULL', () => {
+    const roomId = setupJoinablePublicRoom(store.ROOM_STATUS.WAITING, 4, 4)
+    const result = store.requestJoin(roomId, '新人')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'ROOM_FULL')
+  })
+
+  it('房间不存在', () => {
+    const result = store.requestJoin('NOTEXIST', '申请人')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'ROOM_NOT_FOUND')
+  })
+
+  it('空 roomId', () => {
+    const result = store.requestJoin('', '申请人')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'INVALID_PARAM')
+  })
+
+  it('nickname 默认申请人', () => {
+    const roomId = setupJoinablePublicRoom(store.ROOM_STATUS.WAITING, 1, 4)
+    store.requestJoin(roomId, '')
+    const loaded = store.loadRoom(roomId)
+    assertEqual(loaded.room.joinRequests[0].nickname, '申请人')
+  })
+})
+
+describe('C-18: 发起人审核 approveJoin/rejectJoin', () => {
+  it('approve 正常通过（members+1, joinRequests-1）', () => {
+    reset()
+    const r = store.createRoom('审核', 4, { visibility: 'public' })
+    const loaded = store.loadRoom(r.roomId)
+    loaded.room.joinRequests = [{ requestId: 'req1', openId: 'newuser', nickname: '新人', requestedAt: 1 }]
+    wx.setStorageSync('groupRooms', [loaded.room])
+    const beforeMembers = loaded.room.members.length
+    const result = store.approveJoin(r.roomId, 'req1')
+    assert(result.ok === true, '应成功')
+    assertEqual(result.room.joinRequests.length, 0)
+    assertEqual(result.room.members.length, beforeMembers + 1)
+    assertEqual(result.room.members[result.room.members.length - 1].nickname, '新人')
+  })
+
+  it('approve 非房主失败 NOT_HOST', () => {
+    reset()
+    const r = store.createRoom('审核', 4, { visibility: 'public' })
+    const loaded = store.loadRoom(r.roomId)
+    loaded.room.hostOpenId = 'other_host'
+    loaded.room.joinRequests = [{ requestId: 'req1', openId: 'u', nickname: 'n', requestedAt: 1 }]
+    wx.setStorageSync('groupRooms', [loaded.room])
+    const result = store.approveJoin(r.roomId, 'req1')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'NOT_HOST')
+  })
+
+  it('approve 不存在 requestId 失败', () => {
+    reset()
+    const r = store.createRoom('审核', 4, { visibility: 'public' })
+    const result = store.approveJoin(r.roomId, 'req_notexist')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'REQUEST_NOT_FOUND')
+  })
+
+  it('approve 满员失败 ROOM_FULL', () => {
+    reset()
+    const r = store.createRoom('满', 3, { visibility: 'public' })
+    store.fillMockMembers(r.roomId)
+    // 直接塞一个假申请
+    const loaded = store.loadRoom(r.roomId)
+    loaded.room.joinRequests = [{ requestId: 'req1', openId: 'newuser', nickname: '新人', requestedAt: 1 }]
+    wx.setStorageSync('groupRooms', [loaded.room])
+    const result = store.approveJoin(r.roomId, 'req1')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'ROOM_FULL')
+  })
+
+  it('reject 正常移除申请', () => {
+    reset()
+    const r = store.createRoom('拒绝', 4, { visibility: 'public' })
+    const loaded = store.loadRoom(r.roomId)
+    loaded.room.joinRequests = [{ requestId: 'req1', openId: 'newuser', nickname: '新人', requestedAt: 1 }]
+    wx.setStorageSync('groupRooms', [loaded.room])
+    const result = store.rejectJoin(r.roomId, 'req1')
+    assert(result.ok === true)
+    assertEqual(result.room.joinRequests.length, 0)
+  })
+
+  it('reject 不存在 requestId', () => {
+    reset()
+    const r = store.createRoom('拒绝', 4, { visibility: 'public' })
+    const result = store.rejectJoin(r.roomId, 'req_notexist')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'REQUEST_NOT_FOUND')
+  })
+
+  it('reject 非房主失败 NOT_HOST（构造非房主场景）', () => {
+    reset()
+    const r = store.createRoom('拒绝', 4, { visibility: 'public' })
+    // host 固定，构造一个 hostOpenId 不同的房间
+    const loaded = store.loadRoom(r.roomId)
+    loaded.room.hostOpenId = 'other_host'
+    loaded.room.joinRequests = [{ requestId: 'req1', openId: 'u', nickname: 'n', requestedAt: 1 }]
+    wx.setStorageSync('groupRooms', [loaded.room])
+    const result = store.rejectJoin(r.roomId, 'req1')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'NOT_HOST')
+  })
+
+  it('空参数', () => {
+    assert(store.approveJoin('', 'req').ok === false)
+    assert(store.approveJoin('room', '').ok === false)
+    assert(store.rejectJoin('', 'req').ok === false)
+    assert(store.rejectJoin('room', '').ok === false)
+  })
+})
+
+describe('C-19: 评价和举报 submitReview/reportRoom/buildReviewSummary', () => {
+  it('buildReviewSummary 正常', () => {
+    const reviews = [{ rating: 5 }, { rating: 4 }, { rating: 3 }]
+    const s = store._internal.buildReviewSummary(reviews)
+    assertEqual(s.total, 3)
+    assertEqual(s.average, 4)
+    assertEqual(s.distribution[5], 1)
+    assertEqual(s.distribution[4], 1)
+    assertEqual(s.distribution[3], 1)
+  })
+
+  it('buildReviewSummary 空数组', () => {
+    const s = store._internal.buildReviewSummary([])
+    assertEqual(s.total, 0)
+    assertEqual(s.average, 0)
+  })
+
+  it('buildReviewSummary 非数组', () => {
+    const s = store._internal.buildReviewSummary(null)
+    assertEqual(s.total, 0)
+    assertEqual(s.average, 0)
+  })
+
+  it('buildReviewSummary 平均分保留一位小数', () => {
+    const s = store._internal.buildReviewSummary([{ rating: 5 }, { rating: 4 }])
+    assertEqual(s.average, 4.5)
+  })
+
+  it('submitReview 正常评价返回 summary', () => {
+    const roomId = setupFinishedRoom('评价', 4)
+    const result = store.submitReview(roomId, { rating: 5, comment: '很棒' })
+    assert(result.ok === true, '应成功')
+    assertEqual(result.reviewSummary.total, 1)
+    assertEqual(result.reviewSummary.average, 5)
+  })
+
+  it('submitReview 重复评价失败 ALREADY_REVIEWED', () => {
+    const roomId = setupFinishedRoom('重复评', 4)
+    store.submitReview(roomId, { rating: 5 })
+    const result = store.submitReview(roomId, { rating: 4 })
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'ALREADY_REVIEWED')
+  })
+
+  it('submitReview rating 非法失败', () => {
+    const roomId = setupFinishedRoom('非法评分', 4)
+    assert(store.submitReview(roomId, { rating: 0 }).ok === false)
+    assert(store.submitReview(roomId, { rating: 6 }).ok === false)
+    assert(store.submitReview(roomId, { rating: 3.5 }).ok === false)
+    assert(store.submitReview(roomId, {}).ok === false)
+  })
+
+  it('submitReview 非 FINISHED 失败', () => {
+    reset()
+    const r = store.createRoom('未完成', 4)
+    const result = store.submitReview(r.roomId, { rating: 5 })
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'INVALID_STATUS')
+  })
+
+  it('submitReview comment 超长截断', () => {
+    const roomId = setupFinishedRoom('长评论', 4)
+    const longComment = 'a'.repeat(200)
+    const result = store.submitReview(roomId, { rating: 5, comment: longComment })
+    assert(result.ok === true)
+    const loaded = store.loadRoom(roomId)
+    assertEqual(loaded.room.reviews[0].comment.length, 100)
+  })
+
+  it('reportRoom 正常举报', () => {
+    reset()
+    const r = store.createRoom('举报', 4)
+    const result = store.reportRoom(r.roomId, '垃圾广告')
+    assert(result.ok === true)
+    const loaded = store.loadRoom(r.roomId)
+    assertEqual(loaded.room.reported, true)
+    assertEqual(loaded.room.reportReason, '垃圾广告')
+  })
+
+  it('reportRoom 重复举报失败 ALREADY_REPORTED', () => {
+    reset()
+    const r = store.createRoom('重复举报', 4)
+    store.reportRoom(r.roomId, '理由1')
+    const result = store.reportRoom(r.roomId, '理由2')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'ALREADY_REPORTED')
+  })
+
+  it('reportRoom 空理由失败', () => {
+    reset()
+    const r = store.createRoom('空理由', 4)
+    assert(store.reportRoom(r.roomId, '').ok === false)
+    assert(store.reportRoom(r.roomId, '   ').ok === false)
+  })
+
+  it('reportRoom 超长理由失败', () => {
+    reset()
+    const r = store.createRoom('超长', 4)
+    const result = store.reportRoom(r.roomId, 'a'.repeat(101))
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'INVALID_PARAM')
+  })
+
+  it('reportRoom 房间不存在', () => {
+    const result = store.reportRoom('NOTEXIST', '理由')
+    assert(result.ok === false)
+    assertEqual(result.errCode, 'ROOM_NOT_FOUND')
+  })
+})
+
 // ===== 结果 =====
 console.log('\n' + '='.repeat(50))
 console.log(`单元测试结果: ${passCount} passed, ${failCount} failed`)

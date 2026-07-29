@@ -548,10 +548,29 @@
   font-size: 24rpx;
   color: #666;
 }
+.script-cta {
+  margin-top: 32rpx;
+}
+.start-escape-btn {
+  height: 100rpx;
+  background: linear-gradient(135deg, #5CBF9E, #7BAE7F);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 600;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  box-shadow: 0 4rpx 16rpx rgba(92, 191, 158, 0.3);
+}
+.start-escape-btn .arrow {
+  font-size: 36rpx;
+}
 .script-actions {
   display: flex;
   gap: 20rpx;
-  margin-top: 32rpx;
+  margin-top: 24rpx;
 }
 .regenerate-btn {
   flex: 1;

@@ -22,6 +22,7 @@ Page({
     voteStats: null,
     myVotes: { time: null, budget: null, style: null },
     myPreference: { interests: [], intensity: '' },
+    interestSelectedMap: {},
     script: null,
     generatingScript: false,
     allMembersReady: false,
@@ -128,10 +129,15 @@ Page({
     }
 
     // 我的投票
-    const openId = roomStore._internal ? '' : ''  // 本地模式下从 room 里找 host
-    const myMember = members[0]  // demo 模式下 host 视角，myMember = members[0]
+    const myMember = members[0]
     const myVotes = myMember ? (myMember.votes || { time: null, budget: null, style: null }) : { time: null, budget: null, style: null }
     const myPreference = myMember && myMember.preference ? myMember.preference : { interests: [], intensity: '' }
+
+    // 预计算兴趣选中状态（WXML 不支持 indexOf）
+    const interestSelectedMap = {}
+    PREFERENCE_OPTIONS.interests.forEach(opt => {
+      interestSelectedMap[opt.value] = (myPreference.interests || []).indexOf(opt.value) >= 0
+    })
 
     this.setData({
       room,
@@ -145,6 +151,7 @@ Page({
       allVoted,
       myVotes,
       myPreference,
+      interestSelectedMap,
       script: room.script || null,
       isHostView: true
     })
@@ -240,7 +247,7 @@ Page({
   // ===== C-04: 偏好 - 兴趣选择 =====
   onPreferenceInterestTap(e) {
     const value = e.currentTarget.dataset.value
-    let interests = this.data.myPreference.interests.slice()
+    const interests = (this.data.myPreference.interests || []).slice()
     const idx = interests.indexOf(value)
     if (idx >= 0) {
       interests.splice(idx, 1)
@@ -251,7 +258,15 @@ Page({
       }
       interests.push(value)
     }
-    this.setData({ 'myPreference.interests': interests })
+    // 同步更新选中状态 map（WXML 不支持 indexOf）
+    const interestSelectedMap = {}
+    PREFERENCE_OPTIONS.interests.forEach(opt => {
+      interestSelectedMap[opt.value] = interests.indexOf(opt.value) >= 0
+    })
+    this.setData({
+      'myPreference.interests': interests,
+      interestSelectedMap
+    })
   },
 
   // ===== C-04: 偏好 - 强度选择 =====
@@ -324,6 +339,20 @@ Page({
     if (result.ok) {
       this.applyRoom(result.room)
     }
+  },
+
+  // ===== C-08: 确认剧本，开始出逃 =====
+  onStartEscape() {
+    wx.showModal({
+      title: '开始出逃',
+      content: '剧本已确认，祝你们出逃愉快！',
+      showCancel: false,
+      confirmText: '出发',
+      confirmColor: '#5CBF9E',
+      success: () => {
+        wx.switchTab({ url: '/pages/index/index' })
+      }
+    })
   },
 
   // ===== C-01: 取消组局 =====

@@ -1,11 +1,12 @@
 <view class="page-container group-room-page">
-  <!-- 自定义导航栏 -->
+  <!-- 统一导航栏：标题居中 + 底部 1rpx 分割线 -->
   <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
-  <view class="nav-header">
+  <view class="nav-header" style="{{navHeaderStyle}}">
     <view class="nav-header-back" bindtap="onBackTap">
-      <text class="nav-back-arrow">←</text>
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
     </view>
     <text class="nav-header-title">同频组局</text>
+    <view class="nav-header-divider"></view>
   </view>
 
   <!-- loading -->
@@ -67,30 +68,65 @@
 
       <!-- host 操作区 -->
       <view wx:if="{{isHostView}}" class="actions-section">
-        <button class="invite-btn" open-type="share" hover-class="none">
+        <!-- v11: 邀请按钮降级 —— 个人小程序无 open-type=share 权限，改为弹窗让用户复制房间号 -->
+        <view class="invite-btn" bindtap="onInviteTap" hover-class="none">
           <text class="invite-icon">↗</text>
           <text>邀请朋友</text>
-        </button>
+        </view>
 
         <view wx:if="{{!allMembersReady}}" class="demo-actions">
           <view class="demo-btn" bindtap="onAddMockMember">+ 模拟1人加入</view>
           <view class="demo-btn outline" bindtap="onFillMockMembers">一键到齐</view>
         </view>
 
-        <view wx:if="{{allMembersReady}}" class="start-vote-btn" bindtap="onStartVoting">
-          <text>开始投票</text>
+        <!-- C-09: 人齐了，开始（>=2 人可点，未满员也可确认进入小队模式）-->
+        <view class="start-vote-btn {{membersCount < 2 ? 'disabled' : ''}}" bindtap="onConfirmReady">
+          <text>人齐了，开始</text>
           <text class="arrow">→</text>
         </view>
+        <view wx:if="{{membersCount < 2}}" class="vote-hint">至少 2 人才能开始</view>
 
         <view class="cancel-btn" bindtap="onCancelTap">{{cancelling ? '取消中...' : '取消组局'}}</view>
       </view>
 
       <!-- 成员操作区 -->
       <view wx:else class="actions-section">
-        <button class="invite-btn" open-type="share" hover-class="none">
+        <view class="invite-btn" bindtap="onInviteTap" hover-class="none">
           <text class="invite-icon">↗</text>
           <text>也邀请其他朋友</text>
-        </button>
+        </view>
+        <view class="cancel-btn" bindtap="onExitRoom">退出房间</view>
+      </view>
+    </view>
+
+    <!-- ===== 阶段 1.5: 已到齐，等待开始投票（C-09 READY）===== -->
+    <view wx:if="{{room.status === 'ready'}}" class="stage-section">
+      <view class="ready-banner">
+        <text class="ready-title">人已到齐</text>
+        <text class="ready-sub">{{membersCount}} 位朋友就位，可以开始投票了</text>
+      </view>
+
+      <view class="members-grid">
+        <view wx:for="{{memberSlots}}" wx:key="index" class="member-slot {{item.nickname ? 'filled' : 'empty'}}">
+          <view wx:if="{{item.nickname}}" class="member-avatar" style="background: {{item.isHost ? '#5CBF9E' : '#D98A5C'}};">
+            <text wx:if="{{item.isHost}}" class="member-icon">★</text>
+            <text wx:else class="member-icon">●</text>
+          </view>
+          <view wx:else class="member-avatar empty-avatar">
+            <text class="member-icon">?</text>
+          </view>
+          <text class="member-name">{{item.nickname || '等待加入'}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{isHostView}}" class="actions-section">
+        <view class="start-vote-btn" bindtap="onStartVoting">
+          <text>开始投票</text>
+          <text class="arrow">→</text>
+        </view>
+        <view class="cancel-btn" bindtap="onCancelTap">{{cancelling ? '取消中...' : '取消组局'}}</view>
+      </view>
+      <view wx:else class="actions-section">
         <view class="cancel-btn" bindtap="onExitRoom">退出房间</view>
       </view>
     </view>
@@ -234,6 +270,12 @@
         </view>
       </view>
 
+      <!-- C-12: 本次同频出逃记录入口（已完成同频出逃后展示）-->
+      <view wx:if="{{groupRecordId}}" class="view-record-cta" bindtap="onViewGroupRecord">
+        <text>本次出逃记录</text>
+        <text class="arrow">→</text>
+      </view>
+
       <view class="script-actions">
         <view class="regenerate-btn" bindtap="onRegenerateScript">重新生成</view>
         <view class="back-home-btn" bindtap="onBackTap">返回首页</view>
@@ -241,4 +283,30 @@
     </view>
 
   </scroll-view>
+
+  <!-- v11: 邀请朋友弹窗（个人小程序无 open-type=share 权限，降级为复制 + 提示） -->
+  <view wx:if="{{showInvitePopup}}" class="invite-mask" bindtap="onInvitePopupClose">
+    <view class="invite-popup" catchtap="">
+      <view class="invite-popup-title">邀请朋友加入</view>
+      <view class="invite-popup-desc">把下方房间号发给朋友，他们打开小程序后会自动进入</view>
+
+      <view class="invite-room-card">
+        <text class="invite-room-label">房间号</text>
+        <text class="invite-room-id" user-select="true">{{room.roomId}}</text>
+      </view>
+
+      <view class="invite-actions">
+        <view class="invite-action primary" bindtap="onCopyRoomIdFromPopup">
+          <text>复制房间号</text>
+        </view>
+        <view class="invite-action ghost" bindtap="onCopyInviteLink">
+          <text>复制邀请链接</text>
+        </view>
+      </view>
+
+      <view class="invite-hint">个人小程序暂不支持微信内直接分享卡片，请用其他聊天工具发送房间号</view>
+
+      <view class="invite-close" bindtap="onInvitePopupClose">×</view>
+    </view>
+  </view>
 </view>

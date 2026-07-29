@@ -1,5 +1,7 @@
 const app = getApp()
 const { DEFAULT_STEPS, getTypeMeta } = require('../../utils/constants.js')
+// 执行进度持久化（中途退出/锁屏/进程清除后可续，每步 completedAt 留痕）
+const executionProgress = require('../../utils/execution-progress.js')
 
 // 每步的实用小贴士（兜底，cmd 自带 steps.details 时优先用 cmd 的）。
 const STEP_HINTS = [
@@ -48,6 +50,13 @@ Page({
       const hint = isObj && s.details ? s.details : (STEP_HINTS[i] || '慢慢来，不着急')
       return { id: i + 1, text, hint, done: false }
     })
+    // 进度持久化：冷启动恢复 done 状态 + completedAt 留痕
+    // 首次进入初始化 executionProgress 挂到 currentCommand，复用 saveCurrentCommand 落盘
+    if (!cmd.executionProgress) {
+      cmd.executionProgress = executionProgress.initProgress(rawSteps)
+      app.saveCurrentCommand()
+    }
+    const merged = executionProgress.mergeProgress(steps, cmd.executionProgress)
     const typeMeta = getTypeMeta(cmd.type)
     const typeColor = (typeMeta && typeMeta.color) || '#5CBF9E'
     const isWalk = cmd.mode === 'walk' || cmd.type === 'walk'
@@ -56,19 +65,30 @@ Page({
     const stepCount = duration * 100
     this.setData({
       command: cmd,
-      steps,
+      steps: merged.steps,
       photos: cmd.photos || [],
       typeColor,
       showStepCount,
       stepCount,
-      currentStep: 0,
-      doneCount: 0,
-      allDone: false
+      currentStep: merged.currentStep,
+      doneCount: merged.doneCount,
+      allDone: merged.allDone
     })
     this.startTimer()
   },
 
-  onUnload() { this.stopTimer() },
+  onUnload() {
+    // 切后台/卸载前保存进度，应对进程被清除后冷启动恢复
+    const cmd = app.globalData.currentCommand
+    if (cmd && cmd.executionProgress) app.saveCurrentCommand()
+    this.stopTimer()
+  },
+
+  // 切后台/锁屏时保存进度（onHide 在 onUnload 之前触发，覆盖切应用/锁屏场景）
+  onHide() {
+    const cmd = app.globalData.currentCommand
+    if (cmd && cmd.executionProgress) app.saveCurrentCommand()
+  },
 
   applyNavMetrics() {
     const nav = app.getNavMetrics ? app.getNavMetrics() : {}
@@ -114,27 +134,29 @@ Page({
   },
 
   // v4: 手动点击「完成」第 i 步
+  // 持久化：标记 done 时同步写入 cmd.executionProgress（含 completedAt 时间戳），落盘可续
   onStepTap(e) {
     const index = Number(e.currentTarget.dataset.index)
+    const cmd = app.globalData.currentCommand
+    if (!cmd) return
     const steps = this.data.steps.slice()
     if (!steps[index] || steps[index].done) return
-    steps[index] = Object.assign({}, steps[index], { done: true })
-    this.recomputeProgress(steps)
+    // 更新持久化进度（写 completedAt，已完成不覆盖，保证留痕单调递增）
+    cmd.executionProgress = executionProgress.markStepDone(cmd.executionProgress, index)
+    app.saveCurrentCommand()
+    // 合并到 page data（保留 hint 等页面字段，覆盖 done/completedAt）
+    const merged = executionProgress.mergeProgress(steps, cmd.executionProgress)
+    this.setData({
+      steps: merged.steps,
+      doneCount: merged.doneCount,
+      allDone: merged.allDone,
+      currentStep: merged.currentStep
+    })
     try { wx.vibrateShort({ type: 'light' }) } catch (e) {}
     // 全部完成时给一个轻提示
-    if (this.data.allDone) {
+    if (merged.allDone) {
       wx.showToast({ title: '全部完成，可以出逃了', icon: 'none', duration: 1200 })
     }
-  },
-
-  // 重新计算 currentStep / doneCount / allDone
-  recomputeProgress(steps) {
-    const doneCount = steps.filter(s => s.done).length
-    const allDone = doneCount === steps.length
-    // currentStep = 第一个未完成索引
-    let currentStep = steps.findIndex(s => !s.done)
-    if (currentStep === -1) currentStep = steps.length - 1
-    this.setData({ steps, doneCount, allDone, currentStep })
   },
 
   takePhoto() {

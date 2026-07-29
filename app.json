@@ -37,7 +37,8 @@
     "pages/partner-list/partner-list",
     "pages/leaderboard/leaderboard",
     "pages/group/create/create",
-    "pages/group/room/room"
+    "pages/group/room/room",
+    "pages/group/escape-record/escape-record"
   ],
   "lazyCodeLoading": "requiredComponents",
   "window": {
@@ -77,7 +78,8 @@
     }
   },
   "requiredPrivateInfos": [
-    "chooseLocation"
+    "chooseLocation",
+    "getLocation"
   ],
   "sitemapLocation": "sitemap.json",
   "style": "v2"

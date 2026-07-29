@@ -10,8 +10,17 @@ Page({
     statusBarHeight: 20,
     navHeaderStyle: '',
     topic: '',
-    memberOptions: [3, 4, 5, 6],
-    memberIndex: 1,  // 默认 4 人
+    // 人数选项（v11: 改为对象数组，自定义 picker 用）
+    memberOptions: [
+      { value: 3, label: '3 人', desc: '含发起人，适合小团体' },
+      { value: 4, label: '4 人', desc: '含发起人，轻松组局' },
+      { value: 5, label: '5 人', desc: '含发起人，热闹氛围' },
+      { value: 6, label: '6 人', desc: '含发起人，多人派对' }
+    ],
+    maxMembers: 4,  // 默认 4 人
+    // v11: 自定义 picker 状态
+    showPicker: false,
+    tempMembers: 4,
     creating: false
   },
 
@@ -31,8 +40,32 @@ Page({
     this.setData({ topic: e.detail.value || '' })
   },
 
-  onMemberChange(e) {
-    this.setData({ memberIndex: Number(e.detail.value) })
+  // v11: 自定义 picker - 打开
+  onPickerTap() {
+    this.setData({
+      showPicker: true,
+      tempMembers: this.data.maxMembers
+    })
+  },
+
+  // v11: 自定义 picker - 关闭（取消或点遮罩）
+  onPickerClose() {
+    this.setData({ showPicker: false })
+  },
+
+  // v11: 自定义 picker - 选择选项
+  onPickerOptionTap(e) {
+    const value = Number(e.currentTarget.dataset.value)
+    if (!value) return
+    this.setData({ tempMembers: value })
+  },
+
+  // v11: 自定义 picker - 确认
+  onPickerConfirm() {
+    this.setData({
+      maxMembers: this.data.tempMembers,
+      showPicker: false
+    })
   },
 
   onBackTap() {
@@ -45,7 +78,7 @@ Page({
     if (this.data.creating) return
 
     const topic = (this.data.topic || '').trim()
-    const maxMembers = this.data.memberOptions[this.data.memberIndex]
+    const maxMembers = this.data.maxMembers
 
     // 表单校验
     if (!topic) {

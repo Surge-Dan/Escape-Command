@@ -1,5 +1,6 @@
 const app = getApp()
 const { getTypeMeta } = require('../../utils/constants.js')
+const markerBuilder = require('../../utils/map-marker-builder.js')
 
 // v4: 顶部模式 tab —— 三类：普通地图 / 卫星地图 / 路线模式
 const MAP_TABS = [
@@ -36,7 +37,9 @@ Page({
     activeTime: 'all',
     currentCity: '',
     // 原生地图状态
-    mapCenter: { latitude: 39.9042, longitude: 116.4074 },  // 默认北京
+    // 去掉北京硬编码：优先用真实定位，无定位时用中性兜底（中国中部）+ hasLocation=false 空状态引导
+    mapCenter: { latitude: 35, longitude: 105 },
+    hasLocation: false,
     mapScale: 12,
     mapHeight: 400,  // px，onLoad 中按系统信息计算
     mapMarkers: [],
@@ -76,12 +79,28 @@ Page({
     })
     this.loadCurrentCity()
     this.refresh()
+    // 首次进入若已有真实定位，立即以真实定位为中心（修复「默认北京」）
+    this.locateIfAvailable()
   },
 
   onShow() {
     this.refresh()
+    // 后台返回时若拿到新定位，平滑回正到真实位置
+    this.locateIfAvailable()
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 1 })
+    }
+  },
+
+  // 有真实定位时把地图中心设为真实位置（避免显示北京/中性兜底）
+  locateIfAvailable() {
+    const loc = app.globalData.location
+    if (loc && loc.latitude && loc.longitude) {
+      this.setData({
+        mapCenter: { latitude: loc.latitude, longitude: loc.longitude },
+        hasLocation: true,
+        mapScale: 14
+      })
     }
   },
 
@@ -107,13 +126,17 @@ Page({
       markers = this.buildMarkers(located)
       polyline = this.buildPolyline(located)
     }
-    const fallback = app.globalData.location || this.data.homePoint || this.data.mapCenter
+    // fallback 链：真实定位 > 家 > 中性兜底（中国中部，避免硬编码北京）
+    const NEUTRAL_CENTER = { latitude: 35, longitude: 105 }
+    const fallback = app.globalData.location || this.data.homePoint || NEUTRAL_CENTER
     const center = located[0] ? located[0].location : fallback
+    const hasLocation = !!(app.globalData.location && app.globalData.location.latitude)
     this.setData({
       filteredRecords: located,
       mapMarkers: markers,
       mapPolyline: polyline,
       mapCenter: { latitude: center.latitude, longitude: center.longitude },
+      hasLocation: hasLocation,
       totalCount: allFiltered.length,
       uniquePlaces: this.countUniquePlaces(located),
       totalDistance: this.computeTotalDistance(located),
@@ -152,28 +175,83 @@ Page({
   },
 
   // ===== 标记构建 =====
+  // C-13: 同频记录按 groupId 聚合为聚合 marker（成员数角标），普通记录各自 marker
+  // solo marker id: 0..n-1（反查 this.markerRecords）
+  // group marker id: 200000..（反查 this.markerGroups），避开「家」marker id 100000
   buildMarkers(records) {
-    const markers = records
-      .filter(r => r.location && r.location.latitude && r.location.longitude)
-      .map((r, i) => ({
-        id: i,
-        latitude: r.location.latitude,
-        longitude: r.location.longitude,
-        title: r.commandTitle || r.commandContent || '出逃记忆',
-        iconPath: TYPE_PIN_MAP[r.commandType] || TYPE_PIN_MAP.color,
-        width: 32,
-        height: 32,
-        anchor: { x: 0.5, y: 1 },
-        callout: {
-          content: r.commandTitle || r.commandContent || '出逃记忆',
-          color: '#2E2F33',
-          fontSize: 12,
-          borderRadius: 8,
-          padding: 8,
-          bgColor: '#FFFFFF',
-          display: 'BYCLICK'
-        }
-      }))
+    const solo = markerBuilder.buildSoloMarkers(records)
+    const group = markerBuilder.buildGroupMarkers(records)
+    const merged = markerBuilder.mergeMarkers(solo, group)
+
+    const markerRecords = []
+    const markerGroups = []
+    const markers = []
+    let soloId = 0
+    let groupId = 200000
+
+    merged.markers.forEach(m => {
+      if (m.kind === 'solo') {
+        const id = soloId++
+        markerRecords.push(m.data.record)
+        markers.push({
+          id,
+          latitude: m.data.latitude,
+          longitude: m.data.longitude,
+          title: m.data.title,
+          iconPath: TYPE_PIN_MAP[m.data.type] || TYPE_PIN_MAP.color,
+          width: 32,
+          height: 32,
+          anchor: { x: 0.5, y: 1 },
+          callout: {
+            content: m.data.title,
+            color: '#2E2F33',
+            fontSize: 12,
+            borderRadius: 8,
+            padding: 8,
+            bgColor: '#FFFFFF',
+            display: 'BYCLICK'
+          }
+        })
+      } else {
+        // C-13: 聚合 marker —— 复用现有 pin 图标，成员数用 label 文字渲染（不新增图片资源）
+        const id = groupId++
+        markerGroups.push(m.data)
+        markers.push({
+          id,
+          latitude: m.data.latitude,
+          longitude: m.data.longitude,
+          title: m.data.title,
+          iconPath: TYPE_PIN_MAP[m.data.primaryType] || TYPE_PIN_MAP.color,
+          width: 36,
+          height: 36,
+          anchor: { x: 0.5, y: 1 },
+          label: {
+            content: m.data.memberCount + '人',
+            color: '#fff',
+            fontSize: 10,
+            bgColor: '#5CBF9E',
+            borderRadius: 20,
+            padding: 4,
+            anchorX: 18,
+            anchorY: -8,
+            textAlign: 'center'
+          },
+          callout: {
+            content: m.data.title,
+            color: '#2E2F33',
+            fontSize: 12,
+            borderRadius: 8,
+            padding: 8,
+            bgColor: '#FFFFFF',
+            display: 'BYCLICK'
+          }
+        })
+      }
+    })
+
+    // 保存反查表（实例属性，不进 data 避免渲染开销）
+    this.markerRecords = markerRecords
+    this.markerGroups = markerGroups
 
     // 路线模式下额外标记固定出发点「家」
     if (this.data.activeTab === 'route' && this.data.homePoint) {
@@ -317,8 +395,26 @@ Page({
 
   onMarkerTap(e) {
     const markerId = e.detail.markerId
-    const records = this.data.filteredRecords || []
-    const record = records[markerId]
+    // C-13: group 聚合 marker（id >= 200000）展示聚合弹窗
+    if (markerId >= 200000) {
+      const g = (this.markerGroups || [])[markerId - 200000]
+      if (g) {
+        this.setData({
+          popupRecord: {
+            id: g.groupId,
+            typeColor: '#5CBF9E',
+            typeName: '同频',
+            commandTitle: g.title,
+            dateText: g.memberCount + ' 位朋友'
+          }
+        })
+      }
+      return
+    }
+    // 家 marker（id === 100000）不弹记录窗
+    if (markerId === 100000) return
+    // solo marker：反查 this.markerRecords
+    const record = (this.markerRecords || [])[markerId]
     if (record) {
       this.setData({ popupRecord: this.formatPopup(record) })
     }

@@ -5,6 +5,7 @@
       <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
     </view>
     <text class="nav-header-title">出逃记录</text>
+    <view class="nav-header-divider"></view>
   </view>
 
   <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
@@ -70,6 +71,25 @@
           </view>
           <text class="cmd-title">{{record.commandTitle}}</text>
           <text wx:if="{{record.commandContent && record.commandContent !== record.commandTitle}}" class="cmd-content body-text">{{record.commandContent}}</text>
+        </view>
+      </view>
+
+      <!-- C-12: 同频记录 - 和朋友一起（成员列表 + 步骤留痕时间线）-->
+      <view wx:if="{{isGroup && groupSummary}}" class="section">
+        <text class="section-title h3">和朋友一起</text>
+        <view class="solid-card group-card">
+          <view class="group-members-row">
+            <text wx:for="{{groupSummary.members}}" wx:key="index" class="group-member-tag">{{item}}</text>
+          </view>
+          <view wx:if="{{groupSummary.stepTraces.length > 0}}" class="group-timeline">
+            <view wx:for="{{groupSummary.stepTraces}}" wx:key="index" class="timeline-item">
+              <view class="timeline-dot {{item.done ? 'done' : ''}}">{{index + 1}}</view>
+              <view class="timeline-body">
+                <text class="timeline-text">{{item.text}}</text>
+                <text wx:if="{{item.time}}" class="timeline-time font-mono">{{item.time}}</text>
+              </view>
+            </view>
+          </view>
         </view>
       </view>
       <view class="bottom-spacer"></view>

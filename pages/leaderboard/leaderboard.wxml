@@ -6,6 +6,7 @@
       <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
     </view>
     <text class="nav-header-title">排行榜</text>
+    <view class="nav-header-divider"></view>
   </view>
 
   <!-- Tab 切换栏 -->

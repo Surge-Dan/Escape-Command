@@ -1,4 +1,4 @@
-/* ===== 记录生成中过渡页（全屏，无 nav-header） ===== */
+/* ===== 记录生成中过渡页（全屏，轻量 nav） ===== */
 .generating-page {
   display: flex;
   flex-direction: column;
@@ -6,6 +6,32 @@
 }
 
 .status-bar { width: 100%; flex-shrink: 0; }
+
+/* 顶栏：仅放返回箭头，右侧 padding 让开系统胶囊 */
+.gen-topbar {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8rpx 32rpx 0;
+}
+
+.gen-back {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: var(--white);
+  border: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-popup);
+}
+
+.gen-back-arrow {
+  font-size: 40rpx;
+  line-height: 40rpx;
+  color: var(--ink);
+  margin-top: -6rpx;
+}
 
 .gen-stage {
   flex: 1;
@@ -16,69 +42,131 @@
   padding: 0 80rpx;
 }
 
-/* 拍立得动画 */
-.polaroid-anim {
-  width: 320rpx;
-  padding: 24rpx 24rpx 0;
-  background: var(--white);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-popup);
-  border: var(--border);
-  transform: rotate(-3deg);
-  animation: polaroidPulse 1.2s var(--ease-bounce) infinite;
-}
-
-@keyframes polaroidPulse {
-  0%, 100% { transform: rotate(-4deg) scale(0.94); }
-  50% { transform: rotate(4deg) scale(1.06); }
-}
-
-.polaroid-photo-area {
+/* ===== B-01: 3D 骰子舞台 =====
+ * 6 面立方体，纯 CSS transform，无新增图片。
+ * 面摆放与 generating.js FACE_ROTATIONS 配套：
+ *   1=front, 2=back, 3=right, 4=left, 5=top, 6=bottom
+ *   对面之和 = 7（1↔6, 2↔5, 3↔4）
+ */
+.dice-stage {
   position: relative;
-  width: 100%;
-  height: 300rpx;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--brand-tint), var(--accent-tint));
-  overflow: hidden;
+  width: 160rpx;
+  height: 160rpx;
+  perspective: 900rpx;
+  margin-bottom: 72rpx;
 }
 
-.photo-shine {
+.dice {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+  transform-style: preserve-3d;
+  /* rolling: 1.2s 平滑过渡到随机大角度；settled: 0.5s 反弹落定 */
+  transition: transform 1.2s var(--ease-standard);
+}
+
+.dice.is-rolling {
+  transition: transform 1.2s var(--ease-standard);
+}
+
+.dice.is-settled {
+  transition: transform 0.5s var(--ease-bounce);
+}
+
+/* 抖动期：舞台小幅左右晃 + 微旋（不影响 dice 自身 transform） */
+.dice-stage.is-shaking {
+  animation: dice-shake 0.6s var(--ease-bounce);
+}
+
+@keyframes dice-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  20% { transform: translateX(-10rpx) rotate(-4deg); }
+  40% { transform: translateX(8rpx) rotate(3deg); }
+  60% { transform: translateX(-6rpx) rotate(-2deg); }
+  80% { transform: translateX(4rpx) rotate(1deg); }
+}
+
+/* 6 面：半边长 80rpx，translateZ 推出 */
+.dice-face {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 60%;
-  height: 200%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
-  transform: rotate(20deg);
-  animation: shine 1.5s var(--ease-standard) infinite;
+  top: 0;
+  left: 0;
+  width: 160rpx;
+  height: 160rpx;
+  box-sizing: border-box;
+  background: var(--white);
+  border-radius: 24rpx;
+  border: 2rpx solid var(--brand-tint);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 24rpx;
+  box-shadow: inset 0 0 0 1rpx rgba(217, 138, 92, 0.08);
+  backface-visibility: hidden;
 }
 
-@keyframes shine {
-  0% { left: -60%; }
-  100% { left: 120%; }
+.face-1 { transform: rotateY(0deg) translateZ(80rpx); }
+.face-2 { transform: rotateY(180deg) translateZ(80rpx); }
+.face-3 { transform: rotateY(90deg) translateZ(80rpx); }
+.face-4 { transform: rotateY(-90deg) translateZ(80rpx); }
+.face-5 { transform: rotateX(-90deg) translateZ(80rpx); }
+.face-6 { transform: rotateX(90deg) translateZ(80rpx); }
+
+/* 圆点：grid 3x3 定位 */
+.dot {
+  width: 22rpx;
+  height: 22rpx;
+  border-radius: 50%;
+  background: var(--brand-dark);
+  align-self: center;
+  justify-self: center;
 }
 
-.polaroid-bottom {
-  width: 100%;
-  height: 64rpx;
+.dot-tl { grid-area: 1 / 1; }
+.dot-tc { grid-area: 1 / 2; }
+.dot-tr { grid-area: 1 / 3; }
+.dot-cl { grid-area: 2 / 1; }
+.dot-c  { grid-area: 2 / 2; }
+.dot-cr { grid-area: 2 / 3; }
+.dot-bl { grid-area: 3 / 1; }
+.dot-bc { grid-area: 3 / 2; }
+.dot-br { grid-area: 3 / 3; }
+
+/* 地面投影：随阶段变化模拟离地高度 */
+.dice-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: -40rpx;
+  width: 120rpx;
+  height: 24rpx;
+  margin-left: -60rpx;
+  background: radial-gradient(ellipse, rgba(91, 56, 31, 0.22), transparent 70%);
+  border-radius: 50%;
+  transform: translateY(0) scale(1);
+  transition: transform 0.6s var(--ease-standard), opacity 0.6s var(--ease-standard);
+  opacity: 0.7;
 }
 
-/* 文案 */
+.dice-stage.is-shaking .dice-shadow { transform: translateY(-6rpx) scale(0.85); opacity: 0.4; }
+
+/* ===== 文案 ===== */
 .gen-title {
-  margin-top: 64rpx;
+  margin-top: 24rpx;
   font-size: 32rpx;
   font-weight: 700;
   color: var(--ink);
   letter-spacing: 1rpx;
+  text-align: center;
 }
 
-.dots {
+.gen-dots {
   display: flex;
   gap: 12rpx;
   margin-top: 28rpx;
   height: 16rpx;
 }
-.dot {
+
+.gen-dot {
   width: 14rpx;
   height: 14rpx;
   border-radius: 50%;
@@ -86,8 +174,9 @@
   opacity: 0.3;
   animation: dotBlink 1.2s var(--ease-standard) infinite;
 }
-.d2 { animation-delay: 0.2s; }
-.d3 { animation-delay: 0.4s; }
+
+.gen-dot.d2 { animation-delay: 0.2s; }
+.gen-dot.d3 { animation-delay: 0.4s; }
 
 @keyframes dotBlink {
   0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
@@ -98,4 +187,18 @@
   margin-top: 24rpx;
   font-size: 24rpx;
   color: var(--ink-faint);
+}
+
+/* ===== 低端机降级：pixelRatio<2 关投影/阴影，保留旋转 ===== */
+.generating-page.low-end .dice-face { box-shadow: none; }
+.generating-page.low-end .dice-shadow { display: none; }
+.generating-page.low-end .gen-back { box-shadow: none; }
+
+/* ===== reduceMotion：跳过抖动，缩短过渡 ===== */
+@media (prefers-reduced-motion: reduce) {
+  .dice-stage.is-shaking { animation: none; }
+  .dice { transition: transform 0.4s var(--ease-standard); }
+  .dice.is-rolling { transition: transform 0.4s var(--ease-standard); }
+  .dice.is-settled { transition: transform 0.3s var(--ease-standard); }
+  .gen-dot { animation: none; opacity: 0.6; }
 }

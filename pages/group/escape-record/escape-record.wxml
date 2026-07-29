@@ -1,0 +1,93 @@
+<view class="page-container escape-record-page">
+  <!-- 统一导航栏：标题居中 + 底部 1rpx 分割线 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="onBackTap">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">出逃进行中</text>
+    <view class="nav-header-divider"></view>
+  </view>
+
+  <scroll-view scroll-y class="er-scroll" enhanced show-scrollbar="{{false}}">
+    <!-- 计时卡 -->
+    <view class="timer-card">
+      <view class="timer-head">
+        <text class="timer-label">已探索</text>
+        <text class="timer-num font-mono">{{elapsedMinutes}}</text>
+        <text class="timer-unit">分钟</text>
+      </view>
+      <view class="progress-bar-bg">
+        <view class="progress-bar-fill" style="width: {{progressPct}}%;"></view>
+      </view>
+      <text class="timer-sub">预计还需 {{remainMin}} 分钟</text>
+    </view>
+
+    <!-- 剧本卡 -->
+    <view wx:if="{{script}}" class="script-card">
+      <view class="script-badge">出逃剧本</view>
+      <text class="script-title">{{script.title}}</text>
+
+      <view class="script-meta">
+        <view class="meta-item">
+          <text class="meta-label">时长</text>
+          <text class="meta-value">{{script.duration}} 分钟</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">预算</text>
+          <text class="meta-value">{{script.budgetLabel}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">风格</text>
+          <text class="meta-value">{{script.styleLabel}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">时间</text>
+          <text class="meta-value">{{script.timeLabel}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{script.members && script.members.length}}" class="script-members">
+        <text class="script-members-label">一起出逃的人</text>
+        <view class="script-members-row">
+          <text wx:for="{{script.members}}" wx:key="*this" class="script-member-tag">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 步骤卡：每步可手动点击完成 -->
+    <view wx:if="{{script && script.steps && script.steps.length}}" class="step-card">
+      <text class="step-card-title">出逃步骤（点击「完成」）</text>
+      <view wx:for="{{steps}}" wx:key="id" class="step-row {{item.done ? 'finished' : ''}} {{!item.done && index === currentStep ? 'current' : ''}}">
+        <view class="step-mark">
+          <text wx:if="{{item.done}}" class="step-mark-check">✓</text>
+          <text wx:else class="step-mark-num">{{index + 1}}</text>
+        </view>
+        <view class="step-content">
+          <text class="step-label">第 {{index + 1}} 步</text>
+          <text class="step-text">{{item.text}}</text>
+        </view>
+        <view wx:if="{{!item.done}}" class="step-finish-btn" data-index="{{index}}" catchtap="onStepTap">
+          <text>完成</text>
+        </view>
+        <view wx:else class="step-done-mark">
+          <text>✓</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{!script}}" class="empty-card">
+      <text class="empty-text">剧本数据丢失</text>
+      <view class="empty-btn" bindtap="onBackTap">返回首页</view>
+    </view>
+
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+
+  <!-- 底部完成按钮 -->
+  <view class="er-actions">
+    <view class="finish-btn {{allDone ? '' : 'disabled'}}" bindtap="onFinish">
+      <text>{{allDone ? '完成出逃' : '还有 ' + (steps.length - doneCount) + ' 步待完成'}}</text>
+    </view>
+  </view>
+</view>

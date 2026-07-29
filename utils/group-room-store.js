@@ -10,10 +10,14 @@ const OPENID_KEY = 'localHostOpenId'
 // ===== 房间状态机 =====
 const ROOM_STATUS = {
   WAITING: 'waiting_members',    // 等待成员加入
+  READY: 'ready',                // C-09: 人已到齐，等待房主开始投票
   VOTING: 'voting',              // 投票中
   GENERATING: 'generating',      // 剧本生成中
   FINISHED: 'finished'           // 剧本已生成
 }
+
+// C-11: 人数不足兜底常量（demo 友好，允许 2 人小队）
+const MIN_MEMBERS = 2
 
 // ===== 投票选项定义 =====
 const VOTE_OPTIONS = {
@@ -521,6 +525,108 @@ function getMostFrequent(arr) {
   return result
 }
 
+// ===== C-11: 人数不足兜底 =====
+// 纯函数：检查房间人数是否满足最低要求，返回建议动作
+//   current < min            → suggestion='cancel'（建议取消）
+//   min <= current < 3       → suggestion='small_team'（小队模式，可继续）
+//   current >= 3             → suggestion='ok'
+// room 入参可为 room 对象或 { members }；非法入参保守返回 cancel
+function checkQuorum(room) {
+  const members = (room && Array.isArray(room.members)) ? room.members : []
+  const current = members.length
+  const min = MIN_MEMBERS
+  let suggestion = 'ok'
+  if (current < min) {
+    suggestion = 'cancel'
+  } else if (current < 3) {
+    suggestion = 'small_team'
+  }
+  return { ok: true, enough: current >= min, current, min, suggestion }
+}
+
+// ===== C-09: 到齐确认 =====
+// 仅房主可调，成员数 >= MIN_MEMBERS 时 WAITING → READY
+// 兜底：成员数 < MIN_MEMBERS 返回 NOT_ENOUGH_MEMBERS
+// 兼容：房主可跳过 READY 直接 WAITING → VOTING（保留 updateRoomStatus 路径）
+function confirmReady(roomId) {
+  if (!roomId) return { ok: false, errCode: 'INVALID_PARAM' }
+  const list = loadAllRooms()
+  const idx = findRoomIndex(list, roomId)
+  if (idx === -1) return { ok: false, errCode: 'ROOM_NOT_FOUND' }
+
+  const room = list[idx]
+  if (room.status === 'cancelled') return { ok: false, errCode: 'ROOM_CANCELLED' }
+  if (room.status !== ROOM_STATUS.WAITING) {
+    return { ok: false, errCode: 'INVALID_STATUS', errMsg: '当前阶段无法确认到齐' }
+  }
+
+  const openId = getHostOpenId()
+  if (room.hostOpenId !== openId) {
+    return { ok: false, errCode: 'NOT_HOST', errMsg: '只有发起人可以确认到齐' }
+  }
+
+  if (!Array.isArray(room.members) || room.members.length < MIN_MEMBERS) {
+    return { ok: false, errCode: 'NOT_ENOUGH_MEMBERS', errMsg: '至少 ' + MIN_MEMBERS + ' 人才能开始' }
+  }
+
+  room.status = ROOM_STATUS.READY
+  touchRoom(room)
+  list[idx] = room
+  saveAllRooms(list)
+  return { ok: true, room }
+}
+
+// ===== C-10: 临时退出 =====
+// 非房主退出：从 members 移除自己，投票统计由 getVoteStats 实时重算
+// 房主退出：转取消房间（房主走则局散），返回 hostLeft=true
+// 状态限制：status ∈ {WAITING, READY, VOTING} 可退；{GENERATING, FINISHED} 不可退（剧本已生成）
+// 退出后联动 checkQuorum，suggestion='cancel' 时返回值带 quorum 提示房主
+function leaveRoom(roomId) {
+  if (!roomId) return { ok: false, errCode: 'INVALID_PARAM' }
+  const list = loadAllRooms()
+  const idx = findRoomIndex(list, roomId)
+  if (idx === -1) return { ok: false, errCode: 'ROOM_NOT_FOUND' }
+
+  const room = list[idx]
+  if (room.status === 'cancelled') return { ok: false, errCode: 'ROOM_CANCELLED' }
+
+  // 状态限制：剧本已生成（GENERATING/FINISHED）不可退
+  if (room.status === ROOM_STATUS.GENERATING || room.status === ROOM_STATUS.FINISHED) {
+    return { ok: false, errCode: 'INVALID_STATUS', errMsg: '剧本已生成，无法退出' }
+  }
+
+  const openId = getHostOpenId()
+
+  // 房主退出 → 转取消房间（房主走则局散）
+  if (room.hostOpenId === openId) {
+    room.status = 'cancelled'
+    touchRoom(room)
+    list[idx] = room
+    saveAllRooms(list)
+    return {
+      ok: true, room, hostLeft: true,
+      quorum: { suggestion: 'cancel', current: 0, min: MIN_MEMBERS }
+    }
+  }
+
+  // 非房主退出：从 members 移除自己
+  const beforeLen = room.members.length
+  room.members = room.members.filter(m => m.openId !== openId)
+  if (room.members.length === beforeLen) {
+    return { ok: false, errCode: 'NOT_MEMBER', errMsg: '你不在房间中' }
+  }
+  touchRoom(room)
+  list[idx] = room
+  saveAllRooms(list)
+
+  // 联动 C-11: 退出后检查人数兜底
+  const quorum = checkQuorum(room)
+  return {
+    ok: true, room, hostLeft: false,
+    quorum: { suggestion: quorum.suggestion, current: quorum.current, min: quorum.min }
+  }
+}
+
 // ===== 状态转换 =====
 function updateRoomStatus(roomId, status) {
   if (!roomId || !status) return { ok: false, errCode: 'INVALID_PARAM' }
@@ -564,9 +670,13 @@ module.exports = {
   getVoteStats,
   // C-08
   generateScript,
+  // C-09 到齐确认 / C-10 临时退出 / C-11 人数不足兜底
+  confirmReady,
+  leaveRoom,
+  checkQuorum,
   // 通用
   updateRoomStatus,
   clearAllRooms,
   // 内部导出（供测试用）
-  _internal: { getMostFrequent, getWinner, generateRoomId, findRoomIndex }
+  _internal: { getMostFrequent, getWinner, generateRoomId, findRoomIndex, checkQuorum, MIN_MEMBERS }
 }

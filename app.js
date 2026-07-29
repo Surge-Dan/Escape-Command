@@ -4,6 +4,12 @@ const challenges = require('./data/challenges.js')
 const themes = require('./data/themes.js')
 // v4: AI 场景插画 —— 启动时清理过期缓存
 const aiImage = require('./utils/ai-image.js')
+// B-02~B-06: 生成引擎（纯函数，零 wx 依赖）
+const generatorEngine = require('./utils/generator-engine.js')
+// 出逃记录构造器（普通 + 同频统一入口，纯函数零 wx 依赖）
+const recordBuilder = require('./utils/record-builder.js')
+// POI 指令构建器（真实周边商铺/打卡点 → 带具体地点的指令，纯函数零 wx 依赖）
+const poiCommandBuilder = require('./utils/poi-command-builder.js')
 
 App({
   globalData: {
@@ -248,12 +254,10 @@ App({
   },
 
   getFallbackCommands() {
-    return [
-      this.normalizeCommand({ id: 'fb001', title: '找一块蓝色招牌', content: '抬头找一块蓝色招牌或路牌，和它合个影', type: 'color', duration: 15, outdoor: true, nightSafe: true, rainy: true, requirePOI: null, tip: '蓝色常常藏在路牌和店招里' }),
-      this.normalizeCommand({ id: 'fb002', title: '听三分钟城市声音', content: '找个能坐下的地方，闭眼听 3 分钟，记下 5 种声音', type: 'sense', duration: 10, outdoor: true, nightSafe: true, rainy: true, requirePOI: null, tip: '不要急着判断，只听见就好' }),
-      this.normalizeCommand({ id: 'fb003', title: '买一份热乎小吃', content: '去最近的小店买一个你很久没吃过的零食', type: 'food', duration: 15, outdoor: true, nightSafe: false, rainy: true, requirePOI: null, tip: '把选择权交给今天的胃口' }),
-      this.normalizeCommand({ id: 'fb004', title: '走一条没走过的路', content: '沿着一条没走过的路走 15 分钟', type: 'walk', duration: 20, outdoor: true, nightSafe: false, rainy: false, requirePOI: null, tip: '迷路了再导航回来' })
-    ]
+    // B-06: 委托给 generator-engine（保持原返回结构：normalizeCommand 包装）
+    const ctx = this._buildEngineCtx()
+    const fallback = generatorEngine.getFallbackCommands(ctx)
+    return fallback.map(cmd => this.normalizeCommand(cmd))
   },
 
   checkLocation() {
@@ -266,7 +270,9 @@ App({
         // 未配置 key 时优雅降级到「当前位置附近」，不影响主流程。
         this.reverseGeocode(res.latitude, res.longitude)
         this.fetchWeather()
-        this.scanNearbyPOI()
+        // 真实 POI 搜索：云函数 + 腾讯地图，获取周边商铺/打卡点生成新指令体系
+        // 未配置 key / 云函数失败时降级到 scanNearbyPOI mock，主流程不挂
+        this.fetchNearbyPOI(res.latitude, res.longitude)
       },
       fail: () => {
         this.globalData.location = null
@@ -274,6 +280,66 @@ App({
         this.fetchWeather()
       }
     })
+  },
+
+  // 真实 POI 搜索：调云函数 poiSearch（腾讯地图逆地理 + 周边搜索）
+  // 成功：写 currentCity/locationName/nearbyPOI/nearbyPOIList，注入 POI 指令到 commandPool
+  // 失败/无 key：降级到 scanNearbyPOI mock，主流程不挂
+  fetchNearbyPOI(lat, lng) {
+    if (!this.globalData.cloudReady || !wx.cloud || typeof wx.cloud.callFunction !== 'function') {
+      this.scanNearbyPOI()
+      return
+    }
+    wx.cloud.callFunction({
+      name: 'poiSearch',
+      data: { lat: lat, lng: lng },
+      success: (res) => {
+        const r = res && res.result
+        if (!r || !r.ok) {
+          this.scanNearbyPOI()
+          return
+        }
+        // 城市信息（云函数逆地理，优先于客户端 reverseGeocode）
+        if (r.locationName) this.globalData.locationName = r.locationName
+        if (r.city) {
+          this.globalData.currentCity = r.city
+          this.saveToLocal('currentCity', r.city)
+        }
+        const pois = Array.isArray(r.pois) ? r.pois : []
+        this.globalData.nearbyPOIList = pois
+        // nearbyPOI 类型集合：真实 POI 类型 + mock 兜底（保证基础类型可达）
+        const poiSet = {}
+        pois.forEach(p => { if (p && p.type) poiSet[p.type] = true })
+        this.globalData.nearbyPOI = Object.assign({
+          market: true, cafe: true, park: true, bookstore: true,
+          alley: true, lake: false, convenience: true
+        }, poiSet)
+        // 注入 POI 指令到 commandPool 头部
+        this.injectPOICommands(pois)
+      },
+      fail: () => { this.scanNearbyPOI() }
+    })
+  },
+
+  // 把真实 POI 转为指令并注入 commandPool 头部
+  // POI 指令自带 location，完成后记录自动带坐标 → 地图标记闭环
+  injectPOICommands(pois) {
+    if (!Array.isArray(pois) || pois.length === 0) return
+    const ctx = {
+      city: this.globalData.currentCity || '',
+      hour: this.getCurrentHour(),
+      weather: (this.globalData.weather && this.globalData.weather.condition) || 'sunny'
+    }
+    const poiCmds = poiCommandBuilder.buildCommands(pois, this.globalData.userPreferences || { type: {} }, ctx)
+    if (!poiCmds.length) return
+    // normalizeCommand 包装（与现有指令池结构一致），POI 指令的 location 字段保留
+    const normalized = poiCmds.map(c => this.normalizeCommand(c))
+    // 去重：移除 commandPool 中已有的同 id POI 指令（避免重复注入）
+    const newIds = new Set(normalized.map(c => c.id))
+    const filtered = this.globalData.commandPool.filter(c => !newIds.has(c.id))
+    this.globalData.commandPool = normalized.concat(filtered)
+    // 同步 offlineCommands（POI 指令 requirePOI=null，会进入 offlineCommands）
+    this.globalData.offlineCommands = this.globalData.commandPool.filter(c => !c.requirePOI).slice(0, 100)
   },
 
   // v2 fix: 腾讯地图 WebService 逆地理编码，结果形如「广州·天河」写入 globalData.locationName。
@@ -365,6 +431,99 @@ App({
     }
   },
 
+  // B-02~B-06: 构造 generator-engine 上下文
+  // 把 globalData + storage 的状态打包成纯函数入参
+  // B-07~B-14: 追加 weatherDetail/recentLocations/recentLocationTimes/recentContents/userIntensity/targetDuration/locationName/season
+  _buildEngineCtx(mode) {
+    const completedIds = this.globalData.completedCommandIds || []
+    const records = this.globalData.records || []
+    // 已完成日期映射 {cmdId: dateStr}
+    const completedDates = {}
+    records.forEach(r => {
+      if (r && r.commandId) completedDates[r.commandId] = r.date
+    })
+    // B-08/B-09: 从最近 5 次记录提取 requirePOI 列表 + 时间戳 + content 文本
+    // 命令池建索引便于反查 requirePOI/content（记录本身只存 commandId + content 副本）
+    const pool = this.globalData.commandPool || []
+    const cmdMap = {}
+    pool.forEach(c => { if (c && c.id) cmdMap[c.id] = c })
+    const recentLocations = []
+    const recentLocationTimes = []
+    const recentContents = []
+    records.slice(0, 5).forEach(r => {
+      if (!r) return
+      const cmd = r.commandId ? cmdMap[r.commandId] : null
+      const poi = cmd && cmd.requirePOI && cmd.requirePOI !== 'null' ? cmd.requirePOI : null
+      if (poi) {
+        recentLocations.push(poi)
+        // 时间戳：优先 completedAt → date 字符串解析 → now 兜底
+        let ts = Date.now()
+        if (r.completedAt) {
+          const t = new Date(r.completedAt).getTime()
+          if (!isNaN(t)) ts = t
+        } else if (r.date) {
+          const t = new Date(r.date).getTime()
+          if (!isNaN(t)) ts = t
+        }
+        recentLocationTimes.push(ts)
+      }
+      // content 优先用 record 副本，缺失则从 command 反查
+      const content = (typeof r.content === 'string' && r.content) ? r.content : (cmd && cmd.content) || ''
+      if (content) recentContents.push(content)
+    })
+    // B-07: weatherDetail 从 globalData.weather 提取（当前 weather 无 visibility 字段，留空不过滤）
+    const weather = this.globalData.weather || {}
+    const weatherDetail = {
+      temperature: Number.isFinite(weather.temperature) ? weather.temperature : null,
+      visibility: '',
+      condition: typeof weather.description === 'string' ? weather.description : ''
+    }
+    // B-10: userIntensity 从 userPreferences.intensity
+    const userPrefs = this.globalData.userPreferences || { type: {} }
+    const userIntensity = userPrefs.intensity === 'low' || userPrefs.intensity === 'high' ? userPrefs.intensity : 'medium'
+    return {
+      commandPool: pool,
+      completedIds: completedIds,
+      completedDates: completedDates,
+      hour: this.getCurrentHour(),
+      weather: (weather && weather.condition) || 'sunny',
+      nearbyPOI: this.globalData.nearbyPOI || {},
+      lastType: wx.getStorageSync('lastCommandType') || '',
+      sameTypeCount: wx.getStorageSync('sameTypeCount') || 0,
+      userPrefs: userPrefs,
+      mode: mode || '',
+      duration: 0,
+      reduceMotion: !!wx.getStorageSync('reduceMotion'),
+      // B-07 天气细筛
+      weatherDetail: weatherDetail,
+      // B-08 地点去重（最近 5 次 requirePOI + 时间戳）
+      recentLocations: recentLocations,
+      recentLocationTimes: recentLocationTimes,
+      // B-09 历史体验去重（最近 5 次 content 文本）
+      recentContents: recentContents,
+      // B-10 难度匹配
+      userIntensity: userIntensity,
+      // B-12 时长匹配（mode 推算目标时长，0 表示不参与评分）
+      targetDuration: this._modeTargetDuration(mode),
+      // B-14 变量替换
+      locationName: this.globalData.locationName || '',
+      season: ''
+    }
+  },
+
+  // B-12: mode → 目标时长映射，供 scoreCommand 时长匹配维度
+  _modeTargetDuration(mode) {
+    switch (mode) {
+      case 'micro': return 10
+      case 'walk': return 25
+      case 'breakthrough': return 20
+      case 'sync': return 30
+      case 'night': return 15
+      case 'rainy': return 15
+      default: return 0
+    }
+  },
+
   checkContinuousDays() {
     const today = this.getTodayStr()
     const last = this.globalData.lastCompleteDate
@@ -381,31 +540,26 @@ App({
     return prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)]
   },
 
+  // B-03/04/05: 委托给 generator-engine 三层过滤
+  // 保持原返回结构：normalizeCommand 包装的候选数组
   getAvailableCommands() {
+    const ctx = this._buildEngineCtx()
     const pool = this.globalData.commandPool
-    const completed = this.globalData.completedCommandIds
-    const hour = this.getCurrentHour()
-    const weather = (this.globalData.weather && this.globalData.weather.condition) || 'sunny'
-    const isLateNight = hour >= 22 || hour < 6
-    const isRainy = weather === 'rainy' || weather === 'storm'
-    const nearby = this.globalData.nearbyPOI || {}
-    const lastType = wx.getStorageSync('lastCommandType') || ''
-    const sameTypeCount = wx.getStorageSync('sameTypeCount') || 0
+    // 三层过滤
+    let candidates = generatorEngine.filterByConditions(pool, ctx)
+    candidates = generatorEngine.filterByBusinessHours(candidates, ctx.hour)
+    candidates = generatorEngine.filterBySafety(candidates, ctx)
 
-    let candidates = pool.filter(cmd => {
-      if (completed.includes(cmd.id)) {
-        const completedDate = this.getCompletedDate(cmd.id)
-        if (completedDate && Date.now() - new Date(completedDate).getTime() < 90 * 24 * 60 * 60 * 1000) return false
-      }
-      if (isLateNight && !cmd.nightSafe) return false
-      if (isRainy && !cmd.rainy && cmd.outdoor) return false
-      if (cmd.requirePOI && !nearby[cmd.requirePOI]) return false
-      if (cmd.type === lastType && sameTypeCount >= 2) return false
-      return true
-    })
-
-    if (!candidates.length) candidates = this.globalData.offlineCommands.filter(cmd => !completed.includes(cmd.id))
-    if (!candidates.length) candidates = pool.filter(c => !c.outdoor || !c.requirePOI)
+    // 原兜底链：filtered → offline → pool → fallback
+    if (!candidates.length) {
+      candidates = this.globalData.offlineCommands.filter(cmd => !ctx.completedIds.includes(cmd.id))
+    }
+    if (!candidates.length) {
+      candidates = pool.filter(c => !c.outdoor || !c.requirePOI)
+    }
+    if (!candidates.length) {
+      candidates = this.getFallbackCommands()
+    }
     return candidates.length ? candidates : this.getFallbackCommands()
   },
 
@@ -414,34 +568,27 @@ App({
     return record ? record.date : null
   },
 
+  // B-02~B-06: 委托给 generator-engine.generate
+  // B-13: 消费 result.explanation 写入 cmd.explanation，供 generating/execution 页展示「为什么推荐它」
+  // 保持原返回结构：单个 normalizeCommand 包装的 command
   rollCommand(mode) {
-    let candidates = this.getAvailableCommands()
-    if (mode === 'micro') candidates = candidates.filter(c => c.duration < 15)
-    if (mode === 'walk') candidates = candidates.filter(c => c.outdoor !== false && c.duration >= 20)
-    if (mode === 'double') candidates = candidates.filter(c => c.double || c.social)
-    if (mode === 'night') candidates = candidates.filter(c => c.nightSafe && (c.mode === 'night' || !c.mode))
-    if (mode === 'rainy') candidates = candidates.filter(c => c.rainy && (c.mode === 'rainy' || !c.mode))
-    // smart mode: no filter, use all candidates (weighted recommendation)
-    if (!candidates.length) candidates = this.getAvailableCommands()
-    if (!candidates.length) candidates = this.globalData.offlineCommands
-    if (!candidates.length) candidates = this.globalData.commandPool
-    if (!candidates.length) candidates = this.getFallbackCommands()
-    const selected = this.pickWeightedCommand(candidates)
-    this.rememberLastType(selected.type)
-    return selected
-  },
-
-  // v2 core change: preferred types get a 20% probability lift.
-  pickWeightedCommand(candidates) {
-    const typePrefs = (this.globalData.userPreferences && this.globalData.userPreferences.type) || {}
-    const topType = Object.keys(typePrefs).sort((a, b) => typePrefs[b] - typePrefs[a])[0] || ''
-    const total = candidates.reduce((sum, cmd) => sum + (cmd.type === topType ? 1.2 : 1), 0)
-    let cursor = Math.random() * total
-    for (let i = 0; i < candidates.length; i++) {
-      cursor -= candidates[i].type === topType ? 1.2 : 1
-      if (cursor <= 0) return candidates[i]
+    const ctx = this._buildEngineCtx(mode)
+    const result = generatorEngine.generate(ctx)
+    if (!result || !result.ok || !result.command) {
+      // 终极兜底
+      const fb = this.getFallbackCommands()
+      return fb[0] || null
     }
-    return candidates[Math.floor(Math.random() * candidates.length)]
+    const selected = result.command
+    // normalizeCommand 包装（与原行为一致）
+    const normalized = this.globalData.commandPool.find(c => c.id === selected.id) || selected
+    const cmd = this.normalizeCommand(normalized)
+    // B-13: 附加任务解释（reason/howto/tip），供 generating/execution 页展示
+    if (result.explanation) cmd.explanation = result.explanation
+    // B-12 标记 fallback（供前端区分「兜底推荐」与「正常推荐」）
+    cmd.isFallback = !!result.fallback
+    this.rememberLastType(cmd.type)
+    return cmd
   },
 
   rememberLastType(type) {
@@ -473,25 +620,28 @@ App({
   completeCommand(recordData) {
     const cmd = this.globalData.currentCommand
     if (!cmd) return null
-    const now = new Date()
-    const record = {
-      id: 'r_' + Date.now(),
-      commandId: cmd.id,
-      commandTitle: cmd.title || cmd.content,
-      commandContent: cmd.content,
-      commandType: cmd.type,
-      typeColor: cmd.typeColor,
-      duration: Math.max(1, Math.round((Date.now() - cmd.startTime) / 60000)),
-      photos: recordData.photos || [],
-      feeling: (recordData.feeling || '').slice(0, 200),
-      mood: recordData.mood || 'calm',
-      location: recordData.location || this.globalData.location || null,
-      weather: this.globalData.weather,
-      date: this.getTodayStr(),
-      time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
-      rotation: Math.random() * 4 - 2,
-      filter: recordData.filter || 'day'
+    // 自动注入 executionProgress（普通出逃从 currentCommand 取，调用方无需显式传）
+    // 确保 record.steps 升级为 [{text, completedAt}] 留痕，事后可追溯每步完成时间
+    const rd = Object.assign({}, recordData || {})
+    if (!rd.executionProgress && cmd.executionProgress) {
+      rd.executionProgress = cmd.executionProgress
     }
+    // POI 指令自带 location：调用方未传时用 cmd.location，确保记录带坐标落地图
+    const isLoc = recordBuilder._internal.isLocObj
+    if (!isLoc(rd.location) && isLoc(cmd.location)) {
+      rd.location = cmd.location
+    }
+    // 同频出逃扩展字段自动注入（委托 record-builder 纯函数，便于单测/变异测试覆盖）
+    // record 页 onSave 只传基础字段时，isGroup/groupId/members/steps 从 currentCommand 补齐
+    // 普通出逃 cmd.isGroup 不存在，不注入，零影响
+    Object.assign(rd, recordBuilder.injectGroupFields(cmd, rd))
+    // 委托给 record-builder 纯函数构造记录（普通 + 同频统一入口）
+    // 保证 location/stickers/group 扩展字段一致，下游 map/profile/badges 数据联动
+    const record = recordBuilder.buildRecord(cmd, rd, {
+      location: this.globalData.location,
+      weather: this.globalData.weather,
+      now: Date.now()
+    })
 
     this.globalData.records.unshift(record)
     if (!this.globalData.completedCommandIds.includes(cmd.id)) this.globalData.completedCommandIds.push(cmd.id)

@@ -1,58 +1,84 @@
 <view class="page-container group-create-page">
+  <!-- 统一导航栏：标题居中 + 底部 1rpx 分割线 -->
   <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
   <view class="nav-header" style="{{navHeaderStyle}}">
-    <view class="nav-header-back" catchtap="onBackTap">
+    <view class="nav-header-back" bindtap="onBackTap">
       <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
     </view>
     <text class="nav-header-title">创建出逃房间</text>
     <view class="nav-header-divider"></view>
   </view>
 
-  <scroll-view scroll-y class="create-scroll">
-    <view class="create-hero">
-      <text class="create-hero-title">发起一次同频出逃</text>
-      <text class="create-hero-sub">约上朋友，一起掷骰决定今天的出逃任务</text>
+  <scroll-view scroll-y class="form-scroll" enhanced show-scrollbar="{{false}}">
+    <view class="form-hero">
+      <text class="hero-title">发起一次同频出逃</text>
+      <text class="hero-subtitle">约上朋友，一起掷骰决定今天的出逃任务</text>
     </view>
 
-    <view class="create-card">
-      <view class="form-row">
-        <text class="form-label">同频主题</text>
-        <input class="form-input"
-               value="{{topic}}"
-               placeholder="比如：周末探店 / 周末出逃"
-               placeholder-class="form-input-ph"
-               maxlength="20"
-               bindinput="onTopicInput" />
-        <text class="form-counter">{{topic.length}}/20</text>
+    <view class="form-card">
+      <view class="form-field">
+        <text class="field-label">同频主题</text>
+        <text class="field-counter">{{topic.length}}/20</text>
+        <input
+          class="field-input"
+          placeholder="比如：周末探店 / 周末出逃"
+          placeholder-class="field-placeholder"
+          maxlength="20"
+          value="{{topic}}"
+          bindinput="onTopicInput"
+          confirm-type="done"
+        />
       </view>
 
       <view class="form-divider"></view>
 
-      <view class="form-row">
-        <text class="form-label">人数上限</text>
-        <picker class="form-picker" mode="selector" range="{{memberOptions}}" value="{{memberIndex}}" bindchange="onMemberChange">
-          <view class="form-picker-value">
-            <text>{{memberOptions[memberIndex]}} 人</text>
-            <image class="form-picker-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
-          </view>
-        </picker>
-        <text class="form-hint">含发起人，3-6 人</text>
+      <!-- v11: 自定义 picker 触发区（统一样式：与主题输入框一致的白底卡片） -->
+      <view class="form-field" bindtap="onPickerTap">
+        <text class="field-label">人数上限</text>
+        <view class="picker-display">
+          <text class="picker-value">{{maxMembers}} 人</text>
+          <text class="picker-arrow">▾</text>
+        </view>
+        <text class="field-tip">含发起人，3-6 人</text>
       </view>
     </view>
 
-    <view class="create-tips">
-      <text class="tips-title">小贴士</text>
-      <text class="tips-text">创建后会生成房间号，朋友加入后可以一起投票决定出逃时间、预算和风格。</text>
+    <view class="tip-card">
+      <text class="tip-title">小贴士</text>
+      <text class="tip-text">创建后会生成房间号，朋友加入后可以一起投票决定出逃时间、预算和风格。</text>
     </view>
-
-    <view class="bottom-spacer"></view>
   </scroll-view>
 
-  <view class="create-footer">
-    <view class="create-btn {{creating ? 'loading' : ''}} {{!topic || creating ? 'disabled' : ''}}"
-          bindtap="onCreateTap">
-      <view wx:if="{{creating}}" class="create-btn-loading"></view>
+  <view class="footer">
+    <view class="create-btn {{creating ? 'disabled' : ''}}" bindtap="onCreateTap">
       <text>{{creating ? '创建中...' : '创建组局'}}</text>
+    </view>
+  </view>
+
+  <!-- v11: 自定义人数选择器（底部弹层 + 选中态高亮与外框同色系） -->
+  <view wx:if="{{showPicker}}" class="picker-mask" bindtap="onPickerClose">
+    <view class="picker-panel" catchtap="">
+      <view class="picker-header">
+        <text class="picker-cancel" bindtap="onPickerClose">取消</text>
+        <text class="picker-title">选择人数上限</text>
+        <text class="picker-confirm" bindtap="onPickerConfirm">确定</text>
+      </view>
+      <view class="picker-options">
+        <view
+          wx:for="{{memberOptions}}"
+          wx:key="value"
+          class="picker-option {{tempMembers === item.value ? 'selected' : ''}}"
+          data-value="{{item.value}}"
+          bindtap="onPickerOptionTap"
+        >
+          <view class="picker-option-radio {{tempMembers === item.value ? 'selected' : ''}}"></view>
+          <view class="picker-option-info">
+            <text class="picker-option-label">{{item.label}}</text>
+            <text class="picker-option-desc">{{item.desc}}</text>
+          </view>
+          <text wx:if="{{tempMembers === item.value}}" class="picker-option-check">✓</text>
+        </view>
+      </view>
     </view>
   </view>
 </view>

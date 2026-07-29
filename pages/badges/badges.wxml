@@ -6,6 +6,7 @@
       <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
     </view>
     <text class="nav-header-title">徽章墙</text>
+    <view class="nav-header-divider"></view>
   </view>
 
   <scroll-view scroll-y class="badges-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">

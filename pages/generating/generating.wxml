@@ -1,20 +1,44 @@
-<view class="page-container paper-texture generating-page">
+<view class="page-container paper-texture generating-page {{lowEnd ? 'low-end' : ''}}">
   <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <!-- 左上角返回（避开右上角系统胶囊） -->
+  <view class="gen-topbar" style="{{navHeaderStyle}}">
+    <view class="gen-back" bindtap="goBack" aria-label="返回">
+      <text class="gen-back-arrow">‹</text>
+    </view>
+  </view>
+
   <view class="gen-stage">
-    <!-- 拍立得动画图标：旋转 + 缩放脉冲 -->
-    <view class="polaroid-anim">
-      <view class="polaroid-photo-area">
-        <view class="photo-shine"></view>
+    <!-- B-01: 3D 骰子（CSS 6 面立方体，零图片资源） -->
+    <view class="dice-stage {{dicePhase === 'shaking' ? 'is-shaking' : ''}}">
+      <view
+        class="dice {{dicePhase === 'rolling' ? 'is-rolling' : ''}} {{dicePhase === 'settled' ? 'is-settled' : ''}}"
+        style="transform: {{diceTransform}};">
+        <view
+          wx:for="{{faces}}"
+          wx:for-item="face"
+          wx:key="num"
+          class="dice-face face-{{face.num}}"
+          data-face="{{face.num}}">
+          <view
+            wx:for="{{face.dots}}"
+            wx:for-item="dot"
+            wx:key="*this"
+            class="dot dot-{{dot}}"></view>
+        </view>
       </view>
-      <view class="polaroid-bottom"></view>
+      <view class="dice-shadow"></view>
     </view>
 
-    <text class="gen-title">正在生成你的出逃记录</text>
-    <view class="dots">
-      <view class="dot"></view>
-      <view class="dot d2"></view>
-      <view class="dot d3"></view>
+    <!-- B-02: 加载文案 -->
+    <text class="gen-title">{{loadingCopy || '正在生成你的出逃记录'}}</text>
+
+    <view class="gen-dots">
+      <view class="gen-dot"></view>
+      <view class="gen-dot d2"></view>
+      <view class="gen-dot d3"></view>
     </view>
+
     <text class="gen-sub">把这一刻收进相册里</text>
   </view>
 </view>

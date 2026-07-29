@@ -1,3 +1,5 @@
+/* ===== 出逃房间创建页 ===== */
+
 .group-create-page {
   display: flex;
   flex-direction: column;
@@ -11,35 +13,35 @@
   background: transparent;
 }
 
-.create-scroll {
+.form-scroll {
   flex: 1;
   height: 0;
   padding: 0 40rpx;
 }
 
 /* hero 区 */
-.create-hero {
+.form-hero {
   padding: 32rpx 0 28rpx;
   display: flex;
   flex-direction: column;
   gap: 8rpx;
 }
 
-.create-hero-title {
+.hero-title {
   font-size: 40rpx;
   font-weight: 700;
   color: var(--ink);
   letter-spacing: 1rpx;
 }
 
-.create-hero-sub {
+.hero-subtitle {
   font-size: 24rpx;
   color: var(--ink-soft);
   letter-spacing: 0.5rpx;
 }
 
-/* 表单卡片 */
-.create-card {
+/* 表单卡片（v11: 与内框弹窗的选中态保持同色系） */
+.form-card {
   background: var(--white);
   border: var(--border);
   border-radius: var(--radius-xl);
@@ -47,7 +49,7 @@
   padding: 8rpx 28rpx;
 }
 
-.form-row {
+.form-field {
   position: relative;
   padding: 28rpx 0;
   display: flex;
@@ -55,14 +57,14 @@
   gap: 14rpx;
 }
 
-.form-label {
+.field-label {
   font-size: 26rpx;
   font-weight: 600;
   color: var(--ink);
   letter-spacing: 0.5rpx;
 }
 
-.form-input {
+.field-input {
   height: 80rpx;
   font-size: 30rpx;
   color: var(--ink);
@@ -70,12 +72,12 @@
   border-bottom: 1rpx solid var(--line);
 }
 
-.form-input-ph {
+.field-placeholder {
   color: var(--ink-faint);
   font-size: 28rpx;
 }
 
-.form-counter {
+.field-counter {
   position: absolute;
   right: 4rpx;
   top: 28rpx;
@@ -88,11 +90,8 @@
   background: var(--line);
 }
 
-.form-picker {
-  width: 100%;
-}
-
-.form-picker-value {
+/* v11: picker 触发区（外框）—— 与内框弹窗使用同色高亮，保持视觉一致 */
+.picker-display {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -103,21 +102,25 @@
   border-bottom: 1rpx solid var(--line);
 }
 
-.form-picker-arrow {
-  width: 28rpx;
-  height: 28rpx;
-  transform: rotate(90deg);
-  opacity: 0.6;
+.picker-value {
+  font-weight: 600;
+  color: var(--brand-dark);
 }
 
-.form-hint {
+.picker-arrow {
+  font-size: 28rpx;
+  color: var(--ink-faint);
+  transition: transform 200ms var(--ease-standard);
+}
+
+.field-tip {
   font-size: 22rpx;
   color: var(--ink-faint);
   letter-spacing: 0.5rpx;
 }
 
 /* 小贴士 */
-.create-tips {
+.tip-card {
   margin-top: 28rpx;
   padding: 24rpx 28rpx;
   background: rgba(92, 191, 158, 0.06);
@@ -127,14 +130,14 @@
   gap: 8rpx;
 }
 
-.tips-title {
+.tip-title {
   font-size: 24rpx;
   font-weight: 600;
   color: var(--brand);
   letter-spacing: 0.5rpx;
 }
 
-.tips-text {
+.tip-text {
   font-size: 24rpx;
   color: var(--ink-soft);
   line-height: 1.6;
@@ -142,7 +145,7 @@
 }
 
 /* 底部按钮区 */
-.create-footer {
+.footer {
   flex-shrink: 0;
   padding: 24rpx 40rpx 48rpx;
   background: rgba(245, 243, 239, 0.92);
@@ -179,17 +182,148 @@
   opacity: 0.85;
 }
 
-.create-btn-loading {
-  width: 32rpx;
-  height: 32rpx;
-  border: 3rpx solid rgba(255, 255, 255, 0.4);
-  border-top-color: var(--white);
-  border-radius: 50%;
-  animation: btnSpin 700ms linear infinite;
+/* ===== v11: 自定义人数选择器（底部弹层）=====
+   关键：内框选项的选中色与外框高亮色一致（#D98A5C 品牌色 + #FFF8F0 淡色底） */
+
+.picker-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: maskFadeIn 200ms var(--ease-standard);
 }
 
-@keyframes btnSpin {
-  to { transform: rotate(360deg); }
+@keyframes maskFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.picker-panel {
+  width: 100%;
+  background: var(--white);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 24rpx);
+  box-shadow: 0 -8rpx 32rpx rgba(0, 0, 0, 0.08);
+  animation: panelSlideUp 260ms var(--ease-standard);
+}
+
+@keyframes panelSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx 20rpx;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.picker-cancel {
+  font-size: 28rpx;
+  color: var(--ink-soft);
+  padding: 8rpx 0;
+  min-width: 80rpx;
+}
+
+.picker-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.5rpx;
+}
+
+.picker-confirm {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--brand);
+  padding: 8rpx 0;
+  min-width: 80rpx;
+  text-align: right;
+}
+
+.picker-confirm:active {
+  color: var(--brand-dark);
+}
+
+.picker-options {
+  padding: 16rpx 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.picker-option {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 24rpx 32rpx;
+  margin: 0 16rpx 8rpx;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 2rpx solid transparent;
+  transition: all 180ms var(--ease-standard);
+}
+
+.picker-option:active {
+  background: var(--canvas);
+}
+
+/* 关键：内框选中态 —— 与外框 picker-value 颜色一致（品牌橙 #D98A5C） */
+.picker-option.selected {
+  background: #FFF8F0;
+  border-color: #D98A5C;
+}
+
+.picker-option-radio {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  border: 4rpx solid var(--ink-faint);
+  flex-shrink: 0;
+  transition: all 180ms var(--ease-standard);
+}
+
+.picker-option-radio.selected {
+  border-color: #D98A5C;
+  background: #D98A5C;
+  box-shadow: inset 0 0 0 6rpx var(--white);
+}
+
+.picker-option-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  min-width: 0;
+}
+
+.picker-option-label {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.picker-option.selected .picker-option-label {
+  color: #D98A5C;
+}
+
+.picker-option-desc {
+  font-size: 22rpx;
+  color: var(--ink-soft);
+}
+
+.picker-option-check {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #D98A5C;
+  flex-shrink: 0;
 }
 
 .bottom-spacer { height: 80rpx; }

@@ -1,5 +1,6 @@
 const app = getApp()
 const { MOODS, MODE_LIST, getTypeMeta } = require('../../utils/constants.js')
+const recordBuilder = require('../../utils/record-builder.js')
 
 Page({
   data: {
@@ -16,7 +17,10 @@ Page({
     locationText: '未记录',
     dateText: '',
     timeText: '',
-    isFavorite: false
+    isFavorite: false,
+    // C-12: 同频记录展示摘要（成员 + 步骤留痕时间线）
+    isGroup: false,
+    groupSummary: null
   },
 
   onLoad(options) {
@@ -48,6 +52,9 @@ Page({
       : (w.condition || '未记录')
     const locationText = record.location ? '已记录位置' : '未记录'
     const photo = (record.photos && record.photos.length) ? record.photos[0] : ''
+    // C-12: 同频记录展示摘要（成员 + 步骤留痕时间线）
+    const summary = recordBuilder.buildGroupSummary(record)
+    const groupSummary = summary.isGroup ? this.formatGroupSummary(summary) : null
     this.setData({
       statusBarHeight: nav.statusBarHeight || 20,
       navHeaderStyle: nav.navHeaderStyle || app.globalData.navHeaderStyle || '',
@@ -61,8 +68,28 @@ Page({
       locationText,
       dateText: record.date || '',
       timeText: record.time || '',
-      isFavorite: !!record.isFavorite
+      isFavorite: !!record.isFavorite,
+      isGroup: summary.isGroup,
+      groupSummary
     })
+  },
+
+  // C-12: 格式化同频摘要，completedAt 时间戳 → HH:MM 字符串供 wxml 展示
+  formatGroupSummary(summary) {
+    const stepTraces = (summary.stepTraces || []).map(s => ({
+      text: s.text || '',
+      time: s.completedAt ? this.formatTs(s.completedAt) : '',
+      done: !!s.completedAt
+    }))
+    return { members: summary.members || [], stepTraces }
+  },
+
+  formatTs(ts) {
+    const d = new Date(ts)
+    if (isNaN(d.getTime())) return ''
+    const h = String(d.getHours()).padStart(2, '0')
+    const m = String(d.getMinutes()).padStart(2, '0')
+    return h + ':' + m
   },
 
   goBack() { wx.navigateBack({ delta: 1 }) },

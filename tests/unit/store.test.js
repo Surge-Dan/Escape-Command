@@ -548,6 +548,205 @@ describe('集成测试: 完整流程（C-01→C-08）', () => {
   })
 })
 
+// ============================================================
+// C-09: confirmReady 到齐确认
+// ============================================================
+describe('C-09: confirmReady', () => {
+  it('正常到齐确认 WAITING → READY', () => {
+    reset()
+    const r = store.createRoom('到齐测试', 4)
+    store.addMockMember(r.roomId)  // 2 人
+    const result = store.confirmReady(r.roomId)
+    assert(result.ok === true, '应返回 ok=true')
+    assertEqual(result.room.status, 'ready', '状态应为 ready')
+  })
+
+  it('成员 < 2 不能确认到齐', () => {
+    reset()
+    const r = store.createRoom('人少', 4)  // 仅 1 人（发起人）
+    const result = store.confirmReady(r.roomId)
+    assert(result.ok === false, '1 人应失败')
+    assertEqual(result.errCode, 'NOT_ENOUGH_MEMBERS', '错误码')
+  })
+
+  it('非 WAITING 状态不能确认到齐', () => {
+    reset()
+    const r = store.createRoom('状态', 4)
+    store.addMockMember(r.roomId)
+    store.confirmReady(r.roomId)  // → READY
+    const result = store.confirmReady(r.roomId)  // READY 再确认
+    assert(result.ok === false, 'READY 状态应失败')
+    assertEqual(result.errCode, 'INVALID_STATUS', '错误码')
+  })
+
+  it('房间不存在', () => {
+    reset()
+    const result = store.confirmReady('NOTEXIST')
+    assert(result.ok === false, '应失败')
+    assertEqual(result.errCode, 'ROOM_NOT_FOUND', '错误码')
+  })
+
+  it('roomId 为空', () => {
+    reset()
+    const result = store.confirmReady('')
+    assert(result.ok === false, '空 roomId 应失败')
+    assertEqual(result.errCode, 'INVALID_PARAM', '错误码')
+  })
+
+  it('取消的房间不能确认到齐', () => {
+    reset()
+    const r = store.createRoom('取消', 4)
+    store.addMockMember(r.roomId)
+    store.cancelRoom(r.roomId)
+    const result = store.confirmReady(r.roomId)
+    assert(result.ok === false, '取消的房间应失败')
+    assertEqual(result.errCode, 'ROOM_CANCELLED', '错误码')
+  })
+
+  it('READY 后可开始投票 → VOTING', () => {
+    reset()
+    const r = store.createRoom('投票', 4)
+    store.addMockMember(r.roomId)
+    store.confirmReady(r.roomId)  // → READY
+    const result = store.updateRoomStatus(r.roomId, store.ROOM_STATUS.VOTING)
+    assert(result.ok === true, 'READY → VOTING 应成功')
+    assertEqual(result.room.status, 'voting', '状态应为 voting')
+  })
+})
+
+// ============================================================
+// C-10: leaveRoom 临时退出
+// ============================================================
+describe('C-10: leaveRoom', () => {
+  it('房主退出 → 转取消房间 hostLeft=true', () => {
+    reset()
+    const r = store.createRoom('房主退', 4)
+    store.addMockMember(r.roomId)
+    const result = store.leaveRoom(r.roomId)
+    assert(result.ok === true, '应返回 ok=true')
+    assert(result.hostLeft === true, 'hostLeft 应为 true')
+    assertEqual(result.room.status, 'cancelled', '房间应已取消')
+    assertEqual(result.quorum.suggestion, 'cancel', 'quorum 建议 cancel')
+  })
+
+  it('FINISHED 状态不能退出', () => {
+    reset()
+    const r = store.createRoom('已完成', 3)
+    store.fillMockMembers(r.roomId)
+    // 全员投票
+    const room = store.loadRoom(r.roomId).room
+    room.members.forEach((m, i) => {
+      store.submitVote(r.roomId, 'time', ['morning', 'afternoon', 'evening'][i % 3])
+      // 注意 submitVote 只记 host 一票，mock 成员票在 addMockMember 已带
+    })
+    store.generateScript(r.roomId)  // → FINISHED
+    const result = store.leaveRoom(r.roomId)
+    assert(result.ok === false, 'FINISHED 应失败')
+    assertEqual(result.errCode, 'INVALID_STATUS', '错误码')
+  })
+
+  it('READY 状态可以退出', () => {
+    reset()
+    const r = store.createRoom('READY退', 4)
+    store.addMockMember(r.roomId)
+    store.confirmReady(r.roomId)  // → READY
+    const result = store.leaveRoom(r.roomId)
+    assert(result.ok === true, 'READY 状态应可退')
+    assert(result.hostLeft === true, '房主退 → hostLeft')
+  })
+
+  it('房间不存在', () => {
+    reset()
+    const result = store.leaveRoom('NOTEXIST')
+    assert(result.ok === false, '应失败')
+    assertEqual(result.errCode, 'ROOM_NOT_FOUND', '错误码')
+  })
+
+  it('roomId 为空', () => {
+    reset()
+    const result = store.leaveRoom('')
+    assert(result.ok === false, '空 roomId 应失败')
+    assertEqual(result.errCode, 'INVALID_PARAM', '错误码')
+  })
+
+  it('取消的房间不能退出', () => {
+    reset()
+    const r = store.createRoom('已取消', 4)
+    store.cancelRoom(r.roomId)
+    const result = store.leaveRoom(r.roomId)
+    assert(result.ok === false, '取消的房间应失败')
+    assertEqual(result.errCode, 'ROOM_CANCELLED', '错误码')
+  })
+})
+
+// ============================================================
+// C-11: checkQuorum 人数不足兜底
+// ============================================================
+describe('C-11: checkQuorum', () => {
+  it('current=1 → suggestion=cancel', () => {
+    const result = store.checkQuorum({ members: ['a'] })
+    assertEqual(result.current, 1)
+    assertEqual(result.min, 2)
+    assertEqual(result.enough, false)
+    assertEqual(result.suggestion, 'cancel')
+  })
+
+  it('current=2 → suggestion=small_team', () => {
+    const result = store.checkQuorum({ members: ['a', 'b'] })
+    assertEqual(result.current, 2)
+    assertEqual(result.enough, true)
+    assertEqual(result.suggestion, 'small_team')
+  })
+
+  it('current=3 → suggestion=ok', () => {
+    const result = store.checkQuorum({ members: ['a', 'b', 'c'] })
+    assertEqual(result.current, 3)
+    assertEqual(result.suggestion, 'ok')
+  })
+
+  it('current=0 → suggestion=cancel', () => {
+    const result = store.checkQuorum({ members: [] })
+    assertEqual(result.current, 0)
+    assertEqual(result.enough, false)
+    assertEqual(result.suggestion, 'cancel')
+  })
+
+  it('null 入参保守返回 cancel', () => {
+    const result = store.checkQuorum(null)
+    assertEqual(result.current, 0)
+    assertEqual(result.suggestion, 'cancel')
+    assertEqual(result.ok, true)
+  })
+
+  it('undefined 入参保守返回 cancel', () => {
+    const result = store.checkQuorum(undefined)
+    assertEqual(result.current, 0)
+    assertEqual(result.suggestion, 'cancel')
+  })
+
+  it('members 非数组保守返回 cancel', () => {
+    const result = store.checkQuorum({ members: 'notarray' })
+    assertEqual(result.current, 0)
+    assertEqual(result.suggestion, 'cancel')
+  })
+
+  it('_internal.checkQuorum === checkQuorum', () => {
+    assert(store._internal.checkQuorum === store.checkQuorum, '应同一引用')
+  })
+
+  it('leaveRoom 后联动 checkQuorum（房主退出 → cancel）', () => {
+    reset()
+    const r = store.createRoom('联动', 4)
+    store.addMockMember(r.roomId)
+    const result = store.leaveRoom(r.roomId)
+    assertEqual(result.quorum.suggestion, 'cancel', '房主退出后建议 cancel')
+  })
+
+  it('MIN_MEMBERS 常量为 2', () => {
+    assertEqual(store._internal.MIN_MEMBERS, 2)
+  })
+})
+
 // ===== 结果 =====
 console.log('\n' + '='.repeat(50))
 console.log(`单元测试结果: ${passCount} passed, ${failCount} failed`)

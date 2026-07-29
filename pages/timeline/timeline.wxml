@@ -6,6 +6,7 @@
       <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
     </view>
     <text class="nav-header-title">出逃时间线</text>
+    <view class="nav-header-divider"></view>
     <view class="nav-header-right">
       <text class="nav-header-count">{{totalCount}} 条</text>
     </view>

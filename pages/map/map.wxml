@@ -101,8 +101,10 @@
     <!-- 空状态 -->
     <cover-view wx:if="{{totalCount === 0}}" class="map-empty">
       <cover-image class="empty-illust" src="/assets/icons/empty-map.svg"></cover-image>
-      <cover-view class="empty-text">还没有出逃记忆</cover-view>
-      <cover-view class="empty-sub">完成第一次出逃，这里会留下你的足迹</cover-view>
+      <cover-view wx:if="{{!hasLocation}}" class="empty-text">开启定位，查看你的出逃地图</cover-view>
+      <cover-view wx:else class="empty-text">还没有出逃记忆</cover-view>
+      <cover-view wx:if="{{!hasLocation}}" class="empty-sub">授权定位后，会显示你周边的出逃足迹</cover-view>
+      <cover-view wx:else class="empty-sub">完成第一次出逃，这里会留下你的足迹</cover-view>
       <cover-view class="empty-cta" catchtap="goEscape">去出逃</cover-view>
     </cover-view>
 

@@ -6,6 +6,7 @@
       <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
     </view>
     <text class="nav-header-title">收藏分类</text>
+    <view class="nav-header-divider"></view>
     <view class="nav-header-right">
       <text class="total-count">{{totalCollected}} 条</text>
     </view>

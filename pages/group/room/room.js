@@ -27,7 +27,11 @@ Page({
     generatingScript: false,
     allMembersReady: false,
     allVoted: false,
-    fromShare: false
+    fromShare: false,
+    // v11: 邀请弹窗状态
+    showInvitePopup: false,
+    // C-12: FINISHED 状态同频记录入口（groupId 命中的最新记录 id）
+    groupRecordId: ''
   },
 
   onLoad(options) {
@@ -111,6 +115,7 @@ Page({
     let statusText = '等待成员加入'
     let statusColor = '#5CBF9E'
     if (room.status === 'cancelled') { statusText = '已取消'; statusColor = '#999' }
+    else if (room.status === 'ready') { statusText = '已到齐'; statusColor = '#5C9EBF' }
     else if (room.status === 'voting') { statusText = '投票中'; statusColor = '#D98A5C' }
     else if (room.status === 'generating') { statusText = '生成中'; statusColor = '#D98A5C' }
     else if (room.status === 'finished') { statusText = '剧本已生成'; statusColor = '#7BAE7F' }
@@ -139,6 +144,14 @@ Page({
       interestSelectedMap[opt.value] = (myPreference.interests || []).indexOf(opt.value) >= 0
     })
 
+    // C-12: FINISHED 状态查找同频记录入口（globalData.records 中 groupId 命中的最新记录）
+    let groupRecordId = ''
+    if (room.status === 'finished') {
+      const records = (app.globalData && app.globalData.records) || []
+      const rec = records.find(r => r && r.isGroup && r.groupId === room.roomId)
+      if (rec) groupRecordId = rec.id
+    }
+
     this.setData({
       room,
       memberSlots: slots,
@@ -153,7 +166,8 @@ Page({
       myPreference,
       interestSelectedMap,
       script: room.script || null,
-      isHostView: true
+      isHostView: true,
+      groupRecordId
     })
   },
 
@@ -189,7 +203,7 @@ Page({
     })
   },
 
-  // ===== C-02: 微信分享 =====
+  // ===== C-02: 微信分享（个人小程序未认证时无法触发，作为降级备份）=====
   onShareAppMessage() {
     const room = this.data.room
     const roomId = this.data.roomId
@@ -198,6 +212,38 @@ Page({
       path: `/pages/group/room/room?roomId=${roomId}&from=share`,
       imageUrl: '/assets/images/coffee-shop.webp'
     }
+  },
+
+  // ===== v11: 邀请朋友（个人小程序无 open-type=share，降级为复制）=====
+  onInviteTap() {
+    this.setData({ showInvitePopup: true })
+  },
+
+  onInvitePopupClose() {
+    this.setData({ showInvitePopup: false })
+  },
+
+  onCopyRoomIdFromPopup() {
+    if (!this.data.room) return
+    wx.setClipboardData({
+      data: this.data.room.roomId,
+      success: () => {
+        wx.showToast({ title: '房间号已复制', icon: 'success' })
+        this.setData({ showInvitePopup: false })
+      }
+    })
+  },
+
+  onCopyInviteLink() {
+    if (!this.data.room) return
+    const link = `escape-command://group/room?roomId=${this.data.room.roomId}`
+    wx.setClipboardData({
+      data: link,
+      success: () => {
+        wx.showToast({ title: '链接已复制', icon: 'success' })
+        this.setData({ showInvitePopup: false })
+      }
+    })
   },
 
   // ===== C-01: 复制 roomId =====
@@ -231,9 +277,28 @@ Page({
     }
   },
 
-  // ===== 进入投票阶段 =====
+  // ===== C-09: 到齐确认（WAITING → READY）=====
+  onConfirmReady() {
+    if (!this.data.room) return
+    if (this.data.membersCount < 2) {
+      wx.showToast({ title: '至少 2 人才能开始', icon: 'none' })
+      return
+    }
+    const result = roomStore.confirmReady(this.data.roomId)
+    if (result.ok) {
+      this.applyRoom(result.room)
+      try { wx.vibrateShort({ type: 'medium' }) } catch (e) {}
+    } else {
+      wx.showToast({ title: this.mapErrMsg(result.errCode), icon: 'none' })
+    }
+  },
+
+  // ===== 进入投票阶段（READY → VOTING，兼容 WAITING 满员快速路径）=====
   onStartVoting() {
-    if (!this.data.allMembersReady) {
+    const room = this.data.room
+    if (!room) return
+    // READY 状态直接进投票；WAITING 满员也允许（保留原兼容路径）
+    if (room.status !== ROOM_STATUS.READY && !this.data.allMembersReady) {
       wx.showToast({ title: '成员未到齐', icon: 'none' })
       return
     }
@@ -341,17 +406,30 @@ Page({
     }
   },
 
-  // ===== C-08: 确认剧本，开始出逃 =====
+  // ===== C-08: 确认剧本，开始出逃（v11: 跳转到出逃执行页，不再直接回首页）=====
   onStartEscape() {
-    wx.showModal({
-      title: '开始出逃',
-      content: '剧本已确认，祝你们出逃愉快！',
-      showCancel: false,
-      confirmText: '出发',
-      confirmColor: '#5CBF9E',
-      success: () => {
-        wx.switchTab({ url: '/pages/index/index' })
+    if (!this.data.script) {
+      wx.showToast({ title: '剧本还没准备好', icon: 'none' })
+      return
+    }
+    // 写入全局，执行页从 globalData 读取
+    try {
+      app.globalData.currentGroupScript = {
+        script: this.data.script,
+        room: this.data.room,
+        steps: []
       }
+    } catch (e) {}
+    wx.redirectTo({
+      url: '/pages/group/escape-record/escape-record?roomId=' + this.data.roomId
+    })
+  },
+
+  // ===== C-12: 查看本次同频出逃记录 =====
+  onViewGroupRecord() {
+    if (!this.data.groupRecordId) return
+    wx.navigateTo({
+      url: '/pages/record-detail/record-detail?id=' + this.data.groupRecordId
     })
   },
 
@@ -389,9 +467,50 @@ Page({
     }
   },
 
-  // ===== C-10: 退出房间（占位）=====
+  // ===== C-10: 临时退出房间 =====
   onExitRoom() {
-    wx.showToast({ title: '退出功能即将开放', icon: 'none' })
+    if (!this.data.room) return
+    const isHost = this.data.isHostView
+    wx.showModal({
+      title: isHost ? '退出组局？' : '离开房间？',
+      content: isHost ? '退出后房间将关闭，成员会收到通知' : '离开后可重新通过房间号加入',
+      confirmText: isHost ? '退出并关闭' : '离开',
+      confirmColor: '#E07A5F',
+      success: (res) => {
+        if (!res.confirm) return
+        this.doLeaveRoom()
+      }
+    })
+  },
+
+  doLeaveRoom() {
+    if (!this.data.room) return
+    const result = roomStore.leaveRoom(this.data.room.roomId)
+    if (!result.ok) {
+      wx.showToast({ title: this.mapErrMsg(result.errCode), icon: 'none' })
+      return
+    }
+    if (result.hostLeft) {
+      // 房主退出 → 房间已关闭，返回首页
+      wx.showToast({ title: '组局已关闭', icon: 'success' })
+      setTimeout(() => {
+        wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/index/index' }) })
+      }, 800)
+      return
+    }
+    // 非房主退出 → 刷新视图 + 人数兜底提示
+    this.applyRoom(result.room)
+    const q = result.quorum || {}
+    if (q.suggestion === 'cancel') {
+      wx.showToast({ title: '人数不足，建议取消', icon: 'none' })
+    } else if (q.suggestion === 'small_team') {
+      wx.showToast({ title: '已离开，当前为小队模式', icon: 'none' })
+    } else {
+      wx.showToast({ title: '已离开房间', icon: 'success' })
+      setTimeout(() => {
+        wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/index/index' }) })
+      }, 800)
+    }
   },
 
   // ===== 返回 =====
@@ -404,7 +523,11 @@ Page({
       'ROOM_NOT_FOUND': '房间不存在',
       'ROOM_FULL': '房间已满',
       'ROOM_CANCELLED': '房间已取消',
-      'ALREADY_JOINED': '已加入房间'
+      'ALREADY_JOINED': '已加入房间',
+      'NOT_ENOUGH_MEMBERS': '至少 2 人才能开始',
+      'INVALID_STATUS': '当前阶段无法操作',
+      'NOT_MEMBER': '你不在房间中',
+      'NOT_HOST': '只有发起人可以操作'
     }
     return map[errCode] || '操作失败'
   },

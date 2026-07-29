@@ -1,0 +1,364 @@
+/* ===== 出逃进行中页（v11: 多人剧本执行页） ===== */
+
+.escape-record-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, #FFF0E4 0%, #FFF6F0 18%, #F5F3EF 55%, #F5F3EF 100%);
+}
+
+.er-scroll {
+  flex: 1;
+  height: 0;
+  padding: 24rpx 40rpx 0;
+}
+
+/* 计时卡 */
+.timer-card {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 32rpx 40rpx;
+  margin-bottom: 24rpx;
+}
+
+.timer-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+}
+
+.timer-label {
+  font-size: 28rpx;
+  color: var(--ink-soft);
+}
+
+.timer-num {
+  font-size: 60rpx;
+  font-weight: 700;
+  color: #5CBF9E;
+  line-height: 1.1;
+}
+
+.timer-unit {
+  font-size: 28rpx;
+  color: var(--ink-soft);
+}
+
+.progress-bar-bg {
+  margin-top: 20rpx;
+  height: 16rpx;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--line);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, #5CBF9E, #7BAE7F);
+  transition: width 500ms var(--ease-standard);
+}
+
+.timer-sub {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+/* 剧本卡 */
+.script-card {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 32rpx 40rpx;
+  margin-bottom: 24rpx;
+}
+
+.script-badge {
+  display: inline-block;
+  padding: 6rpx 20rpx;
+  background: rgba(92, 191, 158, 0.1);
+  color: #5CBF9E;
+  font-size: 22rpx;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  margin-bottom: 16rpx;
+}
+
+.script-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+  margin-bottom: 24rpx;
+}
+
+.script-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24rpx 0;
+  padding: 20rpx 0;
+  border-top: 1rpx solid var(--line);
+  border-bottom: 1rpx solid var(--line);
+  margin-bottom: 24rpx;
+}
+
+.meta-item {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-label {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+.meta-value {
+  font-size: 28rpx;
+  color: var(--ink);
+  font-weight: 600;
+  margin-top: 4rpx;
+}
+
+.script-members-label {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 16rpx;
+}
+
+.script-members-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.script-member-tag {
+  padding: 8rpx 20rpx;
+  background: #FFF0E5;
+  color: #D98A5C;
+  border-radius: var(--radius-pill);
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+/* 步骤卡 */
+.step-card {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 24rpx 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.step-card-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12rpx;
+}
+
+.step-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 8rpx;
+  transition: all 250ms var(--ease-standard);
+}
+
+.step-row + .step-row {
+  border-top: 1rpx solid var(--line);
+}
+
+.step-mark {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--canvas);
+  color: var(--ink-faint);
+  border: 2rpx solid var(--line);
+  transition: all 250ms var(--ease-standard);
+}
+
+.step-mark-num {
+  font-size: 24rpx;
+  font-weight: 700;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  line-height: 1;
+}
+
+.step-mark-check {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.step-row.finished .step-mark {
+  background: #5CBF9E;
+  border-color: #5CBF9E;
+  color: #fff;
+}
+
+.step-row.current .step-mark {
+  background: #fff;
+  border-color: #5CBF9E;
+  color: #5CBF9E;
+  animation: stepPulse 1400ms ease-in-out infinite;
+}
+
+.step-row.current {
+  background: rgba(92, 191, 158, 0.06);
+  border-radius: var(--radius-md);
+  margin: 0 -8rpx;
+}
+
+@keyframes stepPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(92, 191, 158, 0.4); }
+  50% { box-shadow: 0 0 0 12rpx rgba(92, 191, 158, 0); }
+}
+
+.step-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+  min-width: 0;
+}
+
+.step-label {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+.step-text {
+  font-size: 28rpx;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.step-row.current .step-text {
+  color: #2C7A5C;
+  font-weight: 600;
+}
+
+.step-row.finished .step-text {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-faint);
+}
+
+.step-finish-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 56rpx;
+  padding: 0 24rpx;
+  background: #5CBF9E;
+  color: #fff;
+  border-radius: var(--radius-pill);
+  font-size: 24rpx;
+  font-weight: 600;
+  transition: all 200ms var(--ease-standard);
+  box-shadow: 0 2rpx 8rpx rgba(92, 191, 158, 0.3);
+}
+
+.step-finish-btn:active {
+  background: #4DAE8D;
+  transform: scale(0.94);
+}
+
+.step-done-mark {
+  flex-shrink: 0;
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  color: #5CBF9E;
+  font-weight: 700;
+}
+
+/* 空状态 */
+.empty-card {
+  margin-top: 100rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: var(--ink-faint);
+}
+
+.empty-btn {
+  padding: 20rpx 60rpx;
+  background: #5CBF9E;
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+}
+
+/* 底部完成按钮 */
+.er-actions {
+  flex-shrink: 0;
+  padding: 24rpx 40rpx 48rpx;
+  background: rgba(245, 243, 239, 0.92);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+}
+
+.finish-btn {
+  height: 104rpx;
+  border-radius: var(--radius-pill);
+  background: #5CBF9E;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+  transition: all 200ms var(--ease-standard);
+  box-shadow: 0 4rpx 12rpx rgba(92, 191, 158, 0.3);
+}
+
+.finish-btn:active {
+  background: #4DAE8D;
+  transform: scale(0.98);
+}
+
+.finish-btn.disabled {
+  background: #CCC;
+  color: #fff;
+  box-shadow: none;
+}
+
+.finish-btn.disabled:active {
+  background: #CCC;
+  transform: none;
+}
+
+.bottom-spacer {
+  height: 24rpx;
+}

@@ -1,0 +1,9 @@
+{
+  "name": "poiSearch",
+  "version": "1.0.0",
+  "description": "真实定位 POI 搜索：腾讯地图 WebService 逆地理编码 + 周边搜索",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

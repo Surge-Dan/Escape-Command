@@ -37,7 +37,10 @@ Page({
     saving: false,
     saved: false,
     recordCount: 0,
-    shareImagePath: ''
+    shareImagePath: '',
+    // 同频出逃扩展（普通出逃为 false/[]）
+    isGroup: false,
+    members: []
   },
 
   onLoad() {
@@ -59,7 +62,10 @@ Page({
       dateStr: `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`,
       timeStr: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
       weatherText: `${weather.temperature || 26}℃ ${weather.description || '晴'}`,
-      locationText
+      locationText,
+      // 同频出逃识别（供分享卡绘制成员、默认文案选择）
+      isGroup: cmd.isGroup === true,
+      members: Array.isArray(cmd.members) ? cmd.members.slice() : []
     })
   },
 
@@ -142,9 +148,11 @@ Page({
     if (this.data.saving || this.data.saved) return
     this.setData({ saving: true })
     // v3: 无振动，仅保留音效反馈
+    // 同频出逃默认文案区分（completeCommand 自动注入 isGroup/groupId/members/steps）
+    const defaultFeeling = this.data.isGroup ? '和朋友一起完成同频出逃' : '今天出去走了一小段。'
     const record = app.completeCommand({
       photos: this.data.photos.slice(),
-      feeling: this.data.feeling || '今天出去走了一小段。',
+      feeling: this.data.feeling || defaultFeeling,
       mood: this.data.mood,
       filter: this.data.filter,
       stickers: this.data.selectedStickers.slice()
@@ -211,6 +219,14 @@ Page({
     ctx.fillStyle = '#A8ADB5'
     ctx.font = '22px sans-serif'
     ctx.fillText(`${this.data.dateStr} ${this.data.timeStr}  ${this.data.weatherText}`, 80, 780)
+    // 同频出逃：日期行下方画成员落款「和朋友一起：A、B、C 等 N 人」
+    if (this.data.isGroup && Array.isArray(this.data.members) && this.data.members.length > 0) {
+      const names = this.data.members.slice(0, 3).join('、')
+      const suffix = this.data.members.length > 3 ? '等' + this.data.members.length + '人' : ''
+      ctx.fillStyle = '#A8ADB5'
+      ctx.font = '22px sans-serif'
+      ctx.fillText('和朋友一起：' + names + suffix, 80, 815)
+    }
     // v2 fix: 心情以贴纸形式（圆形底色+居中文字）渲染，符合 PRD §4.3.4「心情贴纸」要求。
     const stickerX = 460
     const stickerY = 110

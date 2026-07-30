@@ -1,5 +1,5 @@
 // data/guangzhou-districts.js
-// 广州 6 区数据（C-P3 任务大厅城市数据）
+// 广州 11 区数据（C-P3 任务大厅城市数据）
 // 纯数据模块，零 wx 依赖
 
 'use strict'
@@ -52,6 +52,46 @@ const GUANGZHOU_DISTRICTS = [
     color: '#9B7BB8',
     tags: ['休闲', '市井', '美食'],
     description: '岭南文化发源地之一，沙湾古镇、余荫山房，老番禺味道'
+  },
+  {
+    id: 'gz_hp',
+    name: '黄埔区',
+    alias: '黄埔',
+    color: '#6B8E9E',
+    tags: ['历史', '海丝', '科技'],
+    description: '海上丝绸之路起点，黄埔军校、南海神庙、长洲岛，历史与现代科技并存'
+  },
+  {
+    id: 'gz_hd',
+    name: '花都区',
+    alias: '花都',
+    color: '#C7A03E',
+    tags: ['自然', '度假', '山水'],
+    description: '广州北部门户，芙蓉嶂、九龙湖、花都湖，山水度假首选'
+  },
+  {
+    id: 'gz_ch',
+    name: '从化区',
+    alias: '从化',
+    color: '#5A9367',
+    tags: ['温泉', '森林', '生态'],
+    description: '广州后花园，流溪河、石门森林、温泉镇，生态康养胜地'
+  },
+  {
+    id: 'gz_zc',
+    name: '增城区',
+    alias: '增城',
+    color: '#B85C5C',
+    tags: ['山水', '古村', '绿道'],
+    description: '广州东部生态屏障，白水寨、增江画廊、正果老街，山水与古村交融'
+  },
+  {
+    id: 'gz_ns',
+    name: '南沙区',
+    alias: '南沙',
+    color: '#4A90A4',
+    tags: ['滨海', '湿地', '湾区'],
+    description: '广州南端出海口，南沙湿地、天后宫、百万葵园，湾区滨海风情'
   }
 ]
 

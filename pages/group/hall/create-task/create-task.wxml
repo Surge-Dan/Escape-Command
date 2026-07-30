@@ -96,6 +96,20 @@
               data-key="{{item.key}}"
               bindtap="onCategoryTagTap"
             >{{item.label}}</view>
+            <!-- 自定义分类入口 -->
+            <view
+              wx:if="{{selectedCategory !== 'custom'}}"
+              class="tag tag-custom"
+              bindtap="onCustomCategoryTap"
+            >+ 自定义</view>
+            <view
+              wx:else
+              class="tag tag-custom selected"
+              bindtap="onCustomCategoryTap"
+            >
+              <text class="tag-custom-text">{{customCategory || '自定义'}}</text>
+              <text class="tag-custom-clear" catchtap="onCustomCategoryClear">✕</text>
+            </view>
           </view>
         </scroll-view>
       </view>
@@ -166,7 +180,7 @@
 
   <!-- 自定义人数选择器（底部弹层）-->
   <view wx:if="{{showPicker}}" class="picker-mask" bindtap="onPickerClose">
-    <view class="picker-panel" catchtap="">
+    <view class="picker-panel" catchtap="onPickerPanelTap">
       <view class="picker-header">
         <text class="picker-cancel" bindtap="onPickerClose">取消</text>
         <text class="picker-title">选择人数上限</text>
@@ -188,6 +202,32 @@
           <text wx:if="{{tempMembers === item.value}}" class="picker-option-check">✓</text>
         </view>
       </view>
+    </view>
+  </view>
+
+  <!-- 自定义分类弹层（底部）-->
+  <view wx:if="{{showCustomCategory}}" class="picker-mask" bindtap="onCustomCategoryClose">
+    <view class="picker-panel custom-category-panel" catchtap="onCustomCategoryPanelTap">
+      <view class="picker-header">
+        <text class="picker-cancel" bindtap="onCustomCategoryClose">取消</text>
+        <text class="picker-title">自定义分类</text>
+        <text class="picker-confirm" bindtap="onCustomCategoryConfirm">确定</text>
+      </view>
+      <view class="custom-category-body">
+        <input
+          class="custom-category-input"
+          placeholder="如：骑行 / 园艺 / 手作"
+          placeholder-class="field-placeholder"
+          maxlength="{{customCategoryMaxLen}}"
+          value="{{tempCustomCategory}}"
+          bindinput="onCustomCategoryInput"
+          confirm-type="done"
+          bindconfirm="onCustomCategoryConfirm"
+          focus="{{showCustomCategory}}"
+        />
+        <text class="custom-category-counter">{{tempCustomCategory.length}}/{{customCategoryMaxLen}}</text>
+      </view>
+      <text class="custom-category-tip">1-6 字，会作为任务卡片的分类标签展示</text>
     </view>
   </view>
 </view>

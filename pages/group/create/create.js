@@ -53,6 +53,9 @@ Page({
     this.setData({ showPicker: false })
   },
 
+  // 阻止 picker-panel 内点击冒泡到 mask（空处理函数会导致子树 bindtap 失效，必须有方法体）
+  onPickerPanelTap() {},
+
   // v11: 自定义 picker - 选择选项
   onPickerOptionTap(e) {
     const value = Number(e.currentTarget.dataset.value)

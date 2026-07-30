@@ -47,7 +47,11 @@ var HALL_TASK_STATUS = {
 
 // ===== 合法取值集合 =====
 // 与 escape-master-tasks.js 模板字段对齐
-var VALID_CATEGORIES = ['walk', 'art', 'salon', 'coffee', 'book', 'market']
+// custom 为自定义分类，需配合 customCategory 字段（1-6 字）
+var VALID_CATEGORIES = ['walk', 'art', 'salon', 'coffee', 'book', 'market', 'sport', 'music', 'photo', 'food', 'custom']
+
+// customCategory 长度约束（1-6 字）
+var CUSTOM_CATEGORY_MAX_LEN = 6
 
 // 从 guangzhou-districts.js 派生，保证与城市数据同源
 var VALID_DISTRICTS = (function () {
@@ -174,6 +178,7 @@ function toCardSummary(task) {
     source: task.source,
     topic: task.topic,
     category: task.category,
+    customCategory: task.customCategory || '',
     district: task.district,
     poiName: poi.name || '',
     hostNickname: task.hostNickname || '',
@@ -288,6 +293,17 @@ function createUserTask(creator, options) {
   if (VALID_CATEGORIES.indexOf(opts.category) === -1) {
     return { ok: false, errCode: 'INVALID_PARAM', errMsg: '任务分类不合法' }
   }
+  // customCategory：category === 'custom' 时必填，1-6 字（trim 后非空）
+  var customCategory = ''
+  if (opts.category === 'custom') {
+    if (typeof opts.customCategory !== 'string') {
+      return { ok: false, errCode: 'INVALID_PARAM', errMsg: '自定义分类需 1-6 字' }
+    }
+    customCategory = opts.customCategory.trim()
+    if (!customCategory || customCategory.length > CUSTOM_CATEGORY_MAX_LEN) {
+      return { ok: false, errCode: 'INVALID_PARAM', errMsg: '自定义分类需 1-6 字' }
+    }
+  }
   // district
   if (VALID_DISTRICTS.indexOf(opts.district) === -1) {
     return { ok: false, errCode: 'INVALID_PARAM', errMsg: '行政区不合法' }
@@ -315,6 +331,7 @@ function createUserTask(creator, options) {
     source: 'user',
     topic: topic,
     category: opts.category,
+    customCategory: customCategory,
     district: opts.district,
     poi: buildPoiSnapshot(poi),
     hostOpenId: creator.openId,
@@ -451,6 +468,79 @@ function diceMatch(user, filters) {
   return { ok: true, task: finalTask, partners: partners }
 }
 
+// ===== 6b. 摇骰子匹配（使用预匹配的搭子，D5 真实玩家联动）=====
+// 与 diceMatch 的区别：搭子由外部 player-matcher 预先匹配（真实玩家 + mock 兜底），
+// 本函数只负责任务筛选 + 用户/搭子加入。
+// partners 结构：[{ openId, nickname, isReal?, ... }]（player-matcher.normalizePlayer 输出）
+function diceMatchWithPartners(user, filters, partners) {
+  if (!user || typeof user !== 'object' || !user.openId || typeof user.openId !== 'string') {
+    return { ok: false, errCode: 'INVALID_PARAM', errMsg: '用户信息不合法' }
+  }
+  filters = filters || {}
+
+  // 1. 筛选未满员任务
+  var list = loadAllTasks()
+  var candidates = applyFilters(list, {
+    district: filters.district,
+    category: filters.category,
+    excludeFull: true
+  })
+  // 排除当前用户已加入的任务
+  var pool = []
+  for (var i = 0; i < candidates.length; i++) {
+    var t = candidates[i]
+    var ms = Array.isArray(t.members) ? t.members : []
+    var joined = false
+    for (var m = 0; m < ms.length; m++) {
+      if (ms[m].openId === user.openId) { joined = true; break }
+    }
+    if (!joined) pool.push(t)
+  }
+  if (pool.length === 0) {
+    return { ok: false, errCode: 'NO_MATCH', errMsg: '暂无匹配任务，试试创建一个？' }
+  }
+
+  // 2. 随机选一个任务
+  var task = pickRandomTask(pool)
+
+  // 3. 计算可加入的搭子数（不超过 maxMembers - currentMembers - 1）
+  var currentMembers = Array.isArray(task.members) ? task.members : []
+  var maxPartners = computePartnerCount(task, currentMembers.length)
+
+  // 4. 过滤 partners：排除已是成员 + 排除当前用户 + 截取 maxPartners 个
+  var existingOpenIds = {}
+  for (var e = 0; e < currentMembers.length; e++) {
+    existingOpenIds[currentMembers[e].openId] = true
+  }
+  existingOpenIds[user.openId] = true
+  var validPartners = []
+  if (Array.isArray(partners)) {
+    for (var p = 0; p < partners.length; p++) {
+      var partner = partners[p]
+      if (!partner || !partner.openId) continue
+      if (existingOpenIds[partner.openId]) continue
+      if (validPartners.length >= maxPartners) break
+      validPartners.push(partner)
+      existingOpenIds[partner.openId] = true
+    }
+  }
+
+  // 5. 当前用户加入
+  var joinResult = joinTask(task.taskId, { openId: user.openId, nickname: user.nickname })
+  if (!joinResult.ok) {
+    return { ok: false, errCode: joinResult.errCode, errMsg: joinResult.errMsg || '加入任务失败' }
+  }
+  // 6. 搭子加入（joinTask 内部会校验状态/满员/重复，失败则跳过该搭子）
+  for (var j = 0; j < validPartners.length; j++) {
+    joinTask(task.taskId, { openId: validPartners[j].openId, nickname: validPartners[j].nickname })
+  }
+
+  // 7. 重新读取任务最终状态
+  var detail = getTaskDetail(task.taskId)
+  var finalTask = detail.ok ? detail.task : joinResult.task
+  return { ok: true, task: finalTask, partners: validPartners }
+}
+
 // ===== 7. 关联 group room =====
 function linkRoom(taskId, roomId) {
   if (!taskId || !roomId) return { ok: false, errCode: 'INVALID_PARAM', errMsg: '参数不能为空' }
@@ -519,6 +609,7 @@ module.exports = {
   VALID_CATEGORIES: VALID_CATEGORIES,
   VALID_DISTRICTS: VALID_DISTRICTS,
   VALID_SCHEDULED_TIMES: VALID_SCHEDULED_TIMES,
+  CUSTOM_CATEGORY_MAX_LEN: CUSTOM_CATEGORY_MAX_LEN,
   // 公开 API
   initHallFromTemplates: initHallFromTemplates,
   listTasks: listTasks,
@@ -526,6 +617,7 @@ module.exports = {
   createUserTask: createUserTask,
   joinTask: joinTask,
   diceMatch: diceMatch,
+  diceMatchWithPartners: diceMatchWithPartners,
   linkRoom: linkRoom,
   updateTaskStatus: updateTaskStatus,
   clearAllTasks: clearAllTasks,
@@ -536,6 +628,7 @@ module.exports = {
     VALID_CATEGORIES: VALID_CATEGORIES,
     VALID_DISTRICTS: VALID_DISTRICTS,
     VALID_SCHEDULED_TIMES: VALID_SCHEDULED_TIMES,
+    CUSTOM_CATEGORY_MAX_LEN: CUSTOM_CATEGORY_MAX_LEN,
     generateTaskId: generateTaskId,
     loadAllTasks: loadAllTasks,
     saveAllTasks: saveAllTasks,

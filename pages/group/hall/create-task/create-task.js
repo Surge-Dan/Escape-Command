@@ -18,16 +18,23 @@ const poisData = require('../../../../data/guangzhou-pois.js')
 // 当前用户 openId 存储 key（与 hall.js / group-room-store.js 同源）
 const OPENID_KEY = 'localHostOpenId'
 
-// 主题分类（与 task-hall-store.js VALID_CATEGORIES 对齐：walk/art/salon/coffee/book/market）
-// 注意：POI_TYPES 的 'park' 在分类上对应 'walk'（散步）
+// 主题分类（与 task-hall-store.js VALID_CATEGORIES 对齐，custom 走自定义入口）
+// 注意：POI_TYPES 的 'park' 在分类上对应 'walk'（散步），'cafe' 对应 'coffee'
 const CATEGORY_DEFS = [
   { key: 'walk',   label: '散步', poiType: 'park' },
   { key: 'art',    label: '看展', poiType: 'art' },
   { key: 'salon',  label: '沙龙', poiType: 'salon' },
   { key: 'coffee', label: '咖啡', poiType: 'cafe' },
   { key: 'book',   label: '书店', poiType: 'book' },
-  { key: 'market', label: '市集', poiType: 'market' }
+  { key: 'market', label: '市集', poiType: 'market' },
+  { key: 'sport',  label: '运动', poiType: 'sport' },
+  { key: 'music',  label: '音乐', poiType: 'music' },
+  { key: 'photo',  label: '摄影', poiType: 'photo' },
+  { key: 'food',   label: '美食', poiType: 'food' }
 ]
+
+// 自定义分类长度上限（与 task-hall-store.js CUSTOM_CATEGORY_MAX_LEN 对齐）
+const CUSTOM_CATEGORY_MAX_LEN = 6
 
 // 时间偏好 Tag
 const TIME_OPTIONS = [
@@ -58,7 +65,8 @@ Page({
     // 表单字段
     topic: '',
     selectedDistrict: '',     // 区名（如 '天河区'）
-    selectedCategory: '',     // walk/art/salon/coffee/book/market
+    selectedCategory: '',     // walk/art/salon/coffee/book/market/sport/music/photo/food/custom
+    customCategory: '',       // 自定义分类文案（category === 'custom' 时有值，1-6 字）
     selectedPoiId: '',
     poiOptions: [],           // 当前区域下的 POI 列表
     maxMembers: 4,
@@ -80,6 +88,11 @@ Page({
     ],
     showPicker: false,
     tempMembers: 4,
+
+    // 自定义分类弹层
+    showCustomCategory: false,
+    tempCustomCategory: '',
+    customCategoryMaxLen: CUSTOM_CATEGORY_MAX_LEN,
 
     creating: false
   },
@@ -140,7 +153,45 @@ Page({
   onCategoryTagTap(e) {
     const key = e.currentTarget.dataset.key || ''
     if (!key) return
-    this.setData({ selectedCategory: key })
+    // 选择预定义分类时清空自定义分类文案
+    this.setData({ selectedCategory: key, customCategory: '' })
+  },
+
+  // ===== 自定义分类入口 =====
+  onCustomCategoryTap() {
+    this.setData({
+      showCustomCategory: true,
+      tempCustomCategory: this.data.customCategory || ''
+    })
+  },
+
+  onCustomCategoryClose() {
+    this.setData({ showCustomCategory: false })
+  },
+
+  // 阻止弹层内部点击冒泡到 mask（必须有方法体，否则子树 bindtap 失效）
+  onCustomCategoryPanelTap() {},
+
+  onCustomCategoryInput(e) {
+    this.setData({ tempCustomCategory: e.detail.value || '' })
+  },
+
+  onCustomCategoryConfirm() {
+    const val = (this.data.tempCustomCategory || '').trim()
+    if (!val || val.length > CUSTOM_CATEGORY_MAX_LEN) {
+      wx.showToast({ title: '自定义分类需 1-6 字', icon: 'none' })
+      return
+    }
+    this.setData({
+      customCategory: val,
+      selectedCategory: 'custom',
+      showCustomCategory: false
+    })
+  },
+
+  // 清除已选自定义分类（点击自定义 tag 上的 ✕）
+  onCustomCategoryClear() {
+    this.setData({ selectedCategory: '', customCategory: '' })
   },
 
   onPoiTap(e) {
@@ -166,6 +217,9 @@ Page({
   onPickerClose() {
     this.setData({ showPicker: false })
   },
+
+  // 阻止 picker-panel 内点击冒泡到 mask（空处理函数会导致子树 bindtap 失效，必须有方法体）
+  onPickerPanelTap() {},
 
   onPickerOptionTap(e) {
     const value = Number(e.currentTarget.dataset.value)
@@ -212,6 +266,14 @@ Page({
       wx.showToast({ title: '请选择主题分类', icon: 'none' })
       return
     }
+    // 自定义分类需 1-6 字
+    if (selectedCategory === 'custom') {
+      const cc = (this.data.customCategory || '').trim()
+      if (!cc || cc.length > CUSTOM_CATEGORY_MAX_LEN) {
+        wx.showToast({ title: '自定义分类需 1-6 字', icon: 'none' })
+        return
+      }
+    }
     if (!selectedPoiId) {
       wx.showToast({ title: '请选择出逃地点', icon: 'none' })
       return
@@ -225,12 +287,16 @@ Page({
       return
     }
 
-    // 取分类标签作为 tag
+    // 取分类标签作为 tag（自定义分类用 customCategory 文案）
     let categoryLabel = ''
-    for (let i = 0; i < CATEGORY_DEFS.length; i++) {
-      if (CATEGORY_DEFS[i].key === selectedCategory) {
-        categoryLabel = CATEGORY_DEFS[i].label
-        break
+    if (selectedCategory === 'custom') {
+      categoryLabel = (this.data.customCategory || '').trim()
+    } else {
+      for (let i = 0; i < CATEGORY_DEFS.length; i++) {
+        if (CATEGORY_DEFS[i].key === selectedCategory) {
+          categoryLabel = CATEGORY_DEFS[i].label
+          break
+        }
       }
     }
 
@@ -244,6 +310,7 @@ Page({
         {
           topic: topic,
           category: selectedCategory,
+          customCategory: selectedCategory === 'custom' ? (this.data.customCategory || '').trim() : '',
           district: selectedDistrict,
           poiId: selectedPoiId,
           maxMembers: maxMembers,

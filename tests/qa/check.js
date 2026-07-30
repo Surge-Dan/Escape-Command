@@ -245,7 +245,7 @@ const userPool = require('../../utils/mock-user-pool.js')
 
 // 广州区域
 check('GUANGZHOU_DISTRICTS 导出', Array.isArray(districts.GUANGZHOU_DISTRICTS), 'error')
-check('GUANGZHOU_DISTRICTS 6 区', districts.GUANGZHOU_DISTRICTS.length === 6, 'error')
+check('GUANGZHOU_DISTRICTS 11 区', districts.GUANGZHOU_DISTRICTS.length === 11, 'error')
 check('getDistrictByName 导出', typeof districts.getDistrictByName === 'function', 'error')
 check('getDistrictById 导出', typeof districts.getDistrictById === 'function', 'error')
 
@@ -381,6 +381,68 @@ check('room.js 回写 hall task finished', hallRoomJs.includes('updateTaskStatus
 check('hall.js 导入 group-room-store', hallJs.includes('group-room-store'), 'error')
 check('hall.js diceMatch 后 createRoom', hallJs.includes('createRoom'), 'error')
 check('hall.js diceMatch 后 linkRoom', hallJs.includes('linkRoom'), 'error')
+
+// ===== 3c-bis. D3 自定义分类 / D4 模板扩充 / D5 真实玩家联动 =====
+console.log('\n--- 3c-bis. D3 自定义分类 / D4 模板扩充 / D5 真实玩家联动 ---')
+
+// D3: 自定义分类
+check('D3 VALID_CATEGORIES 含 custom（共 11 类）', hallStore.VALID_CATEGORIES.indexOf('custom') >= 0 && hallStore.VALID_CATEGORIES.length === 11, 'error')
+check('D3 task-hall-store 支持 customCategory 字段', hallStoreJs.includes('customCategory'), 'error')
+check('D3 task-hall-store 校验 customCategory 长度', hallStoreJs.includes('CUSTOM_CATEGORY_MAX_LEN'), 'error')
+check('D3 task-hall-store toCardSummary 含 customCategory', hallStoreJs.includes('customCategory'), 'error')
+check('D3 create-task.js 含 onCustomCategoryTap', createTaskJs.includes('onCustomCategoryTap'), 'error')
+check('D3 create-task.js 含 onCustomCategoryConfirm', createTaskJs.includes('onCustomCategoryConfirm'), 'error')
+check('D3 create-task.js 含 onCustomCategoryClear', createTaskJs.includes('onCustomCategoryClear'), 'error')
+check('D3 create-task.js 含 showCustomCategory 弹层', createTaskJs.includes('showCustomCategory'), 'error')
+const createTaskWxml = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/create-task/create-task.wxml'), 'utf-8')
+check('D3 create-task.wxml 含自定义分类入口', createTaskWxml.includes('tag-custom'), 'error')
+check('D3 create-task.wxml 含自定义分类弹层', createTaskWxml.includes('custom-category-panel'), 'error')
+// 自定义分类创建后落到 task 字段
+check('D3 createUserTask 接收 customCategory 参数', hallStoreJs.includes("opts.customCategory") || hallStoreJs.includes('opts.customCategory'), 'error')
+// detail 页展示自定义分类
+check('D3 detail.js 支持 custom 分类展示', detailJs.includes('customCategory') || detailJs.includes("category === 'custom'"), 'error')
+
+// D4: 官方任务模板扩充
+check('D4 ESCAPE_MASTER_TEMPLATES 扩充至 45 条', templates.ESCAPE_MASTER_TEMPLATES.length === 45, 'error')
+// 覆盖 11 区
+const templateDistricts = new Set(templates.ESCAPE_MASTER_TEMPLATES.map(t => t.district))
+check('D4 模板覆盖 11 个区', templateDistricts.size === 11, 'error')
+check('D4 模板含新增区 增城区', templateDistricts.has('增城区'), 'error')
+check('D4 模板含新增区 花都区', templateDistricts.has('花都区'), 'error')
+check('D4 模板含新增区 南沙区', templateDistricts.has('南沙区'), 'error')
+check('D4 模板含新增区 从化区', templateDistricts.has('从化区'), 'error')
+check('D4 模板含新增区 黄埔区', templateDistricts.has('黄埔区'), 'error')
+// 覆盖 10 类主题（不含 custom）
+const templateCategories = new Set(templates.ESCAPE_MASTER_TEMPLATES.map(t => t.category))
+check('D4 模板覆盖 sport 主题', templateCategories.has('sport'), 'error')
+check('D4 模板覆盖 music 主题', templateCategories.has('music'), 'error')
+check('D4 模板覆盖 photo 主题', templateCategories.has('photo'), 'error')
+check('D4 模板覆盖 food 主题', templateCategories.has('food'), 'error')
+
+// D5: 真实玩家联动
+check('D5 player-matcher.js 存在', fs.existsSync(path.join(projectRoot, 'utils/player-matcher.js')), 'error')
+const playerMatcher = require('../../utils/player-matcher.js')
+;['normalizePlayer', 'rankByRelevance', 'mergeAndPick', 'shouldFallback', 'computePartnerCount', 'matchPlayersAsync'].forEach(fn => {
+  check('D5 player-matcher 导出: ' + fn, typeof playerMatcher[fn] === 'function', 'error')
+})
+check('D5 player-matcher 导出 DEFAULT_AVATAR', typeof playerMatcher.DEFAULT_AVATAR === 'string', 'error')
+check('D5 player-matcher 导出 CLOUD_TIMEOUT', typeof playerMatcher.CLOUD_TIMEOUT === 'number', 'error')
+check('D5 player-matcher _internal.handleCloudResult', typeof playerMatcher._internal.handleCloudResult === 'function', 'error')
+check('D5 hall.js 导入 player-matcher', hallJs.includes('player-matcher'), 'error')
+check('D5 hall.js 调用 matchPlayersAsync', hallJs.includes('matchPlayersAsync'), 'error')
+check('D5 hall.js 含 registerPlayerToCloud', hallJs.includes('registerPlayerToCloud') || hallJs.includes('registerPlayer'), 'error')
+check('D5 hall.js 含 buildMatchCtx', hallJs.includes('buildMatchCtx'), 'error')
+check('D5 task-hall-store 含 diceMatchWithPartners', hallStoreJs.includes('diceMatchWithPartners'), 'error')
+check('D5 task-hall-store 导出 diceMatchWithPartners', typeof hallStore.diceMatchWithPartners === 'function', 'error')
+// 云函数
+check('D5 云函数 registerPlayer 存在', fs.existsSync(path.join(projectRoot, 'cloudfunctions/registerPlayer/index.js')), 'error')
+check('D5 云函数 getOnlinePlayers 存在', fs.existsSync(path.join(projectRoot, 'cloudfunctions/getOnlinePlayers/index.js')), 'error')
+check('D5 云函数 matchPlayers 存在', fs.existsSync(path.join(projectRoot, 'cloudfunctions/matchPlayers/index.js')), 'error')
+// hall.wxml 真人徽章
+check('D5 hall.wxml 含真人徽章 partner-real-badge', hallWxml.includes('partner-real-badge'), 'error')
+check('D5 hall.wxml 含 isReal 判断', hallWxml.includes('item.isReal'), 'error')
+// hall.js 主题分类与 task-hall-store 对齐（10 主题，不含 custom）
+check('D5 hall.js CATEGORY_ORDER 10 主题', hallJs.includes("CATEGORY_ORDER") && hallJs.includes("'food'"), 'error')
 
 // ===== 3d. generator-engine 常量完整性（B-01~B-06）=====
 console.log('\n--- 3d. generator-engine 常量完整性 ---')

@@ -138,6 +138,37 @@
   transform: scale(0.96);
 }
 
+/* ===== 自定义分类入口 Tag ===== */
+.tag-custom {
+  border: 2rpx dashed var(--brand);
+  color: var(--brand);
+  background: var(--white);
+  gap: 8rpx;
+}
+
+.tag-custom.selected {
+  background: #FFF8F0;
+  border-style: solid;
+  border-color: var(--brand);
+  color: var(--brand-dark);
+  font-weight: 600;
+}
+
+.tag-custom-text {
+  font-size: 24rpx;
+}
+
+.tag-custom-clear {
+  font-size: 24rpx;
+  color: var(--ink-faint);
+  margin-left: 4rpx;
+  padding: 0 4rpx;
+}
+
+.tag-custom-clear:active {
+  color: var(--brand-dark);
+}
+
 /* ===== POI 选择 ===== */
 .poi-tip {
   padding: 16rpx 4rpx;
@@ -453,4 +484,41 @@
   font-weight: 700;
   color: #D98A5C;
   flex-shrink: 0;
+}
+
+/* ===== 自定义分类弹层 ===== */
+.custom-category-panel {
+  padding: 0 32rpx 40rpx;
+}
+
+.custom-category-body {
+  position: relative;
+  margin-top: 28rpx;
+}
+
+.custom-category-input {
+  height: 88rpx;
+  font-size: 30rpx;
+  color: var(--ink);
+  padding: 0 24rpx;
+  background: var(--canvas);
+  border: 2rpx solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.custom-category-counter {
+  position: absolute;
+  right: 24rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}
+
+.custom-category-tip {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  letter-spacing: 0.3rpx;
 }

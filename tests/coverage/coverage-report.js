@@ -1,5 +1,5 @@
 // tests/coverage/coverage-report.js
-// 覆盖率报告：统计 group-room-store.js + generator-engine.js + record-builder.js 的函数级 + 行级覆盖率
+// 覆盖率报告：统计 group-room-store.js + generator-engine.js + record-builder.js + execution-progress.js + poi-command-builder.js + player-matcher.js 的函数级 + 行级覆盖率
 // 运行: node tests/coverage/coverage-report.js
 //
 // 覆盖率计算（无第三方依赖）：
@@ -69,6 +69,18 @@ const sources = [
       'tests/qa/check.js'
     ],
     functionThreshold: 90,
+    lineThreshold: 80
+  },
+  {
+    name: 'player-matcher.js',
+    path: 'utils/player-matcher.js',
+    testFiles: [
+      'tests/unit/player-matcher.test.js',
+      'tests/property/player-matcher-property.test.js',
+      'tests/adversarial/player-matcher-attack.test.js',
+      'tests/qa/check.js'
+    ],
+    functionThreshold: 90,   // D5 真实玩家联动核心，要求高覆盖
     lineThreshold: 80
   }
 ]
@@ -238,7 +250,7 @@ function checkLineCoverage(code, testCode) {
 
 // ===== 主流程 =====
 console.log('\n' + '='.repeat(60))
-console.log('覆盖率报告：group-room-store.js + generator-engine.js + record-builder.js')
+console.log('覆盖率报告：group-room-store.js + generator-engine.js + record-builder.js + execution-progress + poi-command-builder + player-matcher')
 console.log('='.repeat(60))
 
 let allPass = true

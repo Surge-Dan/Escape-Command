@@ -1,5 +1,5 @@
 // tests/mutation/mutation-test.js
-// 变异测试：对 group-room-store.js + generator-engine.js + record-builder.js 注入变异，验证测试是否能捕获
+// 变异测试：对 group-room-store.js + generator-engine.js + record-builder.js + execution-progress.js + poi-command-builder.js + player-matcher.js 注入变异，验证测试是否能捕获
 // 运行: node tests/mutation/mutation-test.js
 //
 // 变异算子覆盖：
@@ -751,6 +751,89 @@ const mutations = [
     replace: 'id: \'fb_\' + poiId,',
     test: 'node tests/unit/poi-command-builder.test.js',
     expectKilled: true
+  },
+
+  // ===== player-matcher.js 变异（D5 真实玩家联动 · 混合模式匹配器）=====
+  // 每条变异针对纯函数的关键不变量，由 unit/property/adversarial 精确断言守护
+  {
+    name: 'PM1: normalizePlayer isReal source === cloud 改为 === mock（真实玩家未标记）',
+    file: 'utils/player-matcher.js',
+    find: 'isReal: source === \'cloud\'',
+    replace: 'isReal: source === \'mock\'',
+    test: 'node tests/unit/player-matcher.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'PM2: mergeAndPick real.concat(mock) 改为 mock.concat(real)（mock 优先）',
+    file: 'utils/player-matcher.js',
+    find: 'var merged = real.concat(mock)',
+    replace: 'var merged = mock.concat(real)',
+    test: 'node tests/unit/player-matcher.test.js && node tests/property/player-matcher-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'PM3: mergeAndPick excludeOpenId 守卫反转（real 循环 === 改为 !==）',
+    file: 'utils/player-matcher.js',
+    find: 'if (excludeOpenId && p.openId === excludeOpenId) continue',
+    replace: 'if (excludeOpenId && p.openId !== excludeOpenId) continue',
+    test: 'node tests/unit/player-matcher.test.js && node tests/property/player-matcher-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'PM4: mergeAndPick realOpenIds 去重反转（重复 openId 攻击）',
+    file: 'utils/player-matcher.js',
+    find: 'if (realOpenIds[mp.openId]) continue',
+    replace: 'if (!realOpenIds[mp.openId]) continue',
+    test: 'node tests/unit/player-matcher.test.js && node tests/property/player-matcher-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'PM5: mergeAndPick slice count 改为 count + 1（返回超量）',
+    file: 'utils/player-matcher.js',
+    find: 'return merged.slice(0, Math.min(count, merged.length))',
+    replace: 'return merged.slice(0, Math.min(count + 1, merged.length))',
+    test: 'node tests/unit/player-matcher.test.js && node tests/property/player-matcher-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'PM6: shouldFallback ok !== true 改为 === false（falsy ok 漏网，降级失效）',
+    file: 'utils/player-matcher.js',
+    find: 'if (result.ok !== true) return true',
+    replace: 'if (result.ok === false) return true',
+    test: 'node tests/adversarial/player-matcher-attack.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'PM7: computePartnerCount cap < 0 兜底改为 cap = -1（负数上限漏网）',
+    file: 'utils/player-matcher.js',
+    find: 'if (cap < 0) cap = 0',
+    replace: 'if (cap < 0) cap = -1',
+    test: 'node tests/property/player-matcher-property.test.js && node tests/adversarial/player-matcher-attack.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'PM8: computePartnerCount slots < 0 兜底改为 slots = -1（负数返回）',
+    file: 'utils/player-matcher.js',
+    find: 'if (slots < 0) slots = 0',
+    replace: 'if (slots < 0) slots = -1',
+    test: 'node tests/property/player-matcher-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'PM9: computePartnerCount slots > cap 改为 slots = cap + 1（超上限）',
+    file: 'utils/player-matcher.js',
+    find: 'if (slots > cap) slots = cap',
+    replace: 'if (slots > cap) slots = cap + 1',
+    test: 'node tests/property/player-matcher-property.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'PM10: rankByRelevance 排序方向反转（bScore - aScore 改为 aScore - bScore）',
+    file: 'utils/player-matcher.js',
+    find: 'return bScore - aScore',
+    replace: 'return aScore - bScore',
+    test: 'node tests/unit/player-matcher.test.js',
+    expectKilled: true
   }
 ]
 
@@ -770,7 +853,7 @@ function loadOriginal(filePath) {
 }
 
 console.log('\n' + '='.repeat(60))
-console.log('变异测试：group-room-store(C-01~C-19) + generator-engine + record-builder + execution-progress + poi-command-builder')
+console.log('变异测试：group-room-store(C-01~C-19) + generator-engine + record-builder + execution-progress + poi-command-builder + player-matcher(D5)')
 console.log('='.repeat(60))
 
 for (const mutation of mutations) {

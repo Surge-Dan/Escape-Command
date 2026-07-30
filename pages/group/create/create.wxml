@@ -57,7 +57,7 @@
 
   <!-- v11: 自定义人数选择器（底部弹层 + 选中态高亮与外框同色系） -->
   <view wx:if="{{showPicker}}" class="picker-mask" bindtap="onPickerClose">
-    <view class="picker-panel" catchtap="">
+    <view class="picker-panel" catchtap="onPickerPanelTap">
       <view class="picker-header">
         <text class="picker-cancel" bindtap="onPickerClose">取消</text>
         <text class="picker-title">选择人数上限</text>

@@ -36,16 +36,18 @@ const STATUS_LABELS = {
   cancelled: '已取消'
 }
 
-// 分类展示文案（覆盖 POI_TYPES 与 task-hall-store VALID_CATEGORIES 全集）
+// 分类展示文案（与 task-hall-store VALID_CATEGORIES 对齐，custom 走 customCategory 字段）
 const CATEGORY_LABELS = {
+  walk: '散步',
   art: '看展',
-  cafe: '咖啡',
+  salon: '沙龙',
   coffee: '咖啡',
   book: '书店',
-  park: '公园',
   market: '市集',
-  salon: '沙龙',
-  walk: '漫步'
+  sport: '运动',
+  music: '音乐',
+  photo: '摄影',
+  food: '美食'
 }
 
 Page({
@@ -107,6 +109,14 @@ Page({
     const hostOpenId = members.length > 0 ? members[0].openId : (task.hostOpenId || '')
     const isHost = hostOpenId === user.openId
 
+    // 自定义分类优先使用 customCategory 文案
+    var catLabel = ''
+    if (task.category === 'custom') {
+      catLabel = task.customCategory || '自定义'
+    } else {
+      catLabel = CATEGORY_LABELS[task.category] || task.category || ''
+    }
+
     this.setData({
       task: task,
       isJoined: isJoined,
@@ -114,7 +124,7 @@ Page({
       isHost: isHost,
       scheduledTimeLabel: SCHEDULED_TIME_LABELS[task.scheduledTime] || task.scheduledTime || '',
       statusLabel: STATUS_LABELS[task.status] || task.status || '',
-      categoryLabel: CATEGORY_LABELS[task.category] || task.category || ''
+      categoryLabel: catLabel
     })
   },
 

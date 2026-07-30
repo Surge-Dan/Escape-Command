@@ -142,6 +142,7 @@
           ></image>
           <text wx:else class="partner-emoji">🧑</text>
           <text class="partner-name">{{item.nickname}}</text>
+          <text wx:if="{{item.isReal}}" class="partner-real-badge">真人</text>
         </view>
       </view>
 

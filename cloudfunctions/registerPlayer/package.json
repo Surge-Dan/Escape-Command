@@ -1,0 +1,9 @@
+{
+  "name": "registerPlayer",
+  "version": "1.0.0",
+  "description": "D5: 注册/更新真实玩家档案",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

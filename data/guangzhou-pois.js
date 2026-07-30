@@ -12,7 +12,11 @@ var POI_TYPES = {
   book: { label: '书店', icon: '📚' },
   park: { label: '公园', icon: '🌳' },
   market: { label: '市集', icon: '🏪' },
-  salon: { label: '沙龙', icon: '🎪' }
+  salon: { label: '沙龙', icon: '🎪' },
+  sport: { label: '运动', icon: '🏃' },
+  music: { label: '音乐', icon: '🎵' },
+  photo: { label: '摄影', icon: '📷' },
+  food: { label: '美食', icon: '🍜' }
 }
 
 var GUANGZHOU_POIS = [
@@ -82,7 +86,52 @@ var GUANGZHOU_POIS = [
   { id: 'gz_poi_py_05', name: '紫泥堂文化创意园', district: '番禺区', address: '番禺区沙湾紫泥村', latitude: 22.9758, longitude: 113.3258, type: 'art', businessHours: [10, 22], tags: ['看展', '创意', '文艺'], description: '旧糖厂改造艺术园区，含画廊/设计店/咖啡馆，文艺拍照圣地' },
   { id: 'gz_poi_py_06', name: '宝墨园', district: '番禺区', address: '番禺区沙湾镇紫坭村', latitude: 22.9765, longitude: 113.3262, type: 'park', businessHours: [8, 18], tags: ['公园', '园林', '历史', '岭南'], description: '清代包公庙扩建的岭南园林，含锦鲤池/古建筑/雕塑' },
   { id: 'gz_poi_py_07', name: '西坊大院文化创意园', district: '番禺区', address: '番禺区市桥街环城西路222号', latitude: 22.9425, longitude: 113.3642, type: 'salon', businessHours: [10, 22], tags: ['沙龙', '创意', '文艺'], description: '旧厂房改造文创园，含独立书店/咖啡馆/手作工作室' },
-  { id: 'gz_poi_py_08', name: '市桥老街', district: '番禺区', address: '番禺区市桥街', latitude: 22.9388, longitude: 113.3628, type: 'market', businessHours: [6, 22], tags: ['市集', '美食', '老广', '市井'], description: '老番禺市桥老街，含老字号美食/传统市集，体验老番禺生活气息' }
+  { id: 'gz_poi_py_08', name: '市桥老街', district: '番禺区', address: '番禺区市桥街', latitude: 22.9388, longitude: 113.3628, type: 'market', businessHours: [6, 22], tags: ['市集', '美食', '老广', '市井'], description: '老番禺市桥老街，含老字号美食/传统市集，体验老番禺生活气息' },
+
+  // ===== 黄埔区（7 个）=====
+  { id: 'gz_poi_hp_01', name: '长洲岛', district: '黄埔区', address: '黄埔区长洲岛', latitude: 23.0856, longitude: 113.4280, type: 'park', businessHours: [0, 24], tags: ['公园', '历史', '户外', '江景'], description: '珠江江心岛，黄埔军校所在地，辛亥革命策源地之一，适合历史漫游与江边骑行' },
+  { id: 'gz_poi_hp_02', name: '黄埔军校旧址纪念馆', district: '黄埔区', address: '黄埔区长洲军校路170号', latitude: 23.0872, longitude: 113.4315, type: 'salon', businessHours: [9, 17], tags: ['沙龙', '历史', '文化', '免费'], description: '1924年孙中山创办的军官学校旧址，含校本部、孙总理纪念碑，爱国主义教育示范基地' },
+  { id: 'gz_poi_hp_03', name: '南海神庙', district: '黄埔区', address: '黄埔区庙头旭日街22号', latitude: 23.0838, longitude: 113.4395, type: 'art', businessHours: [9, 17], tags: ['看展', '历史', '海丝', '文化'], description: '中国古代四大海神庙之一，海上丝绸之路发源地，含历代碑刻，国家级文保单位' },
+  { id: 'gz_poi_hp_04', name: '科学城绿轴公园', district: '黄埔区', address: '黄埔区科学城开泰大道', latitude: 23.1185, longitude: 113.4762, type: 'park', businessHours: [0, 24], tags: ['公园', '户外', '现代', '散步'], description: '科学城核心绿地，现代城市景观与生态结合，含步道/广场/艺术装置，适合慢跑散步' },
+  { id: 'gz_poi_hp_05', name: '萝岗香雪公园', district: '黄埔区', address: '黄埔区萝岗街萝峰路', latitude: 23.1288, longitude: 113.5085, type: 'park', businessHours: [6, 22], tags: ['公园', '自然', '梅花', '拍照'], description: '羊城八景之一「萝岗香雪」，冬至前后梅花盛开如雪，广州赏梅首选地' },
+  { id: 'gz_poi_hp_06', name: '黄埔古港', district: '黄埔区', address: '黄埔区长洲岛金洲北路', latitude: 23.0830, longitude: 113.4250, type: 'market', businessHours: [8, 20], tags: ['市集', '历史', '美食', '老广'], description: '清代广州外贸大港，含哥德堡号沉船纪念，周边老字号小吃云集，体验海丝文化' },
+  { id: 'gz_poi_hp_07', name: '广东游戏游艺产业城', district: '黄埔区', address: '黄埔区科学城科丰路', latitude: 23.1200, longitude: 113.4700, type: 'music', businessHours: [10, 22], tags: ['音乐', '创意', '科技', '年轻'], description: '游戏游艺产业聚集地，含电竞赛事/音乐演出/创意市集，年轻文化体验地' },
+
+  // ===== 花都区（7 个）=====
+  { id: 'gz_poi_hd_01', name: '花都湖公园', district: '花都区', address: '花都区新华街花都湖', latitude: 23.3985, longitude: 113.2208, type: 'park', businessHours: [0, 24], tags: ['公园', '湖景', '户外', '散步'], description: '由青石海水库改造的城市滨水公园，环湖绿道6公里，含湿地/花海/夜景观赏' },
+  { id: 'gz_poi_hd_02', name: '芙蓉嶂风景区', district: '花都区', address: '花都区芙蓉镇芙蓉嶂', latitude: 23.4500, longitude: 113.1800, type: 'sport', businessHours: [7, 18], tags: ['运动', '爬山', '山水', '户外'], description: '花都最高峰芙蓉峰360米，含瀑布/水库/徒步道，登山徒步和自然探索首选' },
+  { id: 'gz_poi_hd_03', name: '九龙湖度假区', district: '花都区', address: '花都区花东镇九龙湖', latitude: 23.4250, longitude: 113.1550, type: 'park', businessHours: [8, 19], tags: ['公园', '度假', '湖景', '亲子'], description: '欧洲小镇风情度假区，含人工湖/高尔夫/徒步道，适合周末度假和家庭出逃' },
+  { id: 'gz_poi_hd_04', name: '石头记矿物园', district: '花都区', address: '花都区珠宝城大观路1号', latitude: 23.3850, longitude: 113.2300, type: 'art', businessHours: [9, 17], tags: ['看展', '矿物', '文化', '亲子'], description: '全球首座矿物主题公园，含珍稀矿物/宝石/化石展览，国家4A级景区' },
+  { id: 'gz_poi_hd_05', name: '圆玄道观', district: '花都区', address: '花都区新华街迎宾大道西38号', latitude: 23.3900, longitude: 113.2150, type: 'salon', businessHours: [8, 17], tags: ['沙龙', '文化', '道教', '建筑'], description: '广东最大道教建筑群，含三清殿/元辰殿，岭南道教文化中心，适合文化沙龙' },
+  { id: 'gz_poi_hd_06', name: '洪秀全故居纪念馆', district: '花都区', address: '花都区官禄布村', latitude: 23.4100, longitude: 113.1950, type: 'salon', businessHours: [9, 17], tags: ['沙龙', '历史', '文化', '免费'], description: '太平天国领袖洪秀全诞生地，含故居复原/生平陈列，近代史研学基地' },
+  { id: 'gz_poi_hd_07', name: '花都人民公园', district: '花都区', address: '花都区公益路2号', latitude: 23.3950, longitude: 113.2250, type: 'park', businessHours: [6, 22], tags: ['公园', '户外', '散步', '市井'], description: '花都中心城区综合公园，含湖泊/树林/广场，周边居民晨练散步聚集地' },
+
+  // ===== 从化区（7 个）=====
+  { id: 'gz_poi_ch_01', name: '流溪河国家森林公园', district: '从化区', address: '从化区良口镇流溪河林场', latitude: 23.7150, longitude: 113.6450, type: 'park', businessHours: [7, 18], tags: ['公园', '森林', '自然', '户外'], description: '广州首个国家森林公园，含流溪河水库/岛屿/森林步道，观鹿赏梅徒步胜地' },
+  { id: 'gz_poi_ch_02', name: '石门国家森林公园', district: '从化区', address: '从化区大岭山林场', latitude: 23.6800, longitude: 113.6200, type: 'photo', businessHours: [8, 17], tags: ['摄影', '红叶', '自然', '秋景'], description: '广州最美秋色观赏地，石门红叶/天池花海/竹林溪流，摄影爱好者必到' },
+  { id: 'gz_poi_ch_03', name: '从化温泉镇', district: '从化区', address: '从化区温泉镇温泉东路', latitude: 23.5650, longitude: 113.5850, type: 'salon', businessHours: [0, 24], tags: ['沙龙', '温泉', '度假', '康养'], description: '世界珍稀温泉低氡小苏打泉，含多个温泉度假村，岭南温泉文化代表，适合康养慢聊' },
+  { id: 'gz_poi_ch_04', name: '溪头村', district: '从化区', address: '从化区良口镇溪头村', latitude: 23.6200, longitude: 113.6000, type: 'market', businessHours: [8, 19], tags: ['市集', '古村', '美食', '徒步'], description: '「广州最美乡村」，溪水环绕的古村落，含农家美食/山货市集/徒步起点' },
+  { id: 'gz_poi_ch_05', name: '阿婆六村', district: '从化区', address: '从化区良口镇阿婆六村', latitude: 23.6500, longitude: 113.6300, type: 'photo', businessHours: [0, 24], tags: ['摄影', '星空', '观星', '自然'], description: '广州海拔最高的村庄之一700米，光污染极低，广州观星/星空摄影圣地' },
+  { id: 'gz_poi_ch_06', name: '流溪河水库', district: '从化区', address: '从化区良口镇流溪河水库', latitude: 23.7000, longitude: 113.6400, type: 'sport', businessHours: [8, 17], tags: ['运动', '水上', '骑行', '户外'], description: '广州最大人工湖，含环湖骑行道/皮划艇/垂钓，水上运动和环湖骑行首选' },
+  { id: 'gz_poi_ch_07', name: '千泷沟大瀑布', district: '从化区', address: '从化区良口镇千泷沟', latitude: 23.6300, longitude: 113.5800, type: 'sport', businessHours: [8, 17], tags: ['运动', '瀑布', '徒步', '自然'], description: '广州最大瀑布群，含竹海/溪流/瀑布徒步道，落差80米，徒步探险胜地' },
+
+  // ===== 增城区（7 个）=====
+  { id: 'gz_poi_zc_01', name: '白水寨', district: '增城区', address: '增城区派潭镇白水寨', latitude: 23.3900, longitude: 113.8150, type: 'sport', businessHours: [8, 17], tags: ['运动', '瀑布', '爬山', '户外'], description: '中国大陆落差最大瀑布428.5米，含9999级登山步道「天南第一梯」，徒步登山首选' },
+  { id: 'gz_poi_zc_02', name: '增江画廊', district: '增城区', address: '增城区增江两岸', latitude: 23.3100, longitude: 113.8200, type: 'park', businessHours: [0, 24], tags: ['公园', '绿道', '骑行', '江景'], description: '增江两岸滨水绿道，含湿地/花海/艺术装置，骑行慢跑和江景散步胜地' },
+  { id: 'gz_poi_zc_03', name: '1978文化创意园', district: '增城区', address: '增城区增江街1978文创园', latitude: 23.2950, longitude: 113.8150, type: 'art', businessHours: [10, 22], tags: ['看展', '创意', '文艺', '拍照'], description: '旧糖纸厂改造文创园，含电影院/咖啡馆/艺术展/婚礼小镇，文艺青年聚集地' },
+  { id: 'gz_poi_zc_04', name: '正果老街', district: '增城区', address: '增城区正果镇正果老街', latitude: 23.3500, longitude: 113.8600, type: 'food', businessHours: [7, 21], tags: ['美食', '老街', '老广', '市井'], description: '增江畔千年古镇老街，正果云吞/迟菜心/腊味等增城美食聚集地，吃货必到' },
+  { id: 'gz_poi_zc_05', name: '湖心岛', district: '增城区', address: '增城区正果镇湖心岛', latitude: 23.3300, longitude: 113.8400, type: 'park', businessHours: [8, 18], tags: ['公园', '竹海', '江景', '自然'], description: '增江中游江心岛，含乌榄园/竹海/沙滩，竹海漫步和江景野餐胜地' },
+  { id: 'gz_poi_zc_06', name: '增城广场', district: '增城区', address: '增城区荔城街增城广场', latitude: 23.2900, longitude: 113.8100, type: 'market', businessHours: [0, 24], tags: ['市集', '夜景', '市井', '年轻'], description: '增城中心城区广场，含音乐喷泉/夜市/街头表演，夜间散步和市井体验地' },
+  { id: 'gz_poi_zc_07', name: '何仙姑家庙', district: '增城区', address: '增城区小楼镇小楼墟', latitude: 23.3200, longitude: 113.7800, type: 'salon', businessHours: [8, 17], tags: ['沙龙', '文化', '历史', '道教'], description: '八仙之一何仙姑故乡，含家庙/仙桃树，岭南道教文化传说地，适合文化寻访' },
+
+  // ===== 南沙区（7 个）=====
+  { id: 'gz_poi_ns_01', name: '南沙天后宫', district: '南沙区', address: '南沙区天后路88号', latitude: 22.7700, longitude: 113.5900, type: 'salon', businessHours: [8, 17], tags: ['沙龙', '文化', '妈祖', '滨海'], description: '东南亚最大妈祖庙，滨海而建含天后圣像/钟楼鼓楼，岭南妈祖文化中心' },
+  { id: 'gz_poi_ns_02', name: '南沙湿地公园', district: '南沙区', address: '南沙区万顷沙镇新港桥', latitude: 22.6500, longitude: 113.5800, type: 'park', businessHours: [9, 17], tags: ['公园', '湿地', '观鸟', '自然'], description: '广州最大滨海湿地，候鸟迁徙停歇地，含观鸟屋/红树林/芦苇荡，生态观鸟胜地' },
+  { id: 'gz_poi_ns_03', name: '百万葵园', district: '南沙区', address: '南沙区万顷沙镇新垦15涌', latitude: 22.7300, longitude: 113.5600, type: 'photo', businessHours: [9, 17], tags: ['摄影', '花海', '拍照', '亲子'], description: '中国首个大型葵花主题公园，四季花海+薰衣草+玫瑰园，摄影和亲子出逃首选' },
+  { id: 'gz_poi_ns_04', name: '蕉门河绿道', district: '南沙区', address: '南沙区蕉门河两岸', latitude: 22.7700, longitude: 113.5300, type: 'sport', businessHours: [0, 24], tags: ['运动', '骑行', '绿道', '江景'], description: '南沙城市绿轴，沿蕉门河两岸绿道8公里，含花海/廊桥，骑行慢跑胜地' },
+  { id: 'gz_poi_ns_05', name: '南沙游艇会', district: '南沙区', address: '南沙区虎门大桥南侧游艇会', latitude: 22.7500, longitude: 113.6000, type: 'sport', businessHours: [9, 21], tags: ['运动', '游艇', '滨海', '高端'], description: '广州唯一游艇会，含游艇租赁/帆船体验/滨海餐厅，高端水上运动体验地' },
+  { id: 'gz_poi_ns_06', name: '南沙天后宫沙滩', district: '南沙区', address: '南沙区天后宫滨海沙滩', latitude: 22.7650, longitude: 113.5950, type: 'park', businessHours: [0, 24], tags: ['公园', '沙滩', '滨海', '拍照'], description: '天后宫旁滨海沙滩，可赶海/看日落/散步，广州最近的天然沙滩，黄昏摄影佳地' },
+  { id: 'gz_poi_ns_07', name: '南沙十九涌渔人码头', district: '南沙区', address: '南沙区万顷沙镇十九涌', latitude: 22.6700, longitude: 113.5700, type: 'food', businessHours: [9, 21], tags: ['美食', '海鲜', '市集', '滨海'], description: '广州最南端渔港，海鲜市集/渔船码头/特产街，吃海鲜观渔港的滨海美食地' }
 ]
 
 function getPOIsByDistrict(district) {

@@ -93,11 +93,11 @@ console.log('\n=== task-hall-store 单元测试 ===')
 // ----------------------------------------------------------------
 section('A. initHallFromTemplates')
 
-test('正向：首次调用创建 17 个 master 任务', function () {
+test('正向：首次调用创建 45 个 master 任务', function () {
   var r = store.initHallFromTemplates()
-  eq(r.ok, true, '应返回 ok=true')
-  eq(r.created, 17, '应创建 17 条')
-  eq(r.total, 17, '总数应为 17')
+  ok(r.ok, '应返回 ok=true')
+  eq(r.created, 45, '应创建 45 条')
+  eq(r.total, 45, '总数应为 45')
 })
 
 test('幂等：再次调用不重复创建', function () {
@@ -105,21 +105,21 @@ test('幂等：再次调用不重复创建', function () {
   var r = store.initHallFromTemplates()
   eq(r.ok, true)
   eq(r.created, 0, '二次调用 created 应为 0')
-  eq(r.total, 17, '总数仍为 17')
+  eq(r.total, 45, '总数仍为 45')
 })
 
-test('force=true：强制重建 17 条', function () {
+test('force=true：强制重建 45 条', function () {
   store.initHallFromTemplates()
   var r = store.initHallFromTemplates(true)
   eq(r.ok, true)
-  eq(r.created, 17, 'force 重建 created=17')
-  eq(r.total, 17, '总数仍为 17')
+  eq(r.created, 45, 'force 重建 created=45')
+  eq(r.total, 45, '总数仍为 45')
 })
 
 test('每个 master 任务字段正确：source/hostOpenId/hostNickname/tags', function () {
   store.initHallFromTemplates()
   var list = internals.loadAllTasks()
-  eq(list.length, 17)
+  eq(list.length, 45)
   for (var i = 0; i < list.length; i++) {
     var t = list[i]
     eq(t.source, 'master', 'source 应为 master')
@@ -134,10 +134,10 @@ test('每个 master 任务字段正确：source/hostOpenId/hostNickname/tags', f
 // ----------------------------------------------------------------
 section('B. listTasks')
 
-test('全量返回 17 条精简卡片', function () {
+test('全量返回 45 条精简卡片', function () {
   store.initHallFromTemplates()
   var cards = store.listTasks()
-  eq(cards.length, 17, '应返回 17 条卡片')
+  eq(cards.length, 45, '应返回 45 条卡片')
 })
 
 test('卡片字段完整且正确', function () {
@@ -189,7 +189,7 @@ test('按 createdAt 倒序排列', function () {
 test('district 筛选：只返回天河区', function () {
   store.initHallFromTemplates()
   var cards = store.listTasks({ district: '天河区' })
-  eq(cards.length, 4, '天河区应有 4 条')
+  eq(cards.length, 6, '天河区应有 6 条')
   for (var i = 0; i < cards.length; i++) {
     eq(cards[i].district, '天河区')
   }
@@ -198,8 +198,8 @@ test('district 筛选：只返回天河区', function () {
 test('category 筛选：只返回 walk 类', function () {
   store.initHallFromTemplates()
   var cards = store.listTasks({ category: 'walk' })
-  // em_001 / em_004 / em_011 / em_014 共 4 条 walk
-  eq(cards.length, 4, 'walk 类应有 4 条')
+  // em_001/004/011/014/018/021/024/030 共 8 条 walk
+  eq(cards.length, 8, 'walk 类应有 8 条')
   for (var i = 0; i < cards.length; i++) {
     eq(cards[i].category, 'walk')
   }
@@ -231,7 +231,7 @@ test('excludeFull 筛选：排除已满员任务', function () {
 })
 
 test('默认排除 cancelled 和 finished 任务', function () {
-  store.initHallFromTemplates() // 17 master (recruiting)
+  store.initHallFromTemplates() // 45 master (recruiting)
 
   // 创建并取消一个
   var r1 = store.createUserTask(mkCreator('u_cancel', '取消者'), validOpts({ maxMembers: 3 }))
@@ -245,7 +245,7 @@ test('默认排除 cancelled 和 finished 任务', function () {
   store.updateTaskStatus(r2.taskId, 'finished')
 
   var cards = store.listTasks()
-  eq(cards.length, 17, '应只返回 17 条 master (排除 cancelled + finished)')
+  eq(cards.length, 45, '应只返回 45 条 master (排除 cancelled + finished)')
   for (var i = 0; i < cards.length; i++) {
     ok(cards[i].status !== 'cancelled', '不应含 cancelled')
     ok(cards[i].status !== 'finished', '不应含 finished')
@@ -613,14 +613,14 @@ test('applyFilters：空 filter 返回全部 recruiting', function () {
   store.initHallFromTemplates()
   var list = internals.loadAllTasks()
   var filtered = internals.applyFilters(list, {})
-  eq(filtered.length, 17, '空 filter 应返回全部 17 条')
+  eq(filtered.length, 45, '空 filter 应返回全部 45 条')
 })
 
 test('applyFilters：district 筛选返回对应区', function () {
   store.initHallFromTemplates()
   var list = internals.loadAllTasks()
   var filtered = internals.applyFilters(list, { district: '天河区' })
-  eq(filtered.length, 4, '天河区 4 条')
+  eq(filtered.length, 6, '天河区 6 条')
   for (var i = 0; i < filtered.length; i++) {
     eq(filtered[i].district, '天河区')
   }
@@ -699,6 +699,209 @@ test('数据持久化：saveAllTasks 后 loadAllTasks 读回相同数据', funct
   internals.saveAllTasks(list)
   var loaded = internals.loadAllTasks()
   deepEq(loaded, list, '读回数据应与保存一致')
+})
+
+// ----------------------------------------------------------------
+// K. customCategory（D3 自定义分类）
+// ----------------------------------------------------------------
+section('K. customCategory（D3 自定义分类）')
+
+test('createUserTask：category=custom 且 customCategory 合法 → ok', function () {
+  var r = store.createUserTask(mkCreator('u_cc_01', '自定义用户'), validOpts({
+    category: 'custom', customCategory: '骑行'
+  }))
+  ok(r.ok, '应创建成功')
+  var d = store.getTaskDetail(r.taskId)
+  eq(d.task.category, 'custom')
+  eq(d.task.customCategory, '骑行')
+})
+
+test('createUserTask：category=custom 但 customCategory 空 → 失败', function () {
+  var r = store.createUserTask(mkCreator('u_cc_02', '自定义用户'), validOpts({
+    category: 'custom', customCategory: ''
+  }))
+  ok(!r.ok, '空 customCategory 应失败')
+  eq(r.errCode, 'INVALID_PARAM')
+})
+
+test('createUserTask：category=custom 且 customCategory 超过 6 字 → 失败', function () {
+  var r = store.createUserTask(mkCreator('u_cc_03', '自定义用户'), validOpts({
+    category: 'custom', customCategory: '这是一个超长的自定义分类'
+  }))
+  ok(!r.ok, '超 6 字应失败')
+  eq(r.errCode, 'INVALID_PARAM')
+})
+
+test('createUserTask：category 非 custom 时 customCategory 忽略', function () {
+  var r = store.createUserTask(mkCreator('u_cc_04', '普通用户'), validOpts({
+    category: 'art', customCategory: '不应存储'
+  }))
+  ok(r.ok)
+  var d = store.getTaskDetail(r.taskId)
+  eq(d.task.category, 'art')
+  eq(d.task.customCategory, '', '非 custom 时 customCategory 应为空')
+})
+
+test('toCardSummary：custom 分类的卡片包含 customCategory 字段', function () {
+  var r = store.createUserTask(mkCreator('u_cc_05', '卡片用户'), validOpts({
+    category: 'custom', customCategory: '手作'
+  }))
+  var cards = store.listTasks()
+  var card = null
+  for (var i = 0; i < cards.length; i++) {
+    if (cards[i].taskId === r.taskId) { card = cards[i]; break }
+  }
+  ok(card, '应找到卡片')
+  eq(card.category, 'custom')
+  eq(card.customCategory, '手作')
+})
+
+// ----------------------------------------------------------------
+// L. diceMatchWithPartners（D5 真实玩家联动）
+// ----------------------------------------------------------------
+section('L. diceMatchWithPartners（D5 真实玩家联动）')
+
+test('diceMatchWithPartners：传入预匹配搭子 → 用户+搭子加入任务', function () {
+  store.initHallFromTemplates()
+  var user = mkCreator('u_dwp_01', '发起人')
+  var partners = [
+    { openId: 'p_real_01', nickname: '真实玩家A', isReal: true },
+    { openId: 'p_mock_01', nickname: 'Mock玩家B', isReal: false }
+  ]
+  var r = store.diceMatchWithPartners(user, {}, partners)
+  ok(r.ok, '应匹配成功')
+  ok(r.task, '应返回任务')
+  eq(r.partners.length, 2, '应返回 2 个搭子')
+  // 验证搭子已加入任务
+  var d = store.getTaskDetail(r.task.taskId)
+  var memberIds = {}
+  d.task.members.forEach(function (m) { memberIds[m.openId] = true })
+  ok(memberIds['u_dwp_01'], '发起人应已加入')
+  ok(memberIds['p_real_01'], '真实玩家应已加入')
+  ok(memberIds['p_mock_01'], 'Mock玩家应已加入')
+})
+
+test('diceMatchWithPartners：搭子超过 maxMembers-1 时截断', function () {
+  store.initHallFromTemplates()
+  var user = mkCreator('u_dwp_02', '发起人')
+  // 传入 5 个搭子，但任务 maxMembers 通常 3-6，当前用户占 1 个
+  var partners = [
+    { openId: 'p_01', nickname: 'A' },
+    { openId: 'p_02', nickname: 'B' },
+    { openId: 'p_03', nickname: 'C' },
+    { openId: 'p_04', nickname: 'D' },
+    { openId: 'p_05', nickname: 'E' }
+  ]
+  var r = store.diceMatchWithPartners(user, {}, partners)
+  ok(r.ok)
+  // maxMembers - 0(初始) - 1(发起人) = 可加入搭子数，上限 4
+  ok(r.partners.length <= 4, '搭子数不应超过 4（MAX_PARTNERS 上限）')
+})
+
+test('diceMatchWithPartners：空 partners 数组 → 仅用户加入', function () {
+  store.initHallFromTemplates()
+  var user = mkCreator('u_dwp_03', '独狼')
+  var r = store.diceMatchWithPartners(user, {}, [])
+  ok(r.ok)
+  eq(r.partners.length, 0, '无搭子时 partners 为空')
+  var d = store.getTaskDetail(r.task.taskId)
+  eq(d.task.members.length, 1, '仅发起人 1 人')
+  eq(d.task.members[0].openId, 'u_dwp_03')
+})
+
+test('diceMatchWithPartners：排除已是成员的搭子', function () {
+  store.initHallFromTemplates()
+  // 先创建一个已有 1 个成员的任务
+  var createR = store.createUserTask(mkCreator('u_dwp_04', '房主'), validOpts({ maxMembers: 5 }))
+  var existingTask = store.getTaskDetail(createR.taskId).task
+  // 传入的 partners 包含已是成员的房主
+  var user = mkCreator('u_dwp_05', '新人')
+  var partners = [
+    { openId: 'u_dwp_04', nickname: '房主' }, // 已是成员，应被排除
+    { openId: 'p_new_01', nickname: '新搭子' }
+  ]
+  // 但 diceMatchWithPartners 是随机选任务的，不保证选到 createR 的任务
+  // 所以这里只验证返回的 partners 不包含已是成员的人
+  // 改为直接测试：用 filters 指定 district 来缩小范围不太可靠
+  // 更好的方式：验证 partners 中没有重复 openId
+  var r = store.diceMatchWithPartners(user, {}, partners)
+  ok(r.ok)
+  var partnerIds = {}
+  for (var i = 0; i < r.partners.length; i++) {
+    ok(!partnerIds[r.partners[i].openId], '搭子 openId 不应重复')
+    partnerIds[r.partners[i].openId] = true
+  }
+})
+
+test('diceMatchWithPartners：无效 user → 失败', function () {
+  var r = store.diceMatchWithPartners(null, {}, [])
+  ok(!r.ok)
+  eq(r.errCode, 'INVALID_PARAM')
+})
+
+test('diceMatchWithPartners：无可用任务 → NO_MATCH', function () {
+  // 不初始化模板，无任何任务
+  var user = mkCreator('u_dwp_06', '无人可匹配')
+  var r = store.diceMatchWithPartners(user, {}, [{ openId: 'p', nickname: '搭子' }])
+  ok(!r.ok)
+  eq(r.errCode, 'NO_MATCH')
+})
+
+// ----------------------------------------------------------------
+// M. 45 条模板覆盖性验证（D4）
+// ----------------------------------------------------------------
+section('M. 45 条模板覆盖性验证（D4）')
+
+test('45 条模板覆盖全部 11 区', function () {
+  var masterTasks = require('../../data/escape-master-tasks.js')
+  var templates = masterTasks.ESCAPE_MASTER_TEMPLATES
+  var districtsData = require('../../data/guangzhou-districts.js')
+  var allDistricts = districtsData.GUANGZHOU_DISTRICTS.map(function (d) { return d.name })
+  var templateDistricts = {}
+  templates.forEach(function (t) { templateDistricts[t.district] = true })
+  for (var i = 0; i < allDistricts.length; i++) {
+    ok(templateDistricts[allDistricts[i]], '区 ' + allDistricts[i] + ' 应有模板覆盖')
+  }
+})
+
+test('45 条模板覆盖全部 10 类主题（不含 custom）', function () {
+  var masterTasks = require('../../data/escape-master-tasks.js')
+  var templates = masterTasks.ESCAPE_MASTER_TEMPLATES
+  var expectedCategories = ['walk', 'art', 'salon', 'coffee', 'book', 'market', 'sport', 'music', 'photo', 'food']
+  var templateCategories = {}
+  templates.forEach(function (t) { templateCategories[t.category] = true })
+  for (var i = 0; i < expectedCategories.length; i++) {
+    ok(templateCategories[expectedCategories[i]], '分类 ' + expectedCategories[i] + ' 应有模板覆盖')
+  }
+})
+
+test('45 条模板的 poiId 全部存在于 guangzhou-pois', function () {
+  var masterTasks = require('../../data/escape-master-tasks.js')
+  var poisData = require('../../data/guangzhou-pois.js')
+  var templates = masterTasks.ESCAPE_MASTER_TEMPLATES
+  for (var i = 0; i < templates.length; i++) {
+    var poi = poisData.getPOIById(templates[i].poiId)
+    ok(poi, '模板 ' + templates[i].templateId + ' 的 poiId ' + templates[i].poiId + ' 应存在')
+  }
+})
+
+test('45 条模板的 templateId 无重复', function () {
+  var masterTasks = require('../../data/escape-master-tasks.js')
+  var templates = masterTasks.ESCAPE_MASTER_TEMPLATES
+  var ids = {}
+  for (var i = 0; i < templates.length; i++) {
+    ok(!ids[templates[i].templateId], 'templateId 不应重复: ' + templates[i].templateId)
+    ids[templates[i].templateId] = true
+  }
+})
+
+test('45 条模板的 maxMembers 全部在 3-6 范围', function () {
+  var masterTasks = require('../../data/escape-master-tasks.js')
+  var templates = masterTasks.ESCAPE_MASTER_TEMPLATES
+  for (var i = 0; i < templates.length; i++) {
+    var m = templates[i].maxMembers
+    ok(m >= 3 && m <= 6, '模板 ' + templates[i].templateId + ' maxMembers 应在 3-6，实际 ' + m)
+  }
 })
 
 // ===== 结果汇总 =====

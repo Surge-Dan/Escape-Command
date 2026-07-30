@@ -14,7 +14,7 @@ const app = getApp()
 const hallStore = require('../../../utils/task-hall-store.js')
 const roomStore = require('../../../utils/group-room-store.js')
 const districtsData = require('../../../data/guangzhou-districts.js')
-const poisData = require('../../../data/guangzhou-pois.js')
+const playerMatcher = require('../../../utils/player-matcher.js')
 
 // 当前用户 openId 存储 key（与 group-room-store.js 同源）
 const OPENID_KEY = 'localHostOpenId'
@@ -28,8 +28,21 @@ const SCHEDULED_TIME_LABELS = {
   anytime: '时间不限'
 }
 
-// 6 主题顺序（与 POI_TYPES 对齐）
-const CATEGORY_ORDER = ['art', 'cafe', 'book', 'park', 'market', 'salon']
+// 10 主题顺序（与 task-hall-store.js VALID_CATEGORIES 对齐，不含 custom）
+// 注意：任务分类 key 与 POI 类型 key 存在 walk↔park、coffee↔cafe 的映射
+const CATEGORY_ORDER = ['walk', 'art', 'salon', 'coffee', 'book', 'market', 'sport', 'music', 'photo', 'food']
+const CATEGORY_LABELS = {
+  walk: '散步',
+  art: '看展',
+  salon: '沙龙',
+  coffee: '咖啡',
+  book: '书店',
+  market: '市集',
+  sport: '运动',
+  music: '音乐',
+  photo: '摄影',
+  food: '美食'
+}
 
 Page({
   data: {
@@ -57,6 +70,30 @@ Page({
       console.warn('[hall] initHallFromTemplates 失败', e)
     }
     this.loadTasks()
+    // D5: fire-and-forget 注册玩家档案到云端（便于其他玩家匹配到真实玩家）
+    this.registerPlayerToCloud()
+  },
+
+  // D5: 注册玩家档案到云端（非阻塞，失败静默降级到 mock）
+  registerPlayerToCloud() {
+    if (!app.globalData || !app.globalData.cloudReady || !wx.cloud) return
+    const user = this.getCurrentUser()
+    try {
+      wx.cloud.callFunction({
+        name: 'registerPlayer',
+        data: {
+          nickname: user.nickname,
+          avatar: '/assets/images/avatar.webp',
+          interests: [],
+          district: this.data.selectedDistrict || '',
+          bio: ''
+        },
+        success: function () {},
+        fail: function () {}
+      })
+    } catch (e) {
+      // 静默失败，不影响主流程
+    }
   },
 
   // ===== 导航栏度量（与 create.js 一致）=====
@@ -76,12 +113,11 @@ Page({
     for (let i = 0; i < dlist.length; i++) {
       districtTags.push({ alias: dlist[i].alias, name: dlist[i].name })
     }
-    // 主题 Tag：全部 + 6 主题（从 POI_TYPES 取 label）
+    // 主题 Tag：全部 + 10 主题（与 task-hall-store VALID_CATEGORIES 对齐）
     const categoryTags = [{ key: '', label: '全部' }]
-    const types = poisData.POI_TYPES || {}
     for (let i = 0; i < CATEGORY_ORDER.length; i++) {
-      const t = types[CATEGORY_ORDER[i]]
-      if (t && t.label) categoryTags.push({ key: CATEGORY_ORDER[i], label: t.label })
+      const k = CATEGORY_ORDER[i]
+      categoryTags.push({ key: k, label: CATEGORY_LABELS[k] || k })
     }
     this.setData({ districts: districtTags, categories: categoryTags })
   },
@@ -157,14 +193,57 @@ Page({
     if (this.data.selectedDistrict) filters.district = this.data.selectedDistrict
     if (this.data.selectedCategory) filters.category = this.data.selectedCategory
 
-    let result = null
-    try {
-      result = hallStore.diceMatch(user, filters)
-    } catch (e) {
-      console.warn('[hall] diceMatch 异常', e)
-      result = { ok: false, errCode: 'NO_MATCH', errMsg: '匹配失败，重试' }
-    }
+    // D5: 先用 player-matcher 匹配搭子（云端真实玩家 + mock 兜底），再用 diceMatchWithPartners 加入任务
+    const matchCtx = this.buildMatchCtx()
+    const maxPartners = 4 // 单次最多匹配 4 个搭子
 
+    playerMatcher.matchPlayersAsync(user, maxPartners, {
+      district: filters.district,
+      interests: [],
+      excludeOpenId: user.openId
+    }, matchCtx).then(function (matchResult) {
+      // 用预匹配的搭子加入任务
+      let result = null
+      try {
+        result = hallStore.diceMatchWithPartners(user, filters, matchResult.players || [])
+      } catch (e) {
+        console.warn('[hall] diceMatchWithPartners 异常', e)
+        result = { ok: false, errCode: 'NO_MATCH', errMsg: '匹配失败，重试' }
+      }
+      this._finishDiceMatch(result)
+    }.bind(this)).catch(function (err) {
+      console.warn('[hall] matchPlayersAsync 异常', err)
+      // 兜底：直接走旧版 diceMatch（纯 mock）
+      let result = null
+      try {
+        result = hallStore.diceMatch(user, filters)
+      } catch (e) {
+        result = { ok: false, errCode: 'NO_MATCH', errMsg: '匹配失败，重试' }
+      }
+      this._finishDiceMatch(result)
+    }.bind(this))
+  },
+
+  // 构建 player-matcher 所需的云调用上下文
+  buildMatchCtx() {
+    const cloudReady = !!(app.globalData && app.globalData.cloudReady && wx.cloud && typeof wx.cloud.callFunction === 'function')
+    return {
+      cloudReady: cloudReady,
+      callFunction: function (opts) {
+        return new Promise(function (resolve, reject) {
+          wx.cloud.callFunction({
+            name: opts.name,
+            data: opts.data,
+            success: function (res) { resolve(res) },
+            fail: function (err) { reject(err) }
+          })
+        })
+      }
+    }
+  },
+
+  // diceMatch / diceMatchWithPartners 的公共结果处理
+  _finishDiceMatch(result) {
     this.setData({ diceAnimating: false })
 
     if (result && result.ok && result.task) {

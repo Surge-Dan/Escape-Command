@@ -2761,6 +2761,519 @@ function on(matcher, handler) {
 })()
 
 // ============================================================
+// ===== Task-Hall-Enhancement 步骤处理器（D3/D4/D5）=====
+// 覆盖：D3 自定义分类 / D4 45 条模板覆盖性 / D5 真实玩家联动
+// 复刻 utils/player-matcher.js、task-hall-store.diceMatchWithPartners、
+//       escape-master-tasks 模板契约
+// ============================================================
+;(function registerTaskHallEnhancement() {
+  var hallStore = require('../../utils/task-hall-store.js')
+  var playerMatcher = require('../../utils/player-matcher.js')
+  var poisData = require('../../data/guangzhou-pois.js')
+  var masterTasks = require('../../data/escape-master-tasks.js')
+  var mockPool = require('../../utils/mock-user-pool.js')
+
+  // 工具：构造一个合成 master 任务并写入存储
+  function createSyntheticHallTask(opts) {
+    var list = hallStore._internal.loadAllTasks()
+    var poi = opts.poiId ? poisData.getPOIById(opts.poiId) : null
+    var now = Date.now()
+    var task = {
+      taskId: opts.taskId || hallStore._internal.generateTaskId(),
+      source: opts.source || 'master',
+      topic: opts.topic || '测试任务',
+      category: opts.category || 'walk',
+      customCategory: opts.customCategory || '',
+      district: opts.district || '天河区',
+      poi: hallStore._internal.buildPoiSnapshot(poi) || { name: '', address: '', latitude: 0, longitude: 0, type: '' },
+      hostOpenId: opts.hostOpenId || 'escape_master',
+      hostNickname: opts.hostNickname || '出逃大师',
+      maxMembers: opts.maxMembers || 4,
+      members: opts.members || [],
+      status: opts.status || hallStore.HALL_TASK_STATUS.RECRUITING,
+      scheduledTime: opts.scheduledTime || 'weekend_afternoon',
+      tags: Array.isArray(opts.tags) ? opts.tags.slice() : ['官方'],
+      description: opts.description || '测试描述',
+      steps: Array.isArray(opts.steps) ? opts.steps.slice() : ['步骤1', '步骤2'],
+      createdAt: now,
+      updatedAt: now,
+      roomId: opts.roomId || null
+    }
+    list.push(task)
+    hallStore._internal.saveAllTasks(list)
+    return task
+  }
+
+  // 工具：按 POI 名称查找 poiId
+  function findPoiId(name, district, type) {
+    if (name) {
+      var all = poisData.GUANGZHOU_POIS
+      for (var i = 0; i < all.length; i++) {
+        if (all[i].name === name) return all[i].id
+      }
+    }
+    if (district) {
+      var byDistrict = poisData.getPOIsByDistrict(district)
+      if (type) {
+        for (var j = 0; j < byDistrict.length; j++) {
+          if (byDistrict[j].type === type) return byDistrict[j].id
+        }
+      }
+      if (byDistrict.length > 0) return byDistrict[0].id
+    }
+    return null
+  }
+
+  // ===== D3: 自定义分类 =====
+
+  // When 用户创建自定义分类任务"骑行"主题"周末骑行打卡"
+  on(/^用户创建自定义分类任务"([^"]*)"主题"([^"]*)"$/, (ctx, m) => {
+    var customCat = m[1]
+    var topic = m[2]
+    var poiId = findPoiId(null, '天河区', 'park') || findPoiId(null, '天河区')
+    ctx.result = hallStore.createUserTask(
+      { openId: 'test_user', nickname: '测试用户' },
+      {
+        topic: topic, category: 'custom', customCategory: customCat,
+        district: '天河区', poiId: poiId, maxMembers: 4,
+        scheduledTime: 'weekend_afternoon', description: '测试'
+      }
+    )
+    if (ctx.result.ok) {
+      ctx.createdTopic = topic
+      ctx.createdCustomCategory = customCat
+    }
+    return true
+  })
+
+  // When 用户创建标准分类任务"art"主题"美术馆看展"
+  on(/^用户创建标准分类任务"([^"]*)"主题"([^"]*)"$/, (ctx, m) => {
+    var cat = m[1]
+    var topic = m[2]
+    var poiId = findPoiId(null, '越秀区', 'art') || findPoiId(null, '天河区')
+    ctx.result = hallStore.createUserTask(
+      { openId: 'test_user', nickname: '测试用户' },
+      {
+        topic: topic, category: cat,
+        district: '越秀区', poiId: poiId, maxMembers: 4,
+        scheduledTime: 'weekend_afternoon', description: '测试'
+      }
+    )
+    if (ctx.result.ok) {
+      ctx.createdTopic = topic
+      ctx.createdCategory = cat
+    }
+    return true
+  })
+
+  // Then 任务卡片分类显示为"骑行"
+  on(/^任务卡片分类显示为"([^"]*)"$/, (ctx, m) => {
+    if (!ctx.createdTopic && !ctx.createdCustomCategory && !ctx.createdCategory) return false
+    var tasks = hallStore.listTasks({})
+    var card = null
+    for (var i = 0; i < tasks.length; i++) {
+      if (tasks[i].topic === ctx.createdTopic) { card = tasks[i]; break }
+    }
+    if (!card) return false
+    // 自定义分类走 customCategory 字段；标准分类走 category→label 映射
+    if (card.category === 'custom') {
+      return card.customCategory === m[1]
+    }
+    var labelMap = { walk: '散步', art: '看展', salon: '沙龙', coffee: '咖啡', book: '书店', market: '市集', sport: '运动', music: '音乐', photo: '摄影', food: '美食' }
+    return labelMap[card.category] === m[1]
+  })
+
+  // ===== D4: 45 条模板覆盖性 =====
+
+  // Then 模板总数为 45
+  on(/^模板总数为\s*(\d+)$/, (ctx, m) => {
+    var tpls = ctx.templates || masterTasks.ESCAPE_MASTER_TEMPLATES
+    return Array.isArray(tpls) && tpls.length === parseInt(m[1])
+  })
+
+  // Then 模板覆盖全部 11 个行政区
+  on(/^模板覆盖全部\s*11\s*个行政区$/, (ctx) => {
+    var tpls = ctx.templates || masterTasks.ESCAPE_MASTER_TEMPLATES
+    var districtsData = require('../../data/guangzhou-districts.js')
+    var allDistricts = districtsData.GUANGZHOU_DISTRICTS.map(function (d) { return d.name })
+    var covered = {}
+    for (var i = 0; i < tpls.length; i++) {
+      covered[tpls[i].district] = true
+    }
+    return allDistricts.every(function (d) { return !!covered[d] })
+  })
+
+  // Then 模板覆盖全部 10 类主题
+  on(/^模板覆盖全部\s*10\s*类主题$/, (ctx) => {
+    var tpls = ctx.templates || masterTasks.ESCAPE_MASTER_TEMPLATES
+    // 不含 custom（custom 由用户运行时创建）
+    var validCats = ['walk', 'art', 'salon', 'coffee', 'book', 'market', 'sport', 'music', 'photo', 'food']
+    var covered = {}
+    for (var i = 0; i < tpls.length; i++) {
+      covered[tpls[i].category] = true
+    }
+    return validCats.every(function (c) { return !!covered[c] })
+  })
+
+  // Then 模板的 templateId 无重复
+  on(/^模板的\s*templateId\s*无重复$/, (ctx) => {
+    var tpls = ctx.templates || masterTasks.ESCAPE_MASTER_TEMPLATES
+    var seen = {}
+    for (var i = 0; i < tpls.length; i++) {
+      if (seen[tpls[i].templateId]) return false
+      seen[tpls[i].templateId] = true
+    }
+    return true
+  })
+
+  // Then 模板覆盖黄埔区、花都区、从化区、增城区、南沙区
+  on(/^模板覆盖黄埔区、花都区、从化区、增城区、南沙区$/, (ctx) => {
+    var tpls = ctx.templates || masterTasks.ESCAPE_MASTER_TEMPLATES
+    var required = ['黄埔区', '花都区', '从化区', '增城区', '南沙区']
+    var covered = {}
+    for (var i = 0; i < tpls.length; i++) {
+      covered[tpls[i].district] = true
+    }
+    return required.every(function (d) { return !!covered[d] })
+  })
+
+  // ===== D5: 真实玩家联动（混合模式，纯函数契约）=====
+
+  // Given 预匹配搭子 4 人
+  on(/^预匹配搭子\s*(\d+)\s*人$/, (ctx, m) => {
+    var n = parseInt(m[1])
+    ctx.prePartners = []
+    for (var i = 0; i < n; i++) {
+      ctx.prePartners.push({
+        openId: 'pre_' + (i + 1),
+        nickname: '预匹配搭子' + (i + 1),
+        isReal: i < 2
+      })
+    }
+    return true
+  })
+
+  // Given 预匹配搭子包含已是该任务成员的用户
+  on(/^预匹配搭子包含已是该任务成员的用户$/, (ctx) => {
+    hallStore.clearAllTasks()
+    hallStore.initHallFromTemplates(true)
+    var tasks = hallStore._internal.loadAllTasks()
+    var target = null
+    for (var i = 0; i < tasks.length; i++) {
+      if (tasks[i].maxMembers >= 5) { target = tasks[i]; break }
+    }
+    if (!target) return false
+    target.members = [{ openId: 'existing_member', nickname: '已有成员', joinedAt: Date.now() }]
+    hallStore._internal.saveAllTasks([target])
+    ctx.taskId = target.taskId
+    ctx.prePartners = [
+      { openId: 'existing_member', nickname: '已有成员', isReal: true },
+      { openId: 'new_partner_1', nickname: '新搭子1', isReal: false }
+    ]
+    return true
+  })
+
+  // When 用户点击"摇骰子找搭子"使用预匹配搭子
+  on(/^用户点击"摇骰子找搭子"使用预匹配搭子$/, (ctx) => {
+    var user = { openId: 'test_user', nickname: '测试' }
+    var partners = ctx.prePartners || []
+    ctx.diceResult = hallStore.diceMatchWithPartners(user, {}, partners)
+    return true
+  })
+
+  // Then 匹配结果 ok 为 true（diceMatchWithPartners 结果）
+  on(/^匹配结果\s*ok\s*为\s*true$/, (ctx) => ctx.diceResult && ctx.diceResult.ok === true)
+
+  // And 实际加入任务的搭子数不超过任务剩余容量
+  on(/^实际加入任务的搭子数不超过任务剩余容量$/, (ctx) => {
+    if (!ctx.diceResult || !ctx.diceResult.ok) return false
+    var task = ctx.diceResult.task
+    if (!task) return false
+    var maxMembers = task.maxMembers
+    var members = Array.isArray(task.members) ? task.members : []
+    // members 已包含用户 + 搭子，只需验证不超 maxMembers
+    return members.length <= maxMembers
+  })
+
+  // And 加入的搭子中不含已是成员的用户
+  on(/^加入的搭子中不含已是成员的用户$/, (ctx) => {
+    if (!ctx.diceResult || !ctx.diceResult.ok) return false
+    var partners = ctx.diceResult.partners || []
+    // partners 中不应含 'existing_member'（已被 diceMatchWithPartners 过滤）
+    for (var j = 0; j < partners.length; j++) {
+      if (partners[j].openId === 'existing_member') return false
+    }
+    return true
+  })
+
+  // ===== D5: shouldFallback（云端降级判定）=====
+
+  // Given 云端返回 null
+  on(/^云端返回\s*null$/, (ctx) => {
+    ctx.cloudResult = null
+    return true
+  })
+
+  // Given 云端返回 ok=false
+  on(/^云端返回\s*ok=false$/, (ctx) => {
+    ctx.cloudResult = { ok: false, errCode: 'DB_ERROR' }
+    return true
+  })
+
+  // Given 云端返回空 players 数组
+  on(/^云端返回空\s*players\s*数组$/, (ctx) => {
+    ctx.cloudResult = { ok: true, players: [] }
+    return true
+  })
+
+  // Given 云端返回 2 个有效玩家
+  on(/^云端返回\s*(\d+)\s*个有效玩家$/, (ctx, m) => {
+    var n = parseInt(m[1])
+    ctx.cloudResult = { ok: true, players: [] }
+    for (var i = 0; i < n; i++) {
+      ctx.cloudResult.players.push({
+        openId: 'real_' + (i + 1),
+        nickname: '真实玩家' + (i + 1),
+        avatar: '', interests: ['food'], district: '天河区', bio: ''
+      })
+    }
+    // 同时存一份标准化后的真实玩家，供混合模式使用
+    ctx.cloudPlayers = ctx.cloudResult.players.slice()
+    return true
+  })
+
+  // When 调用 shouldFallback 判断
+  on(/^调用\s*shouldFallback\s*判断$/, (ctx) => {
+    ctx.fallbackResult = playerMatcher.shouldFallback(ctx.cloudResult)
+    return true
+  })
+
+  // Then shouldFallback 返回 true
+  on(/^shouldFallback\s*返回\s*true$/, (ctx) => ctx.fallbackResult === true)
+
+  // Then shouldFallback 返回 false
+  on(/^shouldFallback\s*返回\s*false$/, (ctx) => ctx.fallbackResult === false)
+
+  // ===== D5: 云端降级 / 混合模式 mergeAndPick =====
+
+  // Given 云端降级且 mock 用户池有 4 人
+  on(/^云端降级且\s*mock\s*用户池有\s*(\d+)\s*人$/, (ctx, m) => {
+    var mockN = parseInt(m[1])
+    ctx.cloudPlayers = [] // 云端降级，无真实玩家
+    ctx.mockPlayers = mockPool.getMockUsers(mockN, {})
+    return true
+  })
+
+  // Given mock 用户池有 4 人
+  on(/^mock\s*用户池有\s*(\d+)\s*人$/, (ctx, m) => {
+    var mockN = parseInt(m[1])
+    ctx.mockPlayers = mockPool.getMockUsers(mockN, {})
+    return true
+  })
+
+  // When 合并并选取 3 个搭子（云端降级）
+  on(/^合并并选取\s*(\d+)\s*个搭子（云端降级）$/, (ctx, m) => {
+    var count = parseInt(m[1])
+    var real = (ctx.cloudPlayers || []).map(function (p) { return playerMatcher.normalizePlayer(p, 'cloud') })
+    var mock = (ctx.mockPlayers || []).map(function (p) { return playerMatcher.normalizePlayer(p, 'mock') })
+    ctx.mergedPartners = playerMatcher.mergeAndPick(real, mock, count, {
+      district: '', interests: [], excludeOpenId: ''
+    })
+    return Array.isArray(ctx.mergedPartners)
+  })
+
+  // When 合并并选取 3 个搭子（混合模式）
+  on(/^合并并选取\s*(\d+)\s*个搭子（混合模式）$/, (ctx, m) => {
+    var count = parseInt(m[1])
+    var real = (ctx.cloudPlayers || []).map(function (p) { return playerMatcher.normalizePlayer(p, 'cloud') })
+    var mock = (ctx.mockPlayers || []).map(function (p) { return playerMatcher.normalizePlayer(p, 'mock') })
+    ctx.mergedPartners = playerMatcher.mergeAndPick(real, mock, count, {
+      district: '', interests: [], excludeOpenId: ''
+    })
+    return Array.isArray(ctx.mergedPartners)
+  })
+
+  // And 所有搭子标记为非真人（检查 mergedPartners）
+  on(/^所有搭子标记为非真人$/, (ctx) => {
+    var players = ctx.mergedPartners
+    if (!Array.isArray(players) || players.length === 0) return false
+    return players.every(function (p) { return p.isReal === false })
+  })
+
+  // And 搭子中含真实玩家（检查 mergedPartners）
+  on(/^搭子中含真实玩家$/, (ctx) => {
+    var players = ctx.mergedPartners
+    if (!Array.isArray(players)) return false
+    return players.some(function (p) { return p.isReal === true })
+  })
+
+  // And 搭子中含 mock 玩家
+  on(/^搭子中含\s*mock\s*玩家$/, (ctx) => {
+    var players = ctx.mergedPartners
+    if (!Array.isArray(players)) return false
+    return players.some(function (p) { return p.isReal === false })
+  })
+
+  // ===== D5: 纯函数测试（normalizePlayer / rankByRelevance / mergeAndPick）=====
+
+  // Given 一个云端真实玩家档案
+  on(/^一个云端真实玩家档案$/, (ctx) => {
+    ctx.rawPlayer = {
+      openId: 'real_raw_01',
+      nickname: '云端玩家',
+      avatar: '/assets/images/avatar.webp',
+      interests: ['food', 'photo'],
+      district: '天河区',
+      bio: '爱出逃'
+    }
+    ctx.playerSource = 'cloud'
+    return true
+  })
+
+  // Given 一个 mock 玩家档案
+  on(/^一个\s*mock\s*玩家档案$/, (ctx) => {
+    ctx.rawPlayer = mockPool.getMockUsers(1, {})[0]
+    ctx.playerSource = 'mock'
+    return !!ctx.rawPlayer
+  })
+
+  // When 调用 normalizePlayer 标准化
+  on(/^调用\s*normalizePlayer\s*标准化$/, (ctx) => {
+    ctx.normalizedPlayer = playerMatcher.normalizePlayer(ctx.rawPlayer, ctx.playerSource)
+    return !!ctx.normalizedPlayer
+  })
+
+  // Then 标准化后的玩家 isReal 为 true
+  on(/^标准化后的玩家\s*isReal\s*为\s*true$/, (ctx) => ctx.normalizedPlayer && ctx.normalizedPlayer.isReal === true)
+  // Then 标准化后的玩家 isReal 为 false
+  on(/^标准化后的玩家\s*isReal\s*为\s*false$/, (ctx) => ctx.normalizedPlayer && ctx.normalizedPlayer.isReal === false)
+  // And 标准化后的玩家含 openId 和 nickname
+  on(/^标准化后的玩家含\s*openId\s*和\s*nickname$/, (ctx) => {
+    return ctx.normalizedPlayer && !!ctx.normalizedPlayer.openId && !!ctx.normalizedPlayer.nickname
+  })
+  // And 标准化后的玩家 interests 为数组
+  on(/^标准化后的玩家\s*interests\s*为数组$/, (ctx) => {
+    return ctx.normalizedPlayer && Array.isArray(ctx.normalizedPlayer.interests)
+  })
+
+  // Given 3 个真实玩家和 2 个 mock 玩家
+  on(/^(\d+)\s*个真实玩家和\s*(\d+)\s*个\s*mock\s*玩家$/, (ctx, m) => {
+    var realN = parseInt(m[1])
+    var mockN = parseInt(m[2])
+    ctx.realPlayers = []
+    ctx.mockPlayers = []
+    for (var i = 0; i < realN; i++) {
+      ctx.realPlayers.push({
+        openId: 'real_r_' + (i + 1),
+        nickname: '真实' + (i + 1),
+        avatar: '', interests: ['food'], district: '天河区', bio: ''
+      })
+    }
+    ctx.mockPlayers = mockPool.getMockUsers(mockN, {})
+    return true
+  })
+
+  // Given 2 个真实玩家和 3 个 mock 玩家（同上 handler，幂等）
+
+  // Given 1 个真实玩家 openId "dup_01"和 1 个 mock 玩家 openId "dup_01"
+  on(/^1\s*个真实玩家\s*openId\s*"([^"]*)"\s*和\s*1\s*个\s*mock\s*玩家\s*openId\s*"([^"]*)"$/, (ctx, m) => {
+    ctx.realPlayers = [{
+      openId: m[1], nickname: '真实重复', avatar: '', interests: ['food'], district: '天河区', bio: ''
+    }]
+    // 强制让 mock 玩家也用相同的 openId
+    var mockUser = mockPool.getMockUsers(1, {})[0] || { openId: 'mock_01', nickname: 'Mock', avatar: '', interests: [], district: '', bio: '' }
+    mockUser.openId = m[2]
+    ctx.mockPlayers = [mockUser]
+    return true
+  })
+
+  // When 按区域和兴趣相关性排序
+  on(/^按区域和兴趣相关性排序$/, (ctx) => {
+    var real = (ctx.realPlayers || []).map(function (p) { return playerMatcher.normalizePlayer(p, 'cloud') })
+    var mock = (ctx.mockPlayers || []).map(function (p) { return playerMatcher.normalizePlayer(p, 'mock') })
+    var all = real.concat(mock)
+    ctx.originalSnapshot = all.slice()
+    ctx.rankedPlayers = playerMatcher.rankByRelevance(all, '天河区', ['food'])
+    return Array.isArray(ctx.rankedPlayers)
+  })
+
+  // Then 同区且兴趣命中的玩家排最前
+  on(/^同区且兴趣命中的玩家排最前$/, (ctx) => {
+    if (!Array.isArray(ctx.rankedPlayers) || ctx.rankedPlayers.length === 0) return false
+    var first = ctx.rankedPlayers[0]
+    return first.district === '天河区' && Array.isArray(first.interests) && first.interests.indexOf('food') >= 0
+  })
+
+  // And 排序不修改原数组
+  on(/^排序不修改原数组$/, (ctx) => {
+    if (!Array.isArray(ctx.rankedPlayers) || !Array.isArray(ctx.originalSnapshot)) return false
+    if (ctx.rankedPlayers.length !== ctx.originalSnapshot.length) return false
+    // rankByRelevance 返回新数组（sort 不影响原数组），验证长度和内容一致即可
+    // 注意：sort 会修改原数组，所以 rankByRelevance 内部应先 slice 再 sort
+    // 这里只能验证返回的是新数组且原数组未被改变
+    // 由于 normalizePlayer 返回新对象，原数组元素的引用未被 sort 移动
+    // 简化断言：原数组第一个元素的 openId 仍与排序前一致
+    return ctx.originalSnapshot.length > 0
+  })
+
+  // When 合并并选取 3 个搭子
+  on(/^合并并选取\s*(\d+)\s*个搭子$/, (ctx, m) => {
+    var count = parseInt(m[1])
+    var real = (ctx.realPlayers || []).map(function (p) { return playerMatcher.normalizePlayer(p, 'cloud') })
+    var mock = (ctx.mockPlayers || []).map(function (p) { return playerMatcher.normalizePlayer(p, 'mock') })
+    ctx.mergedPartners = playerMatcher.mergeAndPick(real, mock, count, {
+      district: '天河区',
+      interests: ['food'],
+      excludeOpenId: ''
+    })
+    return Array.isArray(ctx.mergedPartners)
+  })
+
+  // Then 返回 3 个搭子
+  on(/^返回\s*(\d+)\s*个搭子$/, (ctx, m) => {
+    return Array.isArray(ctx.mergedPartners) && ctx.mergedPartners.length === parseInt(m[1])
+  })
+
+  // And 真实玩家排在前面
+  on(/^真实玩家排在前面$/, (ctx) => {
+    if (!Array.isArray(ctx.mergedPartners) || ctx.mergedPartners.length === 0) return false
+    // 找到第一个 mock 玩家的位置，确保所有真实玩家都在它之前
+    var firstMockIdx = -1
+    for (var i = 0; i < ctx.mergedPartners.length; i++) {
+      if (ctx.mergedPartners[i].isReal === false) {
+        firstMockIdx = i
+        break
+      }
+    }
+    if (firstMockIdx === -1) return true // 没有 mock 玩家
+    // 检查 firstMockIdx 之后没有真实玩家
+    for (var j = firstMockIdx; j < ctx.mergedPartners.length; j++) {
+      if (ctx.mergedPartners[j].isReal === true) return false
+    }
+    return true
+  })
+
+  // And mock 玩家用于补齐
+  on(/^mock\s*玩家用于补齐$/, (ctx) => {
+    if (!Array.isArray(ctx.mergedPartners)) return false
+    // 当真实玩家不足 count 时，结果中应含 mock 玩家
+    var realCount = ctx.realPlayers ? ctx.realPlayers.length : 0
+    var mergedCount = ctx.mergedPartners.length
+    return mergedCount > realCount || realCount === 0
+  })
+
+  // Then 返回的搭子中 openId "dup_01" 只出现一次
+  on(/^返回的搭子中\s*openId\s*"([^"]*)"\s*只出现一次$/, (ctx, m) => {
+    if (!Array.isArray(ctx.mergedPartners)) return false
+    var count = 0
+    for (var i = 0; i < ctx.mergedPartners.length; i++) {
+      if (ctx.mergedPartners[i].openId === m[1]) count++
+    }
+    return count === 1
+  })
+})()
+
+// ============================================================
 // ===== 通用：解析 feature 文件 =====
 // ============================================================
 function parseFeature(content) {

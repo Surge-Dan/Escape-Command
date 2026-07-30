@@ -288,6 +288,70 @@
       </view>
     </view>
 
+    <!-- ===== C-P4: Tab 区（ready/voting/generating/finished 展示）===== -->
+    <view wx:if="{{showTabs}}" class="cp4-tab-section">
+      <view class="cp4-tab-bar">
+        <view class="cp4-tab {{activeTab === 'members' ? 'active' : ''}}" data-tab="members" bindtap="onTabTap">
+          <text>成员</text>
+        </view>
+        <view class="cp4-tab {{activeTab === 'chat' ? 'active' : ''}}" data-tab="chat" bindtap="onTabTap">
+          <text>聊天</text>
+        </view>
+        <view class="cp4-tab {{activeTab === 'record' ? 'active' : ''}}" data-tab="record" bindtap="onTabTap">
+          <text>记录</text>
+        </view>
+      </view>
+
+      <!-- 成员 Tab -->
+      <view wx:if="{{activeTab === 'members'}}" class="cp4-panel cp4-members-panel">
+        <view wx:for="{{room.members}}" wx:key="openId" class="cp4-member-row">
+          <view class="cp4-member-avatar" style="background: {{item.isHost ? '#5CBF9E' : '#D98A5C'}};">
+            <text class="cp4-member-icon">{{item.isHost ? '★' : '●'}}</text>
+          </view>
+          <view class="cp4-member-info">
+            <text class="cp4-member-name">{{item.nickname}}</text>
+            <text wx:if="{{memberTrustMap[item.openId].label}}" class="cp4-trust-tag cp4-trust-{{memberTrustMap[item.openId].tier}}">{{memberTrustMap[item.openId].label}}</text>
+          </view>
+          <!-- finished 后展示评价/举报入口（排除自己） -->
+          <view wx:if="{{room.status === 'finished' && item.openId !== currentOpenId}}" class="cp4-member-actions">
+            <text class="cp4-action-btn" data-openid="{{item.openId}}" bindtap="onReviewTap">评价</text>
+            <text class="cp4-action-btn ghost" data-openid="{{item.openId}}" bindtap="onReportTap">举报</text>
+          </view>
+        </view>
+        <view wx:if="{{room.status === 'finished'}}" class="cp4-review-hint">任务已完成，可评价同房间搭子</view>
+      </view>
+
+      <!-- 聊天 Tab -->
+      <view wx:if="{{activeTab === 'chat'}}" class="cp4-panel cp4-chat-panel">
+        <scroll-view scroll-y class="cp4-chat-scroll" scroll-into-view="{{chatScrollIntoView}}" enhanced show-scrollbar="{{false}}">
+          <view wx:if="{{messages.length === 0}}" class="cp4-chat-empty">还没有消息，发条消息聊聊集合点吧</view>
+          <view wx:for="{{messages}}" wx:key="_id" class="cp4-msg-row {{item.senderOpenId === currentOpenId ? 'mine' : 'other'}}">
+            <view class="cp4-msg-bubble">
+              <text wx:if="{{item.senderOpenId !== currentOpenId}}" class="cp4-msg-nickname">{{item.senderNickname || '搭子'}}</text>
+              <text class="cp4-msg-content">{{item.content}}</text>
+              <text wx:if="{{item.isLocal}}" class="cp4-msg-pending">发送中</text>
+            </view>
+          </view>
+          <view id="chat-msg-last"></view>
+        </scroll-view>
+        <view class="cp4-chat-input-bar">
+          <input class="cp4-chat-input" placeholder="说点什么..." value="{{inputContent}}" bindinput="onChatInput" confirm-type="send" bindconfirm="onSendTap" maxlength="200" />
+          <view class="cp4-chat-send {{(!inputContent || chatSending) ? 'disabled' : ''}}" bindtap="onSendTap">{{chatSending ? '...' : '发送'}}</view>
+        </view>
+      </view>
+
+      <!-- 记录 Tab -->
+      <view wx:if="{{activeTab === 'record'}}" class="cp4-panel cp4-record-panel">
+        <view wx:if="{{groupRecordId}}" class="cp4-record-entry" bindtap="onViewGroupRecord">
+          <text>本次出逃记录</text>
+          <text class="arrow">→</text>
+        </view>
+        <view wx:else class="cp4-record-empty">
+          <text>{{room.status === 'finished' ? '出逃完成后可在此查看记录' : '出逃完成后可查看记录'}}</text>
+        </view>
+      </view>
+    </view>
+
   </scroll-view>
 
   <!-- v11: 邀请朋友弹窗（个人小程序无 open-type=share 权限，降级为复制 + 提示） -->
@@ -313,6 +377,50 @@
       <view class="invite-hint">个人小程序暂不支持微信内直接分享卡片，请用其他聊天工具发送房间号</view>
 
       <view class="invite-close" bindtap="onInvitePopupClose">×</view>
+    </view>
+  </view>
+
+  <!-- C-P4: 评价弹窗 -->
+  <view wx:if="{{showReviewModal}}" class="cp4-modal-mask" bindtap="onReviewModalClose">
+    <view class="cp4-modal" catchtap="onReviewPanelTap">
+      <view class="cp4-modal-title">评价搭子</view>
+      <view wx:if="{{reviewTarget}}" class="cp4-modal-target">{{reviewTarget.nickname}}</view>
+
+      <view class="cp4-stars">
+        <text wx:for="{{[1,2,3,4,5]}}" wx:key="*this" class="cp4-star {{reviewRating >= item ? 'on' : ''}}" data-value="{{item}}" bindtap="onReviewRatingTap">★</text>
+      </view>
+
+      <view class="cp4-tag-row">
+        <text wx:for="{{reviewTags}}" wx:key="*this" class="cp4-tag-chip {{reviewSelectedTagMap[item] ? 'selected' : ''}}" data-value="{{item}}" bindtap="onReviewTagTap">{{item}}</text>
+      </view>
+
+      <textarea class="cp4-textarea" placeholder="说说这位搭子（选填，≤100字）" value="{{reviewComment}}" bindinput="onReviewCommentInput" maxlength="100"></textarea>
+
+      <view class="cp4-modal-actions">
+        <view class="cp4-modal-btn ghost" bindtap="onReviewModalClose">取消</view>
+        <view class="cp4-modal-btn primary {{reviewSubmitting ? 'disabled' : ''}}" bindtap="onSubmitReview">{{reviewSubmitting ? '提交中...' : '提交评价'}}</view>
+      </view>
+      <view class="cp4-modal-close" bindtap="onReviewModalClose">×</view>
+    </view>
+  </view>
+
+  <!-- C-P4: 举报弹窗 -->
+  <view wx:if="{{showReportModal}}" class="cp4-modal-mask" bindtap="onReportModalClose">
+    <view class="cp4-modal" catchtap="onReportPanelTap">
+      <view class="cp4-modal-title">举报搭子</view>
+      <view wx:if="{{reportTarget}}" class="cp4-modal-target">{{reportTarget.nickname}}</view>
+
+      <view class="cp4-reason-list">
+        <view wx:for="{{reportReasons}}" wx:key="*this" class="cp4-reason-item {{reportSelectedReason === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="onReportReasonTap">
+          <text>{{item}}</text>
+        </view>
+      </view>
+
+      <view class="cp4-modal-actions">
+        <view class="cp4-modal-btn ghost" bindtap="onReportModalClose">取消</view>
+        <view class="cp4-modal-btn danger {{reportSubmitting ? 'disabled' : ''}}" bindtap="onSubmitReport">{{reportSubmitting ? '提交中...' : '提交举报'}}</view>
+      </view>
+      <view class="cp4-modal-close" bindtap="onReportModalClose">×</view>
     </view>
   </view>
 </view>

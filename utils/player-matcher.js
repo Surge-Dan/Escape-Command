@@ -21,6 +21,10 @@
 var mockPool = require('./mock-user-pool.js')
 var getMockUsers = mockPool.getMockUsers
 
+// C-P4: 信任分权重（gold 1.2 / reliable 1.0 / normal 1.0 / newbie 0.8 / watch 0.3）
+var trustScore = require('./trust-score.js')
+var getTierWeight = trustScore.getTierWeight
+
 // 默认头像（与 mock-user-pool 对齐）
 var DEFAULT_AVATAR = '/assets/images/avatar.webp'
 
@@ -64,23 +68,53 @@ function hasInterestOverlap(userInterests, targetInterests) {
  * 按区/兴趣优先级给玩家排序（不洗牌，稳定排序）
  * 优先级：district+interests > district > interests > 其他
  * 同优先级内保持原始顺序（调用方如需随机可先洗牌）
+ *
+ * C-P4: 可选 trustMap 叠加信任分权重
+ *   - gold（1.2）/ reliable（1.0）/ normal（1.0）/ newbie（0.8）→ baseScore × weight
+ *   - watch（0.3）→ 降级到队尾（不过滤，给改进机会）
+ *   - trustMap 未提供或玩家不在其中 → 按 normal（1.0）处理，向后兼容
+ *
  * @param {Array} players - 标准化玩家数组
  * @param {object} filters - { district, interests }
+ * @param {object} [trustMap] - { [openId]: { tier } }（可选）
  * @returns {Array} 排序后的新数组（不改原数组）
  */
-function rankByRelevance(players, filters) {
+function rankByRelevance(players, filters, trustMap) {
   filters = filters || {}
   var district = filters.district
   var interests = filters.interests
   var list = Array.isArray(players) ? players.slice() : []
+  var hasTrust = trustMap && typeof trustMap === 'object'
 
   list.sort(function (a, b) {
     var aD = district && a.district === district ? 1 : 0
     var bD = district && b.district === district ? 1 : 0
     var aI = interests && interests.length > 0 && hasInterestOverlap(a.interests, interests) ? 1 : 0
     var bI = interests && interests.length > 0 && hasInterestOverlap(b.interests, interests) ? 1 : 0
-    var aScore = aD * 2 + aI
-    var bScore = bD * 2 + bI
+    var aBase = aD * 2 + aI
+    var bBase = bD * 2 + bI
+
+    // 无 trustMap → 原始逻辑（向后兼容）
+    if (!hasTrust) {
+      return bBase - aBase
+    }
+
+    // 查 trust tier（缺失按 normal 处理）
+    var aTrust = a.openId && trustMap[a.openId]
+    var bTrust = b.openId && trustMap[b.openId]
+    var aTier = (aTrust && aTrust.tier) || 'normal'
+    var bTier = (bTrust && bTrust.tier) || 'normal'
+
+    // watch tier 降级到队尾（不管 baseScore）
+    var aWatch = aTier === 'watch'
+    var bWatch = bTier === 'watch'
+    if (aWatch !== bWatch) {
+      return aWatch ? 1 : -1 // watch 排后面
+    }
+
+    // 非 watch：baseScore × trustWeight
+    var aScore = aBase * getTierWeight(aTier)
+    var bScore = bBase * getTierWeight(bTier)
     return bScore - aScore
   })
   return list
@@ -93,9 +127,10 @@ function rankByRelevance(players, filters) {
  * @param {Array} mockPlayers - mock 玩家（原始结构，已由 getMockUsers 返回）
  * @param {number} count - 需要的玩家数
  * @param {object} filters - { district, interests, excludeOpenId }
+ * @param {object} [trustMap] - C-P4 信任分映射 { [openId]: { tier } }（可选）
  * @returns {Array} 标准化玩家数组，长度 = min(count, 可用总量)
  */
-function mergeAndPick(realPlayers, mockPlayers, count, filters) {
+function mergeAndPick(realPlayers, mockPlayers, count, filters, trustMap) {
   if (typeof count !== 'number' || !isFinite(count) || count <= 0 || Math.floor(count) !== count) {
     return []
   }
@@ -112,8 +147,8 @@ function mergeAndPick(realPlayers, mockPlayers, count, filters) {
       real.push(p)
     }
   }
-  // 真实玩家按相关性排序
-  real = rankByRelevance(real, filters)
+  // 真实玩家按相关性排序（C-P4: 含 trust 权重）
+  real = rankByRelevance(real, filters, trustMap)
 
   // 2. 标准化 mock 玩家，排除真实玩家已有的 openId（避免重复）
   var realOpenIds = {}
@@ -239,9 +274,47 @@ function matchPlayersAsync(user, count, filters, ctx) {
       if (promise && typeof promise.then === 'function') {
         promise.then(function (res) {
           if (settled) return
-          settled = true
-          clearTimeout(timer)
-          resolve(handleCloudResult(res, count, mergedFilters))
+          // C-P4: 查询真实玩家信任分（可选，失败降级到无 trust 加权）
+          var realOpenIds = extractRealOpenIds(res)
+          if (ctx.trustLoader && typeof ctx.trustLoader === 'function' && realOpenIds.length > 0) {
+            // trust 查询独立超时 2s，不阻塞主流程
+            var trustDone = false
+            var trustTimer = setTimeout(function () {
+              if (settled || trustDone) return
+              trustDone = true
+              settled = true
+              clearTimeout(timer)
+              resolve(handleCloudResult(res, count, mergedFilters, null))
+            }, 2000)
+            try {
+              Promise.resolve(ctx.trustLoader(realOpenIds)).then(function (trustMap) {
+                if (settled || trustDone) return
+                trustDone = true
+                settled = true
+                clearTimeout(trustTimer)
+                clearTimeout(timer)
+                resolve(handleCloudResult(res, count, mergedFilters, trustMap || null))
+              }).catch(function () {
+                if (settled || trustDone) return
+                trustDone = true
+                settled = true
+                clearTimeout(trustTimer)
+                clearTimeout(timer)
+                resolve(handleCloudResult(res, count, mergedFilters, null))
+              })
+            } catch (e) {
+              if (settled || trustDone) return
+              trustDone = true
+              settled = true
+              clearTimeout(trustTimer)
+              clearTimeout(timer)
+              resolve(handleCloudResult(res, count, mergedFilters, null))
+            }
+          } else {
+            settled = true
+            clearTimeout(timer)
+            resolve(handleCloudResult(res, count, mergedFilters, null))
+          }
         }).catch(function () {
           if (settled) return
           settled = true
@@ -281,7 +354,7 @@ function matchPlayersAsync(user, count, filters, ctx) {
 }
 
 // 处理云端返回结果
-function handleCloudResult(res, count, filters) {
+function handleCloudResult(res, count, filters, trustMap) {
   var result = res && res.result
   if (shouldFallback(result)) {
     // 云端无匹配 → 全 mock
@@ -298,7 +371,7 @@ function handleCloudResult(res, count, filters) {
   var mockNeeded = Math.max(0, count - realPlayers.length)
   var mockPlayers = mockNeeded > 0 ? getMockUsers(mockNeeded, filters) : []
 
-  var merged = mergeAndPick(realPlayers, mockPlayers, count, filters)
+  var merged = mergeAndPick(realPlayers, mockPlayers, count, filters, trustMap)
 
   // 判断 source
   var hasReal = false
@@ -310,6 +383,26 @@ function handleCloudResult(res, count, filters) {
   var source = (hasReal && hasMock) ? 'mixed' : (hasReal ? 'cloud' : 'mock')
 
   return { ok: true, players: merged, source: source }
+}
+
+/**
+ * C-P4: 从云端返回结果中提取真实玩家 openId 列表（供 trust 查询）
+ * @param {object} res - 云函数返回
+ * @returns {string[]} openId 列表
+ */
+function extractRealOpenIds(res) {
+  var result = res && res.result
+  if (shouldFallback(result)) return []
+  var players = result.players
+  if (!Array.isArray(players)) return []
+  var ids = []
+  for (var i = 0; i < players.length; i++) {
+    var p = players[i]
+    if (p && typeof p.openId === 'string' && p.openId && ids.indexOf(p.openId) === -1) {
+      ids.push(p.openId)
+    }
+  }
+  return ids
 }
 
 module.exports = {
@@ -327,6 +420,7 @@ module.exports = {
   matchPlayersAsync: matchPlayersAsync,
   // 内部导出（供测试）
   _internal: {
-    handleCloudResult: handleCloudResult
+    handleCloudResult: handleCloudResult,
+    extractRealOpenIds: extractRealOpenIds
   }
 }

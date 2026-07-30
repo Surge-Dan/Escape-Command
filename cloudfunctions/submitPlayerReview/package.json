@@ -1,0 +1,9 @@
+{
+  "name": "submitPlayerReview",
+  "version": "1.0.0",
+  "description": "C-P4: 提交玩家评价（1-5星+标签+评论，防重复）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

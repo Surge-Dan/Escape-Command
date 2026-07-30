@@ -24,21 +24,26 @@ const testSuites = [
   { name: '单元测试 - poi-command-builder (POI 指令构建)', cmd: 'node tests/unit/poi-command-builder.test.js', timeout: 30000 },
   { name: '单元测试 - task-hall-store (C-P3 任务大厅)', cmd: 'node tests/unit/task-hall-store.test.js', timeout: 30000 },
   { name: '单元测试 - player-matcher (D5 真实玩家联动)', cmd: 'node tests/unit/player-matcher.test.js', timeout: 30000 },
+  { name: '单元测试 - trust-score (C-P4 信任分)', cmd: 'node tests/unit/trust-score.test.js', timeout: 30000 },
+  { name: '单元测试 - player-trust-store (C-P4 信任数据层)', cmd: 'node tests/unit/player-trust-store.test.js', timeout: 30000 },
+  { name: '单元测试 - chat-store (C-P4 聊天数据层)', cmd: 'node tests/unit/chat-store.test.js', timeout: 30000 },
   // ===== BDD =====
-  { name: 'Gherkin BDD (group + generator + completion + task-hall)', cmd: 'node tests/gherkin/runner.js', timeout: 60000 },
+  { name: 'Gherkin BDD (group + generator + completion + task-hall + c-p4-social)', cmd: 'node tests/gherkin/runner.js', timeout: 60000 },
   // ===== Fuzz =====
   { name: 'Property Fuzz - generator (1000+ 次)', cmd: 'node tests/property/generator-property.test.js', timeout: 120000 },
   { name: 'Property Fuzz - group (C-14~C-19)', cmd: 'node tests/property/group-property.test.js', timeout: 120000 },
   { name: 'Property Fuzz - player-matcher (D5)', cmd: 'node tests/property/player-matcher-property.test.js', timeout: 120000 },
+  { name: 'Property Fuzz - chat-trust (C-P4)', cmd: 'node tests/property/chat-trust-property.test.js', timeout: 120000 },
   // ===== 对抗式 =====
   { name: 'Adversarial - generator (45 攻击向量)', cmd: 'node tests/adversarial/generator-attack.test.js', timeout: 60000 },
   { name: 'Adversarial - group (49 攻击向量)', cmd: 'node tests/adversarial/group-attack.test.js', timeout: 60000 },
   { name: 'Adversarial - player-matcher (40 攻击向量)', cmd: 'node tests/adversarial/player-matcher-attack.test.js', timeout: 60000 },
+  { name: 'Adversarial - chat-trust (C-P4)', cmd: 'node tests/adversarial/chat-trust-attack.test.js', timeout: 60000 },
   // ===== 质量与覆盖 =====
   { name: 'QA 质量检查', cmd: 'node tests/qa/check.js', timeout: 30000 },
   { name: '覆盖率报告', cmd: 'node tests/coverage/coverage-report.js', timeout: 30000 },
   // ===== 变异测试（最后跑，最慢）=====
-  { name: '变异测试 (99 mutations)', cmd: 'node tests/mutation/mutation-test.js', timeout: 600000 }
+  { name: '变异测试 (99+ C-P4 mutations)', cmd: 'node tests/mutation/mutation-test.js', timeout: 600000 }
 ]
 
 let passCount = 0

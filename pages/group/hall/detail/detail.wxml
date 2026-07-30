@@ -60,6 +60,7 @@
               <image class="member-avatar" src="/assets/images/avatar.webp" mode="aspectFill"></image>
               <text class="member-name">{{item.nickname}}</text>
               <text wx:if="{{index === 0}}" class="host-tag">发起人</text>
+              <text wx:if="{{memberTrustMap[item.openId].label}}" class="member-trust-tag member-trust-{{memberTrustMap[item.openId].tier}}">{{memberTrustMap[item.openId].label}}</text>
             </view>
           </block>
           <view wx:if="{{task.members.length === 0}}" class="members-empty">暂无成员，等你加入</view>

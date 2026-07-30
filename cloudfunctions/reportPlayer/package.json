@@ -1,0 +1,9 @@
+{
+  "name": "reportPlayer",
+  "version": "1.0.0",
+  "description": "C-P4: 举报玩家（累计3次标记flagged）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -15,6 +15,7 @@ const hallStore = require('../../../utils/task-hall-store.js')
 const roomStore = require('../../../utils/group-room-store.js')
 const districtsData = require('../../../data/guangzhou-districts.js')
 const playerMatcher = require('../../../utils/player-matcher.js')
+const trustStore = require('../../../utils/player-trust-store.js')
 
 // 当前用户 openId 存储 key（与 group-room-store.js 同源）
 const OPENID_KEY = 'localHostOpenId'
@@ -59,6 +60,8 @@ Page({
     dicing: false,           // 防止重复点击
     // 匹配结果弹窗
     matchResult: null,
+    // C-P4: 匹配搭子信任标签 { [openId]: { tier, label } }
+    matchPartnerTrustMap: {},
     scheduledTimeLabels: SCHEDULED_TIME_LABELS
   },
 
@@ -275,7 +278,9 @@ Page({
         maxMembers: result.task.maxMembers
       }
       // 关掉骰子弹窗，展示匹配结果
-      this.setData({ matchResult: matchResult, showDice: false })
+      this.setData({ matchResult: matchResult, showDice: false, matchPartnerTrustMap: {} })
+      // C-P4: 异步加载搭子信任标签（不阻断弹窗）
+      this.loadMatchPartnerTrust(partners)
     } else {
       const errCode = result && result.errCode
       const msg = errCode === 'NO_MATCH'
@@ -298,6 +303,31 @@ Page({
     try { nickname = (app.globalData && app.globalData.escapeName) || '' } catch (e) {}
     if (!nickname) nickname = '出逃者' + Math.floor(Math.random() * 1000)
     return { openId: openId, nickname: nickname }
+  },
+
+  // C-P4: 批量查询匹配搭子信任分（mock 玩家用默认 newbie，不阻断弹窗）
+  loadMatchPartnerTrust(partners) {
+    const list = Array.isArray(partners) ? partners : []
+    const openIds = list.map(p => p && p.openId).filter(id => id && typeof id === 'string' && id.indexOf('mock_') !== 0)
+    if (openIds.length === 0) {
+      // 全是 mock → 用默认 newbie 填充
+      const map = {}
+      list.forEach(p => { if (p && p.openId) map[p.openId] = { tier: 'newbie', label: '新手', score: 5.0, count: 0 } })
+      this.setData({ matchPartnerTrustMap: map })
+      return
+    }
+    const ctx = { cloudReady: !!(app.globalData && app.globalData.cloudReady) }
+    try {
+      trustStore.getTrustBatch(openIds, ctx).then((trusts) => {
+        const map = Object.assign({}, trusts)
+        list.forEach(p => {
+          if (p && p.openId && !map[p.openId]) {
+            map[p.openId] = { tier: 'newbie', label: '新手', score: 5.0, count: 0 }
+          }
+        })
+        this.setData({ matchPartnerTrustMap: map })
+      }).catch(() => {})
+    } catch (e) {}
   },
 
   // 骰子弹窗遮罩点击（动画中不响应）

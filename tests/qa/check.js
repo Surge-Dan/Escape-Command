@@ -671,6 +671,152 @@ validStatuses.forEach(status => {
   check('状态值存在: ' + status, storeJs.includes(status) || roomJs.includes(status), 'warn')
 })
 
+// ===== 8. C-P4 社交增强契约完整性（信任分 + 聊天 + 评价 + 举报）=====
+console.log('\n--- 8. C-P4 社交增强契约 ---')
+
+// 8a. trust-score.js 纯函数 + 常量
+check('C-P4 trust-score.js 存在', fs.existsSync(path.join(projectRoot, 'utils/trust-score.js')), 'error')
+const trustScoreMod = require('../../utils/trust-score.js')
+;['computeTrustScore', 'tierFromScore', 'getTierWeight', 'getTierLabel', 'isValidReview'].forEach(fn => {
+  check('C-P4 trust-score 导出: ' + fn, typeof trustScoreMod[fn] === 'function', 'error')
+})
+check('C-P4 trust-score 导出 TRUST_TIER_WEIGHT', !!trustScoreMod.TRUST_TIER_WEIGHT, 'error')
+check('C-P4 trust-score 导出 DEFAULT_TRUST', !!trustScoreMod.DEFAULT_TRUST, 'error')
+check('C-P4 trust-score 导出 TIER_LABELS', !!trustScoreMod.TIER_LABELS, 'error')
+check('C-P4 TRUST_TIER_WEIGHT 含 5 tier', Object.keys(trustScoreMod.TRUST_TIER_WEIGHT).length === 5, 'error')
+check('C-P4 gold 权重 1.2', trustScoreMod.TRUST_TIER_WEIGHT.gold === 1.2, 'error')
+check('C-P4 watch 权重 0.3', trustScoreMod.TRUST_TIER_WEIGHT.watch === 0.3, 'error')
+check('C-P4 newbie 权重 0.8', trustScoreMod.TRUST_TIER_WEIGHT.newbie === 0.8, 'error')
+check('C-P4 DEFAULT_TRUST score 5.0', trustScoreMod.DEFAULT_TRUST.score === 5.0, 'error')
+check('C-P4 DEFAULT_TRUST tier newbie', trustScoreMod.DEFAULT_TRUST.tier === 'newbie', 'error')
+check('C-P4 TIER_LABELS 5 项', Object.keys(trustScoreMod.TIER_LABELS).length === 5, 'error')
+const trustScoreJs = fs.readFileSync(path.join(projectRoot, 'utils/trust-score.js'), 'utf-8')
+check('C-P4 trust-score 纯函数零 wx 依赖', !trustScoreJs.includes('wx.') && !trustScoreJs.includes('wx.cloud'), 'error')
+check('C-P4 trust-score 使用 strict mode', trustScoreJs.includes('use strict'), 'warn')
+check('C-P4 trust-score 无 eval/Function 注入', !trustScoreJs.includes('eval(') && !trustScoreJs.includes('new Function('), 'error')
+// 分级规则契约（spec ADDED Requirements）
+check('C-P4 gold 需 count>=10 且 avg>=4.8', trustScoreJs.includes('avg >= 4.8 && count >= 10'), 'error')
+check('C-P4 watch 需 avg < 3.0', trustScoreJs.includes('avg < 3.0'), 'error')
+check('C-P4 非法 rating 按 5 处理', trustScoreJs.includes('sum += 5'), 'error')
+check('C-P4 score 保留一位小数', trustScoreJs.includes('Math.round(avg * 10) / 10'), 'error')
+check('C-P4 count<3 返回 newbie', trustScoreJs.includes('count < 3'), 'error')
+
+// 8b. player-trust-store.js 数据层
+check('C-P4 player-trust-store.js 存在', fs.existsSync(path.join(projectRoot, 'utils/player-trust-store.js')), 'error')
+const trustStore = require('../../utils/player-trust-store.js')
+;['submitReview', 'getTrust', 'getTrustBatch', 'reportPlayer', 'getCachedTrust', 'setCachedTrust', 'clearTrustCache', 'buildReviewDoc'].forEach(fn => {
+  check('C-P4 player-trust-store 导出: ' + fn, typeof trustStore[fn] === 'function', 'error')
+})
+check('C-P4 player-trust-store 导出 CACHE_KEY', typeof trustStore.CACHE_KEY === 'string', 'error')
+check('C-P4 player-trust-store 导出 CLOUD_TIMEOUT', typeof trustStore.CLOUD_TIMEOUT === 'number', 'error')
+const trustStoreJs = fs.readFileSync(path.join(projectRoot, 'utils/player-trust-store.js'), 'utf-8')
+check('C-P4 player-trust-store submitReview 降级 CLOUD_OFFLINE', trustStoreJs.includes("'CLOUD_OFFLINE'"), 'error')
+check('C-P4 player-trust-store submitReview 超时 CLOUD_TIMEOUT', trustStoreJs.includes("'CLOUD_TIMEOUT'"), 'error')
+check('C-P4 player-trust-store submitReview 云异常 CLOUD_ERROR', trustStoreJs.includes("'CLOUD_ERROR'"), 'error')
+check('C-P4 player-trust-store getTrustBatch 截断 20', trustStoreJs.includes('ids.length < 20'), 'error')
+check('C-P4 player-trust-store reportPlayer 空 openId INVALID_PARAM', trustStoreJs.includes("'INVALID_PARAM'"), 'error')
+check('C-P4 player-trust-store buildReviewDoc comment 截断 100', trustStoreJs.includes('.slice(0, 100)'), 'error')
+check('C-P4 player-trust-store buildReviewDoc tags 上限 5', trustStoreJs.includes('.slice(0, 5)'), 'error')
+check('C-P4 player-trust-store 调用 submitPlayerReview 云函数', trustStoreJs.includes("'submitPlayerReview'"), 'error')
+check('C-P4 player-trust-store 调用 getPlayerTrust 云函数', trustStoreJs.includes("'getPlayerTrust'"), 'error')
+check('C-P4 player-trust-store 调用 reportPlayer 云函数', trustStoreJs.includes("'reportPlayer'"), 'error')
+check('C-P4 player-trust-store 成功后缓存信任分 setCachedTrust', trustStoreJs.includes('setCachedTrust(doc.targetOpenId'), 'error')
+
+// 8c. chat-store.js 聊天数据层
+check('C-P4 chat-store.js 存在', fs.existsSync(path.join(projectRoot, 'utils/chat-store.js')), 'error')
+const chatStoreMod = require('../../utils/chat-store.js')
+;['sendMessage', 'fetchNewMessages', 'startPolling', 'stopPolling', 'loadMessages', 'saveMessages', 'dedupMessages', 'validateContent', 'buildMessageDoc', 'makeOptimisticId'].forEach(fn => {
+  check('C-P4 chat-store 导出: ' + fn, typeof chatStoreMod[fn] === 'function', 'error')
+})
+check('C-P4 chat-store 导出 POLL_INTERVAL', typeof chatStoreMod.POLL_INTERVAL === 'number', 'error')
+check('C-P4 chat-store POLL_INTERVAL 为 2500ms', chatStoreMod.POLL_INTERVAL === 2500, 'error')
+check('C-P4 chat-store 导出 MAX_CONTENT_LEN', chatStoreMod.MAX_CONTENT_LEN === 200, 'error')
+check('C-P4 chat-store 导出 PAGE_SIZE', chatStoreMod.PAGE_SIZE === 50, 'error')
+check('C-P4 chat-store 导出 _rollbackOptimistic（测试辅助）', typeof chatStoreMod._rollbackOptimistic === 'function', 'error')
+check('C-P4 chat-store 导出 _getPollingState（测试辅助）', typeof chatStoreMod._getPollingState === 'function', 'error')
+const chatStoreJs = fs.readFileSync(path.join(projectRoot, 'utils/chat-store.js'), 'utf-8')
+check('C-P4 chat-store validateContent 超长拒绝', chatStoreJs.includes('MAX_CONTENT_LEN'), 'error')
+check('C-P4 chat-store sendMessage 乐观更新 isLocal', chatStoreJs.includes('isLocal: true') && chatStoreJs.includes('status: \'pending\''), 'error')
+check('C-P4 chat-store sendMessage 失败回滚 rollbackOptimistic', chatStoreJs.includes('rollbackOptimistic(roomId, optimisticId)'), 'error')
+check('C-P4 chat-store sendMessage 降级 local_only', chatStoreJs.includes("'local_only'"), 'error')
+check('C-P4 chat-store dedupMessages 按 createdAt 升序', chatStoreJs.includes('ca - cb'), 'error')
+check('C-P4 chat-store dedupMessages 乐观消息替换 replaceKey', chatStoreJs.includes('replaceKey'), 'error')
+check('C-P4 chat-store startPolling 已有轮询先停', chatStoreJs.includes('stopPolling()') && chatStoreJs.includes('pollingRoomId = roomId'), 'error')
+check('C-P4 chat-store 调用 sendMessage 云函数', chatStoreJs.includes("name: 'sendMessage'"), 'error')
+check('C-P4 chat-store 调用 fetchMessages 云函数', chatStoreJs.includes("name: 'fetchMessages'"), 'error')
+check('C-P4 chat-store 无 eval/Function 注入', !chatStoreJs.includes('eval(') && !chatStoreJs.includes('new Function('), 'error')
+
+// 8d. player-matcher trust 权重集成
+const playerMatcherJs = fs.readFileSync(path.join(projectRoot, 'utils/player-matcher.js'), 'utf-8')
+check('C-P4 player-matcher 引入 trust-score', playerMatcherJs.includes('trust-score'), 'error')
+check('C-P4 player-matcher rankByRelevance 使用 trustMap', playerMatcherJs.includes('trustMap'), 'error')
+check('C-P4 player-matcher watch 玩家降级队尾', playerMatcherJs.includes("tier === 'watch'") || playerMatcherJs.includes("'watch'"), 'error')
+check('C-P4 player-matcher getTierWeight 调用', playerMatcherJs.includes('getTierWeight'), 'error')
+
+// 8e. 云函数存在性 + 契约
+;['sendMessage', 'fetchMessages', 'submitPlayerReview', 'getPlayerTrust', 'reportPlayer'].forEach(cf => {
+  check('C-P4 云函数存在: ' + cf, fs.existsSync(path.join(projectRoot, 'cloudfunctions/' + cf + '/index.js')), 'error')
+})
+const sendMessageCode = fs.readFileSync(path.join(projectRoot, 'cloudfunctions/sendMessage/index.js'), 'utf-8')
+check('C-P4 sendMessage 取 OPENID 上下文', sendMessageCode.includes('OPENID'), 'error')
+check('C-P4 sendMessage 内容长度校验 200', sendMessageCode.includes('200'), 'error')
+const fetchMessagesCode = fs.readFileSync(path.join(projectRoot, 'cloudfunctions/fetchMessages/index.js'), 'utf-8')
+check('C-P4 fetchMessages 按 roomId 过滤', fetchMessagesCode.includes('roomId'), 'error')
+check('C-P4 fetchMessages 按 lastCreatedAt 增量', fetchMessagesCode.includes('lastCreatedAt'), 'error')
+const submitReviewCode = fs.readFileSync(path.join(projectRoot, 'cloudfunctions/submitPlayerReview/index.js'), 'utf-8')
+check('C-P4 submitPlayerReview rating 整数校验', submitReviewCode.includes('Number.isInteger'), 'error')
+check('C-P4 submitPlayerReview 防自评 SELF_REVIEW_FORBIDDEN', submitReviewCode.includes('SELF_REVIEW_FORBIDDEN'), 'error')
+check('C-P4 submitPlayerReview 防重复 ALREADY_REVIEWED', submitReviewCode.includes('ALREADY_REVIEWED'), 'error')
+const getPlayerTrustCode = fs.readFileSync(path.join(projectRoot, 'cloudfunctions/getPlayerTrust/index.js'), 'utf-8')
+check('C-P4 getPlayerTrust 调 computeTrustScore', getPlayerTrustCode.includes('computeTrustScore'), 'error')
+check('C-P4 getPlayerTrust 批量截断', getPlayerTrustCode.includes('MAX_BATCH') || getPlayerTrustCode.includes('20'), 'error')
+const reportPlayerCode = fs.readFileSync(path.join(projectRoot, 'cloudfunctions/reportPlayer/index.js'), 'utf-8')
+check('C-P4 reportPlayer 累计 3 次标记 flagged', reportPlayerCode.includes('3') && reportPlayerCode.includes('flagged'), 'error')
+check('C-P4 reportPlayer 防重复 ALREADY_REPORTED', reportPlayerCode.includes('ALREADY_REPORTED'), 'error')
+
+// 8f. room 页面 Tab + 聊天 + 评价 UI 集成
+const roomJsCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/room/room.js'), 'utf-8')
+const roomWxmlCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/room/room.wxml'), 'utf-8')
+check('C-P4 room.js 导入 chat-store', roomJsCp4.includes('chat-store'), 'error')
+check('C-P4 room.js 导入 player-trust-store', roomJsCp4.includes('player-trust-store'), 'error')
+check('C-P4 room.js 含 activeTab 状态', roomJsCp4.includes('activeTab'), 'error')
+check('C-P4 room.js 含 onTabTap 切换', roomJsCp4.includes('onTabTap'), 'error')
+check('C-P4 room.js 含 onSendTap 发送', roomJsCp4.includes('onSendTap'), 'error')
+check('C-P4 room.js 含 refreshChatState', roomJsCp4.includes('refreshChatState'), 'error')
+check('C-P4 room.js 含 loadMemberTrust', roomJsCp4.includes('loadMemberTrust'), 'error')
+check('C-P4 room.js 含 showReviewModal', roomJsCp4.includes('showReviewModal'), 'error')
+check('C-P4 room.js 调 chatStore.startPolling', roomJsCp4.includes('chatStore.startPolling'), 'error')
+check('C-P4 room.js onHide 调 chatStore.stopPolling', roomJsCp4.includes('chatStore.stopPolling'), 'error')
+check('C-P4 room.wxml 含 Tab 切换区', roomWxmlCp4.includes('cp4-tab') || roomWxmlCp4.includes('tab-bar'), 'warn')
+check('C-P4 room.wxml 含聊天面板', roomWxmlCp4.includes('chat'), 'warn')
+check('C-P4 room.wxml 含评价弹窗', roomWxmlCp4.includes('review') || roomWxmlCp4.includes('cp4-modal'), 'warn')
+
+// 8g. hall / detail 信任标签展示
+const hallJsCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/hall.js'), 'utf-8')
+const hallWxmlCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/hall.wxml'), 'utf-8')
+check('C-P4 hall.js 导入 player-trust-store', hallJsCp4.includes('player-trust-store'), 'error')
+check('C-P4 hall.js 含 loadMatchPartnerTrust', hallJsCp4.includes('loadMatchPartnerTrust'), 'error')
+check('C-P4 hall.js 含 matchPartnerTrustMap', hallJsCp4.includes('matchPartnerTrustMap'), 'error')
+check('C-P4 hall.wxml 含信任标签 partner-trust-tag', hallWxmlCp4.includes('partner-trust-tag') || hallWxmlCp4.includes('trust-tag'), 'warn')
+const detailJsCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/detail/detail.js'), 'utf-8')
+const detailWxmlCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/detail/detail.wxml'), 'utf-8')
+check('C-P4 detail.js 导入 player-trust-store', detailJsCp4.includes('player-trust-store'), 'error')
+check('C-P4 detail.js 含 loadMemberTrust', detailJsCp4.includes('loadMemberTrust'), 'error')
+check('C-P4 detail.js 含 memberTrustMap', detailJsCp4.includes('memberTrustMap'), 'error')
+check('C-P4 detail.wxml 含成员信任标签', detailWxmlCp4.includes('member-trust-tag') || detailWxmlCp4.includes('trust'), 'warn')
+
+// 8h. 测试套件存在性
+;[
+  'tests/unit/trust-score.test.js',
+  'tests/unit/player-trust-store.test.js',
+  'tests/unit/chat-store.test.js',
+  'tests/gherkin/c-p4-social.feature',
+  'tests/property/chat-trust-property.test.js',
+  'tests/adversarial/chat-trust-attack.test.js'
+].forEach(tf => {
+  check('C-P4 测试文件存在: ' + tf, fs.existsSync(path.join(projectRoot, tf)), 'error')
+})
+
 // ===== 结果 =====
 console.log('\n' + '='.repeat(50))
 console.log(`QA 检查结果: ${checks} checks, ${passed} passed, ${warnings} warnings, ${errors} errors`)

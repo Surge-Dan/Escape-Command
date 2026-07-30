@@ -1,9 +1,15 @@
 const app = getApp()
 const roomStore = require('../../../utils/group-room-store.js')
 const hallStore = require('../../../utils/task-hall-store.js')
+const chatStore = require('../../../utils/chat-store.js')
+const trustStore = require('../../../utils/player-trust-store.js')
 const { VOTE_OPTIONS, PREFERENCE_OPTIONS, ROOM_STATUS } = roomStore
 
 const USE_LOCAL_MODE = true
+
+// C-P4: 预设评价标签 + 举报理由
+const REVIEW_TAGS = ['准时', '友善', '有趣', '靠谱', '会聊天', '懂拍照']
+const REPORT_REASONS = ['迟到', '爽约', '骚扰', '其他']
 
 Page({
   data: {
@@ -36,7 +42,34 @@ Page({
     // C-P3 联动：来自任务大厅的 taskId（用于回写 hall task 状态）
     taskId: '',
     // C-P3 联动：任务大厅 POI（出逃地点展示）
-    hallPoi: null
+    hallPoi: null,
+    // C-P4: Tab 切换（members/chat/record），ready 状态后展示
+    activeTab: 'members',
+    showTabs: false,
+    // C-P4: 聊天
+    messages: [],
+    inputContent: '',
+    chatSending: false,
+    chatScrollIntoView: '',
+    // C-P4: 成员信任标签
+    memberTrustMap: {},
+    // C-P4: 当前用户 openId（WXML 区分自己/他人消息用）
+    currentOpenId: '',
+    // C-P4: 评价弹窗
+    showReviewModal: false,
+    reviewTarget: null,
+    reviewRating: 0,
+    reviewTags: REVIEW_TAGS,
+    reviewSelectedTags: [],
+    reviewSelectedTagMap: {},
+    reviewComment: '',
+    reviewSubmitting: false,
+    // C-P4: 举报弹窗
+    showReportModal: false,
+    reportTarget: null,
+    reportReasons: REPORT_REASONS,
+    reportSelectedReason: '',
+    reportSubmitting: false
   },
 
   onLoad(options) {
@@ -217,6 +250,307 @@ Page({
       isHostView: true,
       groupRecordId
     })
+
+    // C-P4: 联动聊天/信任/Tab
+    this.refreshChatState(room)
+  },
+
+  // ===== C-P4: 聊天/信任/Tab 联动 =====
+  refreshChatState(room) {
+    if (!room || !room.roomId) return
+    const activeStatuses = ['ready', 'voting', 'generating', 'finished']
+    const showTabs = activeStatuses.indexOf(room.status) !== -1
+    this.setData({ showTabs, currentOpenId: this._getCurrentUser().openId })
+
+    // 加载本地聊天历史
+    const messages = chatStore.loadMessages(room.roomId)
+    this.setData({ messages: this._trimMessages(messages) })
+
+    // 加载成员信任标签（不阻断页面）
+    this.loadMemberTrust(room)
+
+    // 轮询控制：未 finished 才轮询
+    if (showTabs && room.status !== 'finished' && room.status !== 'cancelled') {
+      this._startChatPolling(room)
+    } else {
+      chatStore.stopPolling()
+    }
+  },
+
+  _startChatPolling(room) {
+    const ctx = this._buildChatCtx(room)
+    chatStore.startPolling(room.roomId, ctx, (newMsgs, allMsgs) => {
+      this.setData({
+        messages: this._trimMessages(allMsgs),
+        chatScrollIntoView: 'chat-msg-last'
+      })
+    })
+  },
+
+  // 裁剪到最近 50 条，避免渲染压力
+  _trimMessages(list) {
+    const arr = Array.isArray(list) ? list : []
+    return arr.slice(-50)
+  },
+
+  // 构造聊天上下文（注入 cloudReady/callFunction/currentUser）
+  _buildChatCtx(room) {
+    const self = this
+    const cloudReady = !!(app.globalData && app.globalData.cloudReady)
+    return {
+      cloudReady: cloudReady,
+      currentUser: this._getCurrentUser(),
+      roomMembers: (room && room.members || []).map(m => m.openId).filter(Boolean),
+      roomStatus: room && room.status || '',
+      pollInterval: chatStore.POLL_INTERVAL,
+      callFunction: function (opts) {
+        if (!cloudReady || !wx.cloud || typeof wx.cloud.callFunction !== 'function') {
+          return Promise.reject(new Error('cloud unavailable'))
+        }
+        return new Promise(function (resolve, reject) {
+          wx.cloud.callFunction({
+            name: opts.name,
+            data: opts.data || {},
+            success: function (res) { resolve(res) },
+            fail: function (err) { reject(err) }
+          })
+        })
+      }
+    }
+  },
+
+  _getCurrentUser() {
+    let openId = ''
+    try { openId = roomStore.getHostOpenId() } catch (e) {}
+    const nickname = (app.globalData && app.globalData.escapeName) || '出逃者'
+    return { openId: openId, nickname: nickname }
+  },
+
+  loadMemberTrust(room) {
+    if (!room || !room.members || room.members.length === 0) return
+    const openIds = room.members.map(m => m.openId).filter(id => id && id.indexOf('mock_') !== 0)
+    if (openIds.length === 0) {
+      // 全是 mock 成员 → 用默认信任分填充（新手）
+      const map = {}
+      room.members.forEach(m => { if (m.openId) map[m.openId] = { tier: 'newbie', label: '新手', score: 5.0, count: 0 } })
+      this.setData({ memberTrustMap: map })
+      return
+    }
+    const ctx = { cloudReady: !!(app.globalData && app.globalData.cloudReady) }
+    try {
+      trustStore.getTrustBatch(openIds, ctx).then((trusts) => {
+        // mock 成员补默认值
+        const map = Object.assign({}, trusts)
+        room.members.forEach(m => {
+          if (m.openId && !map[m.openId]) {
+            map[m.openId] = { tier: 'newbie', label: '新手', score: 5.0, count: 0 }
+          }
+        })
+        this.setData({ memberTrustMap: map })
+      }).catch(() => {})
+    } catch (e) {}
+  },
+
+  // ===== C-P4: Tab 切换 =====
+  onTabTap(e) {
+    const tab = e.currentTarget.dataset.tab
+    if (!tab || tab === this.data.activeTab) return
+    this.setData({ activeTab: tab })
+    if (tab === 'chat') {
+      this.setData({ chatScrollIntoView: 'chat-msg-last' })
+    }
+  },
+
+  // ===== C-P4: 聊天输入/发送 =====
+  onChatInput(e) {
+    this.setData({ inputContent: e.detail.value || '' })
+  },
+
+  onSendTap() {
+    const content = (this.data.inputContent || '').trim()
+    if (!content) return
+    if (this.data.chatSending) return
+    const room = this.data.room
+    if (!room) return
+    if (room.status === 'finished' || room.status === 'cancelled') {
+      wx.showToast({ title: '任务已结束，聊天已关闭', icon: 'none' })
+      return
+    }
+    this.setData({ chatSending: true, inputContent: '' })
+    const ctx = this._buildChatCtx(room)
+    const self = this
+    chatStore.sendMessage(room.roomId, this.data.taskId, content, ctx).then(function (res) {
+      // 乐观消息已在 store 内同步写入，这里刷新视图
+      self.setData({
+        messages: self._trimMessages(chatStore.loadMessages(room.roomId)),
+        chatScrollIntoView: 'chat-msg-last'
+      })
+      if (!res.ok) {
+        wx.showToast({ title: res.errMsg || '发送失败', icon: 'none' })
+      }
+    }).catch(function () {
+      wx.showToast({ title: '发送异常', icon: 'none' })
+    }).then(function () {
+      self.setData({ chatSending: false })
+    })
+  },
+
+  // ===== C-P4: 评价弹窗 =====
+  onReviewTap(e) {
+    const openId = e.currentTarget.dataset.openid
+    const room = this.data.room
+    if (!room) return
+    const target = (room.members || []).find(m => m.openId === openId)
+    if (!target) return
+    this.setData({
+      showReviewModal: true,
+      reviewTarget: target,
+      reviewRating: 0,
+      reviewSelectedTags: [],
+      reviewSelectedTagMap: {},
+      reviewComment: ''
+    })
+  },
+
+  onReviewRatingTap(e) {
+    this.setData({ reviewRating: e.currentTarget.dataset.value })
+  },
+
+  onReviewTagTap(e) {
+    const tag = e.currentTarget.dataset.value
+    const tags = (this.data.reviewSelectedTags || []).slice()
+    const idx = tags.indexOf(tag)
+    if (idx >= 0) {
+      tags.splice(idx, 1)
+    } else {
+      if (tags.length >= 5) {
+        wx.showToast({ title: '最多选5个标签', icon: 'none' })
+        return
+      }
+      tags.push(tag)
+    }
+    // 预计算选中 map（WXML 不支持 indexOf）
+    const map = {}
+    tags.forEach(t => { map[t] = true })
+    this.setData({ reviewSelectedTags: tags, reviewSelectedTagMap: map })
+  },
+
+  onReviewCommentInput(e) {
+    this.setData({ reviewComment: (e.detail.value || '').slice(0, 100) })
+  },
+
+  onSubmitReview() {
+    if (this.data.reviewSubmitting) return
+    const target = this.data.reviewTarget
+    if (!target) return
+    if (!this.data.reviewRating) {
+      wx.showToast({ title: '请选择评分', icon: 'none' })
+      return
+    }
+    const room = this.data.room
+    const ctx = { cloudReady: !!(app.globalData && app.globalData.cloudReady) }
+    const target2 = {
+      openId: target.openId,
+      roomId: room.roomId,
+      taskId: this.data.taskId,
+      roomMembers: (room.members || []).map(m => m.openId),
+      roomStatus: room.status
+    }
+    const review = {
+      rating: this.data.reviewRating,
+      comment: this.data.reviewComment,
+      tags: this.data.reviewSelectedTags
+    }
+    this.setData({ reviewSubmitting: true })
+    const self = this
+    trustStore.submitReview(target2, review, ctx).then(function (res) {
+      if (res.ok) {
+        wx.showToast({ title: '评价已提交', icon: 'success' })
+        // 更新本地信任标签缓存
+        if (target.openId) {
+          const map = Object.assign({}, self.data.memberTrustMap)
+          map[target.openId] = res.trust || map[target.openId]
+          self.setData({ memberTrustMap: map })
+        }
+        self.setData({ showReviewModal: false })
+      } else {
+        wx.showToast({ title: res.errMsg || '评价失败', icon: 'none' })
+      }
+    }).catch(function () {
+      wx.showToast({ title: '评价异常', icon: 'none' })
+    }).then(function () {
+      self.setData({ reviewSubmitting: false })
+    })
+  },
+
+  onReviewModalClose() {
+    this.setData({ showReviewModal: false })
+  },
+
+  // 阻止弹窗内部点击冒泡
+  onReviewPanelTap() {},
+
+  // ===== C-P4: 举报弹窗 =====
+  onReportTap(e) {
+    const openId = e.currentTarget.dataset.openid
+    const room = this.data.room
+    if (!room) return
+    const target = (room.members || []).find(m => m.openId === openId)
+    if (!target) return
+    this.setData({
+      showReportModal: true,
+      reportTarget: target,
+      reportSelectedReason: ''
+    })
+  },
+
+  onReportReasonTap(e) {
+    this.setData({ reportSelectedReason: e.currentTarget.dataset.value })
+  },
+
+  onSubmitReport() {
+    if (this.data.reportSubmitting) return
+    const target = this.data.reportTarget
+    if (!target) return
+    if (!this.data.reportSelectedReason) {
+      wx.showToast({ title: '请选择举报理由', icon: 'none' })
+      return
+    }
+    const room = this.data.room
+    const ctx = { cloudReady: !!(app.globalData && app.globalData.cloudReady) }
+    this.setData({ reportSubmitting: true })
+    const self = this
+    trustStore.reportPlayer(
+      { openId: target.openId, roomId: room.roomId },
+      this.data.reportSelectedReason,
+      ctx
+    ).then(function (res) {
+      if (res.ok) {
+        wx.showToast({ title: '举报已提交', icon: 'success' })
+        self.setData({ showReportModal: false })
+      } else {
+        wx.showToast({ title: res.errMsg || '举报失败', icon: 'none' })
+      }
+    }).catch(function () {
+      wx.showToast({ title: '举报异常', icon: 'none' })
+    }).then(function () {
+      self.setData({ reportSubmitting: false })
+    })
+  },
+
+  onReportModalClose() {
+    this.setData({ showReportModal: false })
+  },
+
+  onReportPanelTap() {},
+
+  // ===== C-P4: 生命周期 - 停止轮询 =====
+  onHide() {
+    chatStore.stopPolling()
+  },
+
+  onUnload() {
+    chatStore.stopPolling()
   },
 
   // ===== C-02: mock 成员视角 =====

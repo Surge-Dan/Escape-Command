@@ -474,6 +474,33 @@
   white-space: nowrap;
 }
 
+/* C-P4: 搭子信任标签 */
+.partner-trust-tag {
+  margin-top: 4rpx;
+  font-size: 18rpx;
+  padding: 2rpx 8rpx;
+  border-radius: 10rpx;
+  background: var(--brand-tint);
+  color: var(--brand-dark);
+  white-space: nowrap;
+}
+.partner-trust-gold {
+  background: #FFF4D6;
+  color: #B8860B;
+}
+.partner-trust-reliable {
+  background: #E8F5E9;
+  color: #4E7A52;
+}
+.partner-trust-newbie {
+  background: var(--brand-tint);
+  color: var(--brand-dark);
+}
+.partner-trust-watch {
+  background: #FBE9E7;
+  color: #B85C3F;
+}
+
 .match-count {
   margin-top: 8rpx;
   font-size: 24rpx;

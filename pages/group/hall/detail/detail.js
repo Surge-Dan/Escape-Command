@@ -14,6 +14,7 @@
 const app = getApp()
 const hallStore = require('../../../../utils/task-hall-store.js')
 const roomStore = require('../../../../utils/group-room-store.js')
+const trustStore = require('../../../../utils/player-trust-store.js')
 
 // 当前用户 openId 存储 key（与 group-room-store.js / hall.js 同源）
 const OPENID_KEY = 'localHostOpenId'
@@ -61,7 +62,9 @@ Page({
     isHost: false,        // 当前用户是否为房主（members[0]）
     scheduledTimeLabel: '',
     statusLabel: '',
-    categoryLabel: ''
+    categoryLabel: '',
+    // C-P4: 成员信任标签 { [openId]: { tier, label } }
+    memberTrustMap: {}
   },
 
   onLoad(query) {
@@ -124,8 +127,35 @@ Page({
       isHost: isHost,
       scheduledTimeLabel: SCHEDULED_TIME_LABELS[task.scheduledTime] || task.scheduledTime || '',
       statusLabel: STATUS_LABELS[task.status] || task.status || '',
-      categoryLabel: catLabel
+      categoryLabel: catLabel,
+      memberTrustMap: {}
     })
+    // C-P4: 异步加载成员信任标签（不阻断页面）
+    this.loadMemberTrust(members)
+  },
+
+  // C-P4: 批量查询成员信任分（mock 玩家用默认 newbie，查询失败不阻断页面）
+  loadMemberTrust(members) {
+    const list = Array.isArray(members) ? members : []
+    const openIds = list.map(m => m && m.openId).filter(id => id && typeof id === 'string' && id.indexOf('mock_') !== 0)
+    if (openIds.length === 0) {
+      const map = {}
+      list.forEach(m => { if (m && m.openId) map[m.openId] = { tier: 'newbie', label: '新手', score: 5.0, count: 0 } })
+      this.setData({ memberTrustMap: map })
+      return
+    }
+    const ctx = { cloudReady: !!(app.globalData && app.globalData.cloudReady) }
+    try {
+      trustStore.getTrustBatch(openIds, ctx).then((trusts) => {
+        const map = Object.assign({}, trusts)
+        list.forEach(m => {
+          if (m && m.openId && !map[m.openId]) {
+            map[m.openId] = { tier: 'newbie', label: '新手', score: 5.0, count: 0 }
+          }
+        })
+        this.setData({ memberTrustMap: map })
+      }).catch(() => {})
+    } catch (e) {}
   },
 
   // ===== 返回 =====

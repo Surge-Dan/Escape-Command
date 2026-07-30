@@ -1,5 +1,5 @@
 // tests/mutation/mutation-test.js
-// 变异测试：对 group-room-store.js + generator-engine.js + record-builder.js + execution-progress.js + poi-command-builder.js + player-matcher.js 注入变异，验证测试是否能捕获
+// 变异测试：对 group-room-store.js + generator-engine.js + record-builder.js + execution-progress.js + poi-command-builder.js + player-matcher.js + trust-score.js + player-trust-store.js + chat-store.js 注入变异，验证测试是否能捕获
 // 运行: node tests/mutation/mutation-test.js
 //
 // 变异算子覆盖：
@@ -834,6 +834,215 @@ const mutations = [
     replace: 'return aScore - bScore',
     test: 'node tests/unit/player-matcher.test.js',
     expectKilled: true
+  },
+
+  // ===== C-P4 社交增强变异（trust-score + player-trust-store + chat-store）=====
+  // 每条变异针对纯函数的关键不变量（分级阈值/边界/降级/去重），由 unit/property/adversarial 精确断言守护
+
+  // --- trust-score.js 变异（信任分纯函数）---
+  {
+    name: 'CP4-TS1: computeTrustScore newbie 边界 count < 3 改为 <= 3（3条评价仍判新手）',
+    file: 'utils/trust-score.js',
+    find: 'if (count < 3) {',
+    replace: 'if (count <= 3) {',
+    test: 'node tests/unit/trust-score.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-TS2: computeTrustScore gold 阈值 count >= 10 改为 >= 9（9条评价误升金牌）',
+    file: 'utils/trust-score.js',
+    find: 'avg >= 4.8 && count >= 10',
+    replace: 'avg >= 4.8 && count >= 9',
+    test: 'node tests/unit/trust-score.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-TS3: computeTrustScore reliable 边界 avg >= 4.5 改为 > 4.5（4.5分误降普通）',
+    file: 'utils/trust-score.js',
+    find: 'avg >= 4.5',
+    replace: 'avg > 4.5',
+    test: 'node tests/unit/trust-score.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-TS4: computeTrustScore watch 边界 avg < 3.0 改为 <= 3.0（3.0分误判待观察）',
+    file: 'utils/trust-score.js',
+    find: 'avg < 3.0',
+    replace: 'avg <= 3.0',
+    test: 'node tests/unit/trust-score.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-TS5: computeTrustScore 非法 rating 善意 sum += 5 改为 sum += 0（非法评价拉低分数）',
+    file: 'utils/trust-score.js',
+    find: 'sum += 5',
+    replace: 'sum += 0',
+    test: 'node tests/unit/trust-score.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-TS6: computeTrustScore score 保留一位小数 Math.round 改为 Math.floor（4.9→4.8 降级）',
+    file: 'utils/trust-score.js',
+    find: 'Math.round(avg * 10) / 10',
+    replace: 'Math.floor(avg * 10) / 10',
+    test: 'node tests/unit/trust-score.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-TS7: getTierWeight 未知 tier 兜底 normal(1.0) 改为 watch(0.3)（未知玩家被降权）',
+    file: 'utils/trust-score.js',
+    find: 'return TRUST_TIER_WEIGHT.normal\n  }',
+    replace: 'return TRUST_TIER_WEIGHT.watch\n  }',
+    test: 'node tests/unit/trust-score.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-TS8: isValidReview rating 下界 >= 1 改为 >= 0（0分评价通过校验）',
+    file: 'utils/trust-score.js',
+    find: 'rating >= 1 && rating <= 5',
+    replace: 'rating >= 0 && rating <= 5',
+    test: 'node tests/unit/trust-score.test.js',
+    expectKilled: true
+  },
+
+  // --- player-trust-store.js 变异（信任数据层 + 降级协调）---
+  {
+    name: 'CP4-PT1: getTrustBatch 批量截断 ids.length < 20 改为 < 21（超量请求漏网）',
+    file: 'utils/player-trust-store.js',
+    find: 'ids.length < 20',
+    replace: 'ids.length < 21',
+    test: 'node tests/unit/player-trust-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-PT2: buildReviewDoc comment 截断 slice(0, 100) 改为 slice(0, 99)',
+    file: 'utils/player-trust-store.js',
+    find: '.slice(0, 100)',
+    replace: '.slice(0, 99)',
+    test: 'node tests/unit/player-trust-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-PT3: buildReviewDoc tags 上限 slice(0, 5) 改为 slice(0, 6)',
+    file: 'utils/player-trust-store.js',
+    find: '.slice(0, 5)',
+    replace: '.slice(0, 6)',
+    test: 'node tests/unit/player-trust-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-PT4: reportPlayer 空 openId 守卫移除（空 ID 不再拒绝）',
+    file: 'utils/player-trust-store.js',
+    find: 'if (!targetOpenId) {',
+    replace: 'if (false) {',
+    test: 'node tests/unit/player-trust-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-PT5: getTrustBatch 去重 indexOf === -1 改为 !== -1（重复 openId 攻击漏网）',
+    file: 'utils/player-trust-store.js',
+    find: 'ids.indexOf(id) === -1',
+    replace: 'ids.indexOf(id) !== -1',
+    test: 'node tests/unit/player-trust-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-PT6: submitReview 成功后缓存 setCachedTrust 移除（信任分不缓存）',
+    file: 'utils/player-trust-store.js',
+    find: 'setCachedTrust(doc.targetOpenId, result.trust)',
+    replace: '/* setCachedTrust(doc.targetOpenId, result.trust) */',
+    test: 'node tests/unit/player-trust-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-PT7: getTrustBatch 非数组守卫移除（null 输入抛 TypeError）',
+    file: 'utils/player-trust-store.js',
+    find: 'if (!Array.isArray(openIds) || openIds.length === 0) {',
+    replace: 'if (false) {',
+    test: 'node tests/unit/player-trust-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-PT8: getTrustBatch 补齐未返回 openId 时移除本地缓存读取（merged[tid] = DEFAULT_TRUST）',
+    file: 'utils/player-trust-store.js',
+    find: 'merged[tid] = getCachedTrust(tid) || DEFAULT_TRUST',
+    replace: 'merged[tid] = DEFAULT_TRUST',
+    test: 'node tests/unit/player-trust-store.test.js',
+    expectKilled: true
+  },
+
+  // --- chat-store.js 变异（聊天数据层 + 乐观更新 + 轮询）---
+  {
+    name: 'CP4-CS1: validateContent 超长边界 > MAX_CONTENT_LEN 改为 >=（200字消息被拒）',
+    file: 'utils/chat-store.js',
+    find: 'if (trimmed.length > MAX_CONTENT_LEN) {',
+    replace: 'if (trimmed.length >= MAX_CONTENT_LEN) {',
+    test: 'node tests/unit/chat-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-CS2: sendMessage 乐观消息 isLocal: true 改为 false（乐观消息不标记）',
+    file: 'utils/chat-store.js',
+    find: "isLocal: true,\n    status: 'pending'",
+    replace: "isLocal: false,\n    status: 'pending'",
+    test: 'node tests/unit/chat-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-CS3: dedupMessages 排序方向 ca - cb 改为 cb - ca（消息倒序）',
+    file: 'utils/chat-store.js',
+    find: 'if (ca !== cb) return ca - cb',
+    replace: 'if (ca !== cb) return cb - ca',
+    test: 'node tests/unit/chat-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-CS4: dedupMessages 乐观消息替换逻辑移除（replaceKey 命中不跳过）',
+    file: 'utils/chat-store.js',
+    find: 'if (m.isLocal && tk && pendingKeys[tk]) {',
+    replace: 'if (false && m.isLocal && tk && pendingKeys[tk]) {',
+    test: 'node tests/unit/chat-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-CS5: filterAfter 增量游标 > 改为 >=（已拉取消息重复返回）',
+    file: 'utils/chat-store.js',
+    find: 'list[i].createdAt > lastCreatedAt',
+    replace: 'list[i].createdAt >= lastCreatedAt',
+    test: 'node tests/unit/chat-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-CS6: saveMessages tempKey 持久化移除（乐观消息替换匹配失效）',
+    file: 'utils/chat-store.js',
+    find: 'tempKey: typeof m.tempKey === \'string\' ? m.tempKey : \'\',',
+    replace: "tempKey: '',",
+    test: 'node tests/unit/chat-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-CS7: sendMessage 云端降级 local_only 返回 ok: true 改为 ok: false（降级失效）',
+    file: 'utils/chat-store.js',
+    find: "ok: true,\n      source: 'local_only',",
+    replace: "ok: false,\n      source: 'local_only',",
+    test: 'node tests/unit/chat-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-CS8: computeNewOnes 去重 seenIds[id] 改为 !seenIds[id]（已存在消息重复计入新增）',
+    file: 'utils/chat-store.js',
+    find: 'if (id && seenIds[id]) continue',
+    replace: 'if (id && !seenIds[id]) continue',
+    test: 'node tests/unit/chat-store.test.js',
+    expectKilled: true
+  },
+  {
+    name: 'CP4-CS9: startPolling 切换 room 时 stopPolling 移除（旧轮询不被停止）',
+    file: 'utils/chat-store.js',
+    find: '// 已有轮询先停止\n  stopPolling()',
+    replace: '// 已有轮询先停止',
+    test: 'node tests/unit/chat-store.test.js',
+    expectKilled: true
   }
 ]
 
@@ -853,7 +1062,7 @@ function loadOriginal(filePath) {
 }
 
 console.log('\n' + '='.repeat(60))
-console.log('变异测试：group-room-store(C-01~C-19) + generator-engine + record-builder + execution-progress + poi-command-builder + player-matcher(D5)')
+console.log('变异测试：group-room-store(C-01~C-19) + generator-engine + record-builder + execution-progress + poi-command-builder + player-matcher(D5) + C-P4社交增强(trust-score + player-trust-store + chat-store)')
 console.log('='.repeat(60))
 
 for (const mutation of mutations) {

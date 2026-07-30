@@ -1,0 +1,9 @@
+{
+  "name": "sendMessage",
+  "version": "1.0.0",
+  "description": "C-P4: 发送 room 内聊天消息（写入 messages 集合）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -16,6 +16,11 @@ const I = engine._internal
 const recordBuilder = require('../../utils/record-builder.js')
 const executionProgress = require('../../utils/execution-progress.js')
 const markerBuilder = require('../../utils/map-marker-builder.js')
+// C-P4 社交增强
+const trustScore = require('../../utils/trust-score.js')
+const trustStore = require('../../utils/player-trust-store.js')
+const chatStore = require('../../utils/chat-store.js')
+const playerMatcher = require('../../utils/player-matcher.js')
 
 // ===== 测试统计 =====
 let passCount = 0
@@ -3274,6 +3279,302 @@ function on(matcher, handler) {
 })()
 
 // ============================================================
+// ===== C-P4 社交增强步骤处理器（信任分 + 聊天 + 评价 + 举报）=====
+// 设计原则：When 只执行并存储 ctx.lastResult（返回 true），Then 统一断言 ctx.lastResult，
+//           避免跨子系统同文步骤冲突。Given 步骤文本保持唯一。
+// ============================================================
+;(function registerCP4Social() {
+  // ===== 信任分计算（trust-score.js 纯函数）=====
+  on(/^玩家没有任何评价$/, (ctx) => { ctx.reviews = []; return true })
+  on(/^玩家收到 (\d+) 条评价平均 (\d+) 分$/, (ctx, m) => {
+    const n = parseInt(m[1]); const r = parseInt(m[2])
+    ctx.reviews = []
+    for (let i = 0; i < n; i++) ctx.reviews.push({ rating: r })
+    return true
+  })
+  on(/^玩家收到 (\d+) 条合法 (\d+) 分评价和 (\d+) 条非法评价$/, (ctx, m) => {
+    const ok = parseInt(m[1]); const okR = parseInt(m[2]); const bad = parseInt(m[3])
+    ctx.reviews = []
+    for (let i = 0; i < ok; i++) ctx.reviews.push({ rating: okR })
+    for (let j = 0; j < bad; j++) ctx.reviews.push({ rating: '非法' })
+    return true
+  })
+  on(/^计算信任分$/, (ctx) => {
+    ctx.lastResult = trustScore.computeTrustScore(ctx.reviews)
+    return !!ctx.lastResult
+  })
+  on(/^信任分为 score 5\.0 且 count 0 且 tier newbie 且 label 新手$/, (ctx) => {
+    const r = ctx.lastResult
+    return r && r.score === 5.0 && r.count === 0 && r.tier === 'newbie' && r.label === '新手'
+  })
+  on(/^tier 为 (\w+) 且 label 为 (.+)$/, (ctx, m) => {
+    const r = ctx.lastResult
+    return r && r.tier === m[1] && r.label === m[2]
+  })
+  on(/^count 为 (\d+) 且 score 为 ([\d.]+)$/, (ctx, m) => {
+    const r = ctx.lastResult
+    return r && r.count === parseInt(m[1]) && r.score === parseFloat(m[2])
+  })
+  on(/^分数 ([\d.]+) 评价数 (\d+)$/, (ctx, m) => { ctx.score = parseFloat(m[1]); ctx.count = parseInt(m[2]); return true })
+  on(/^调用 tierFromScore$/, (ctx) => {
+    ctx.lastResult = trustScore.tierFromScore(ctx.score, ctx.count)
+    return true
+  })
+  on(/^tierFromScore 结果为 (\w+)$/, (ctx, m) => ctx.lastResult === m[1])
+  on(/^未知 tier 为 (\w+)$/, (ctx, m) => { ctx.tier = m[1]; return true })
+  on(/^查询权重$/, (ctx) => { ctx.lastResult = trustScore.getTierWeight(ctx.tier); return true })
+  on(/^权重为 ([\d.]+)$/, (ctx, m) => ctx.lastResult === parseFloat(m[1]))
+
+  // ===== 公共云调用 ctx 构造器 =====
+  function makeCloudCtx(impl) {
+    return {
+      cloudReady: true,
+      callFunction: function (opts) {
+        return new Promise(function (resolve) {
+          try {
+            const r = impl(opts)
+            if (r && typeof r.then === 'function') r.then(resolve, function (e) { resolve({ result: { ok: false, errCode: 'CLOUD_ERROR', errMsg: String(e) } }) })
+            else resolve({ result: r })
+          } catch (e) { resolve({ result: { ok: false, errCode: 'CLOUD_ERROR', errMsg: String(e) } }) }
+        })
+      }
+    }
+  }
+  function defaultTarget() {
+    return { openId: 't1', roomId: 'r1', taskId: 'k1', roomMembers: [{ openId: 't1' }, { openId: 'me' }], roomStatus: 'finished' }
+  }
+
+  // ===== 玩家评价（player-trust-store.js）=====
+  on(/^云端可用且目标玩家在 finished 房间内$/, (ctx) => {
+    wx._reset()
+    ctx.target = defaultTarget()
+    ctx.cloudCtx = makeCloudCtx(function () { return { ok: true, trust: { score: 5.0, count: 1, label: '新手', tier: 'newbie' } } })
+    return true
+  })
+  on(/^云端返回 ALREADY_REVIEWED 错误$/, (ctx) => {
+    wx._reset()
+    ctx.target = defaultTarget()
+    ctx.cloudCtx = makeCloudCtx(function () { return { ok: false, errCode: 'ALREADY_REVIEWED', errMsg: '已评价过' } })
+    return true
+  })
+  on(/^评价场景云端不可用$/, (ctx) => {
+    wx._reset()
+    ctx.target = defaultTarget()
+    ctx.cloudCtx = { cloudReady: false }
+    return true
+  })
+  on(/^提交评价 rating (\d+)$/, (ctx, m) => {
+    return trustStore.submitReview(ctx.target, { rating: parseInt(m[1]), comment: '不错', tags: ['准时'] }, ctx.cloudCtx)
+      .then(function (res) { ctx.lastResult = res; return true })
+      .catch(function () { return false })
+  })
+  on(/^返回 ok true 且包含更新后的 trust$/, (ctx) => {
+    const r = ctx.lastResult; return r && r.ok === true && !!r.trust
+  })
+  on(/^返回 ok false 且 errCode 为 ALREADY_REVIEWED$/, (ctx) => {
+    const r = ctx.lastResult; return r && r.ok === false && r.errCode === 'ALREADY_REVIEWED'
+  })
+  on(/^返回 ok false 且 errCode 为 CLOUD_OFFLINE 且 trust 为默认新手$/, (ctx) => {
+    const r = ctx.lastResult
+    return r && r.ok === false && r.errCode === 'CLOUD_OFFLINE' && r.trust && r.trust.tier === 'newbie'
+  })
+  on(/^评价 comment 超长 200 字且 tags 含 8 个标签$/, (ctx) => {
+    ctx.review = { rating: 5, comment: 'x'.repeat(200), tags: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] }
+    ctx.target = defaultTarget()
+    return true
+  })
+  on(/^构造评价文档$/, (ctx) => { ctx.lastResult = trustStore.buildReviewDoc(ctx.target, ctx.review); return true })
+  on(/^comment 截断为 100 字且 tags 仅保留 5 个$/, (ctx) => {
+    const d = ctx.lastResult; return d && d.comment.length === 100 && d.tags.length === 5
+  })
+
+  // ===== 信任分批量查询（getTrustBatch）=====
+  on(/^openIds 含 2 个重复项共 4 项$/, (ctx) => {
+    wx._reset()
+    ctx.openIds = ['a', 'b', 'a', 'c']; ctx.cloudCtx = { cloudReady: false }
+    return true
+  })
+  on(/^openIds 含 25 项$/, (ctx) => {
+    wx._reset()
+    ctx.openIds = []
+    for (let i = 0; i < 25; i++) ctx.openIds.push('u' + i)
+    ctx.cloudCtx = { cloudReady: false }
+    return true
+  })
+  on(/^云端 callFunction 抛出异常$/, (ctx) => {
+    wx._reset()
+    ctx.openIds = ['a', 'b']
+    ctx.cloudCtx = { cloudReady: true, callFunction: function () { throw new Error('boom') } }
+    return true
+  })
+  on(/^批量查询信任分$/, (ctx) => {
+    return trustStore.getTrustBatch(ctx.openIds, ctx.cloudCtx).then(function (res) { ctx.lastResult = res; return true })
+  })
+  on(/^仅查询 3 个唯一 openId$/, (ctx) => ctx.lastResult && Object.keys(ctx.lastResult).length === 3)
+  on(/^仅查询前 20 个$/, (ctx) => ctx.lastResult && Object.keys(ctx.lastResult).length === 20)
+  on(/^返回每个 openId 的默认 newbie 值$/, (ctx) => {
+    const r = ctx.lastResult
+    if (!r) return false
+    const keys = Object.keys(r)
+    if (keys.length !== 2) return false
+    return keys.every(function (k) { return r[k] && r[k].tier === 'newbie' })
+  })
+
+  // ===== 举报玩家（reportPlayer）=====
+  on(/^云端可用且被举报者 openId 有效$/, (ctx) => {
+    wx._reset()
+    ctx.target = { openId: 'bad_guy', roomId: 'r1' }
+    ctx.cloudCtx = makeCloudCtx(function () { return { ok: true, flagged: true } })
+    return true
+  })
+  on(/^被举报者 openId 为空$/, (ctx) => {
+    ctx.target = { openId: '', roomId: 'r1' }
+    ctx.cloudCtx = { cloudReady: true, callFunction: function () { return Promise.resolve({ result: { ok: true } }) } }
+    return true
+  })
+  on(/^举报场景云端不可用$/, (ctx) => {
+    wx._reset()
+    ctx.target = { openId: 'someone', roomId: 'r1' }
+    ctx.cloudCtx = { cloudReady: false }
+    return true
+  })
+  on(/^提交举报理由 (.+)$/, (ctx, m) => {
+    return trustStore.reportPlayer(ctx.target, m[1], ctx.cloudCtx).then(function (res) { ctx.lastResult = res; return true })
+  })
+  on(/^提交举报$/, (ctx) => {
+    return trustStore.reportPlayer(ctx.target, '理由', ctx.cloudCtx).then(function (res) { ctx.lastResult = res; return true })
+  })
+  on(/^返回 ok true$/, (ctx) => ctx.lastResult && ctx.lastResult.ok === true)
+  on(/^返回 ok false 且 errCode 为 INVALID_PARAM$/, (ctx) => {
+    const r = ctx.lastResult; return r && r.ok === false && r.errCode === 'INVALID_PARAM'
+  })
+  on(/^返回 ok false 且 errCode 为 CLOUD_OFFLINE$/, (ctx) => {
+    const r = ctx.lastResult; return r && r.ok === false && r.errCode === 'CLOUD_OFFLINE'
+  })
+
+  // ===== room 内嵌聊天（chat-store.js）=====
+  on(/^room (\w+) 本地无消息$/, (ctx, m) => { wx._reset(); ctx.roomId = m[1]; return true })
+  on(/^room (\w+) 云端不可用$/, (ctx, m) => {
+    wx._reset(); ctx.roomId = m[1]
+    ctx.chatCtx = { cloudReady: false, currentUser: { openId: 'me', nickname: '我' } }
+    return true
+  })
+  on(/^发送消息内容 (.+)$/, (ctx, m) => {
+    const roomId = ctx.roomId || 'r_def'
+    const cloudCtx = ctx.chatCtx || {
+      cloudReady: true,
+      currentUser: { openId: 'me', nickname: '我' },
+      callFunction: function (opts) {
+        return Promise.resolve({ result: { ok: true, message: { _id: 'srv_1', roomId: roomId, content: opts.data.content, senderOpenId: 'me', senderNickname: '我', createdAt: Date.now() } } })
+      }
+    }
+    return chatStore.sendMessage(roomId, 'task1', m[1], cloudCtx).then(function (res) { ctx.lastResult = res; return true })
+  })
+  on(/^本地缓存出现真实消息且 status sent$/, (ctx) => {
+    const list = chatStore.loadMessages(ctx.roomId)
+    return list.length > 0 && list[0]._id === 'srv_1' && list[0].status === 'sent'
+  })
+  on(/^返回 ok true 且 source 为 local_only$/, (ctx) => {
+    const r = ctx.lastResult; return r && r.ok === true && r.source === 'local_only'
+  })
+  on(/^消息内容 (\d+) 字$/, (ctx, m) => {
+    ctx.content = 'a'.repeat(parseInt(m[1]))
+    ctx.chatCtx = { cloudReady: false, currentUser: { openId: 'me' } }
+    ctx.roomId = 'r_len'
+    return true
+  })
+  on(/^消息内容为空字符串$/, (ctx) => {
+    ctx.content = '   '
+    ctx.chatCtx = { cloudReady: false, currentUser: { openId: 'me' } }
+    ctx.roomId = 'r_empty'
+    return true
+  })
+  on(/^发送消息$/, (ctx) => {
+    return chatStore.sendMessage(ctx.roomId, 't', ctx.content, ctx.chatCtx).then(function (res) { ctx.lastResult = res; return true })
+  })
+  on(/^本地已有 2 条消息 createdAt 100 和 200$/, (ctx) => {
+    wx._reset()
+    ctx.roomId = 'r_inc'
+    chatStore.saveMessages(ctx.roomId, [
+      { _id: 'm100', roomId: 'r_inc', content: '旧1', createdAt: 100, senderOpenId: 'a' },
+      { _id: 'm200', roomId: 'r_inc', content: '旧2', createdAt: 200, senderOpenId: 'a' }
+    ])
+    ctx.chatCtx = { cloudReady: false }
+    return true
+  })
+  on(/^增量拉取 lastCreatedAt (\d+)$/, (ctx, m) => {
+    return chatStore.fetchNewMessages(ctx.roomId, parseInt(m[1]), ctx.chatCtx).then(function (res) { ctx.lastResult = res; return true })
+  })
+  on(/^仅返回 createdAt 大于 (\d+) 的消息$/, (ctx, m) => {
+    const threshold = parseInt(m[1])
+    const r = ctx.lastResult
+    if (!r || !Array.isArray(r.messages)) return false
+    return r.messages.every(function (msg) { return msg.createdAt > threshold }) && r.messages.some(function (msg) { return msg.createdAt === 200 })
+  })
+  on(/^已有消息含 _id (\w+) createdAt (\d+)$/, (ctx, m) => {
+    wx._reset()
+    ctx.existing = [{ _id: m[1], roomId: 'r', content: 'c', createdAt: parseInt(m[2]), senderOpenId: 'a' }]
+    return true
+  })
+  on(/^新消息 _id (\w+) createdAt (\d+) 到达$/, (ctx, m) => {
+    ctx.incoming = [{ _id: m[1], roomId: 'r', content: 'c2', createdAt: parseInt(m[2]), senderOpenId: 'b' }]
+    ctx.lastResult = chatStore.dedupMessages(ctx.existing, ctx.incoming)
+    return true
+  })
+  on(/^合并后顺序为 (\w+) 然后 (\w+)$/, (ctx, m) => {
+    const ids = ctx.lastResult.map(function (x) { return x._id })
+    return ids[0] === m[1] && ids[1] === m[2]
+  })
+  on(/^本地有乐观消息 tempKey (\w+)$/, (ctx, m) => {
+    wx._reset()
+    ctx.roomId = 'r_opt'; ctx.tempKey = m[1]
+    chatStore.saveMessages(ctx.roomId, [{ _id: m[1], tempKey: m[1], roomId: 'r_opt', content: '乐观', createdAt: 100, isLocal: true, status: 'pending', senderOpenId: 'me' }])
+    return true
+  })
+  on(/^真实消息携带 replaceKey (\w+) 到达$/, (ctx, m) => {
+    const incoming = [{ _id: 'real_1', roomId: 'r_opt', content: '乐观', createdAt: 100, senderOpenId: 'me', replaceKey: m[1] }]
+    ctx.lastResult = chatStore.dedupMessages(chatStore.loadMessages(ctx.roomId), incoming)
+    return true
+  })
+  on(/^乐观消息被删除且真实消息保留$/, (ctx) => {
+    const ids = ctx.lastResult.map(function (x) { return x._id })
+    return ids.indexOf(ctx.tempKey) === -1 && ids.indexOf('real_1') >= 0
+  })
+  on(/^轮询已启动 room (\w+)$/, (ctx, m) => {
+    wx._reset(); ctx.roomId = m[1]
+    chatStore.stopPolling()
+    return chatStore.startPolling(ctx.roomId, { cloudReady: false, pollInterval: 50 }, function () {}) === true
+  })
+  on(/^停止轮询$/, (ctx) => { chatStore.stopPolling(); return true })
+  on(/^轮询状态 active 为 false$/, (ctx) => {
+    const s = chatStore._getPollingState(); return s && s.active === false
+  })
+
+  // ===== 信任分影响匹配优先级（player-matcher.rankByRelevance）=====
+  function makePlayer(openId, district, tier) {
+    return { openId: openId, nickname: openId, district: district, interests: [], avatar: '/a', isReal: true, tier: tier }
+  }
+  on(/^候选池有 1 个 (\w+) 玩家和 1 个 (\w+) 玩家 district 相同$/, (ctx, m) => {
+    ctx.players = [makePlayer('p_a', '天河区', m[1]), makePlayer('p_b', '天河区', m[2])]
+    ctx.trustMap = { p_a: { tier: m[1] }, p_b: { tier: m[2] } }
+    return true
+  })
+  on(/^候选池有 1 个 (\w+) 玩家和 1 个 (\w+) 玩家$/, (ctx, m) => {
+    ctx.players = [makePlayer('p1', '天河区', m[1]), makePlayer('p2', '天河区', m[2])]
+    ctx.trustMap = { p1: { tier: m[1] }, p2: { tier: m[2] } }
+    return true
+  })
+  on(/^按 trust 权重排序$/, (ctx) => {
+    ctx.lastResult = playerMatcher.rankByRelevance(ctx.players, { district: '天河区' }, ctx.trustMap)
+    return Array.isArray(ctx.lastResult) && ctx.lastResult.length === 2
+  })
+  on(/^(\w+) 玩家排在前面$/, (ctx, m) => ctx.lastResult[0].tier === m[1])
+  on(/^normal 玩家排在前面且 watch 玩家在队尾$/, (ctx) => {
+    return ctx.lastResult[0].tier === 'normal' && ctx.lastResult[1].tier === 'watch'
+  })
+})()
+
+// ============================================================
 // ===== 通用：解析 feature 文件 =====
 // ============================================================
 function parseFeature(content) {
@@ -3302,7 +3603,7 @@ function parseFeature(content) {
 // ============================================================
 // ===== 步骤分发 =====
 // ============================================================
-function executeStep(ctx, step) {
+async function executeStep(ctx, step) {
   const text = step.text
   for (const h of stepHandlers) {
     let matched = false
@@ -3316,8 +3617,12 @@ function executeStep(ctx, step) {
       matched = text === h.match
     }
     if (!matched) continue
-    const result = h.run(ctx, m, text)
-    if (result !== null && result !== undefined) return result
+    let result = h.run(ctx, m, text)
+    // 支持异步 handler（C-P4 聊天/信任数据层为 Promise）
+    if (result && typeof result.then === 'function') {
+      try { result = await result } catch (e) { result = false }
+    }
+    if (result !== null && result !== undefined) return !!result
   }
   console.log('    ⚠ 未匹配步骤: ' + text)
   return false
@@ -3341,11 +3646,12 @@ if (argFilter.length > 0) {
 }
 
 // ============================================================
-// ===== 主执行循环 =====
+// ===== 主执行循环（async 以支持 C-P4 异步步骤）=====
 // ============================================================
 let totalScenarioPassed = 0
 let totalScenarioFailed = 0
 
+;(async function () {
 for (const ff of featureFiles) {
   if (!fs.existsSync(ff.path)) {
     console.log('\n⚠ 文件不存在: ' + ff.name)
@@ -3369,7 +3675,7 @@ for (const ff of featureFiles) {
     let allPassed = true
 
     for (const step of scenario.steps) {
-      const result = executeStep(ctx, step)
+      const result = await executeStep(ctx, step)
       if (result) {
         passCount++
         console.log('  ✓ ' + step.keyword + ' ' + step.text)
@@ -3407,3 +3713,4 @@ if (failures.length > 0) {
 }
 console.log('='.repeat(60))
 process.exit(failCount > 0 ? 1 : 0)
+})()

@@ -143,6 +143,7 @@
           <text wx:else class="partner-emoji">🧑</text>
           <text class="partner-name">{{item.nickname}}</text>
           <text wx:if="{{item.isReal}}" class="partner-real-badge">真人</text>
+          <text wx:if="{{matchPartnerTrustMap[item.openId].label}}" class="partner-trust-tag partner-trust-{{matchPartnerTrustMap[item.openId].tier}}">{{matchPartnerTrustMap[item.openId].label}}</text>
         </view>
       </view>
 

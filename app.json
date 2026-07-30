@@ -35,7 +35,9 @@
     "pages/data-export/data-export",
     "pages/invite/invite",
     "pages/partner-list/partner-list",
-    "pages/leaderboard/leaderboard"
+    "pages/breakthrough-profile/breakthrough-profile",
+    "pages/leaderboard/leaderboard",
+    "pages/bt-certificate/bt-certificate"
   ],
   "lazyCodeLoading": "requiredComponents",
   "window": {

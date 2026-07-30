@@ -62,6 +62,7 @@ const CATEGORIES = [
     accentColor: '#6B7280',
     items: [
       { label: '资料', path: '/pages/profile-edit/profile-edit', icon: '/assets/icons/user-brand.svg' },
+      { label: '破圈画像', path: '/pages/breakthrough-profile/breakthrough-profile', icon: '/assets/icons/zap-coral.svg' },
       { label: '设置', path: '/pages/settings/settings', icon: '/assets/icons/settings-brand.svg' },
       { label: '帮助', path: '/pages/help/help', icon: '/assets/icons/compass.svg' },
       { label: '关于', path: '/pages/about/about', icon: '/assets/icons/compass-ink-faint.svg' }

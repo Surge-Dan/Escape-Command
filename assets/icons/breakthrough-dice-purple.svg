@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  
+  <defs>
+    <!-- 纸张纹理 -->
+    <filter id="paper" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" seed="2" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.93  0 0 0 0 0.91  0 0 0 0 0.85  0 0 0 0.08 0"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <!-- 水彩边缘不规则 -->
+    <filter id="handDrawn" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="2" seed="3" result="t"/>
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="0.8"/>
+    </filter>
+    <!-- 柔和投影 -->
+    <filter id="dropShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="1.5"/>
+      <feOffset dx="0.5" dy="1.5" result="shadow"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- 发光 -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 容器底色 -->
+  <rect x="2" y="2" width="44" height="44" rx="10" ry="10" fill="#F4EFE3" stroke="#E8DFC9" stroke-width="1"/>
+  <rect x="2" y="2" width="44" height="44" rx="10" ry="10" fill="#9B7BB8" opacity="0.08" filter="url(#paper)"/>
+  <ellipse cx="24" cy="44" rx="16" ry="1.5" fill="#000000" opacity="0.06"/>
+
+  <!-- 装饰散点 -->
+  <g>
+    <circle cx="38" cy="10" r="1" fill="#D98A5C" opacity="0.5"/>
+    <circle cx="10" cy="40" r="0.8" fill="#9B7BB8" opacity="0.4"/>
+    <circle cx="40" cy="38" r="0.6" fill="#D98A5C" opacity="0.3"/>
+  </g>
+
+  <g filter="url(#dropShadow)">
+    <!-- 碎裂飞出的碎片 -->
+    <g filter="url(#handDrawn)">
+      <!-- 右上碎片 -->
+      <path d="M34,10 L37,8 L36,12 Z" fill="#D98A5C" opacity="0.8"/>
+      <!-- 左上碎片 -->
+      <path d="M10,14 L8,11 L12,12 Z" fill="#D98A5C" opacity="0.6"/>
+      <!-- 下部碎片 -->
+      <path d="M28,38 L31,40 L29,36 Z" fill="#D98A5C" opacity="0.7"/>
+    </g>
+
+    <!-- 骰子主体（裂开的立方体） -->
+    <g>
+      <!-- 骰子右面（深紫） -->
+      <path d="M24,12 L38,16 L38,32 L24,36 Z" fill="#7B5A9A" stroke="#6B4A8A" stroke-width="0.8" filter="url(#handDrawn)"/>
+      <!-- 骰子顶面（浅紫） -->
+      <path d="M10,16 L24,12 L24,36 L10,32 Z" fill="#9B7BB8" stroke="#8B6BA8" stroke-width="0.8" filter="url(#handDrawn)"/>
+      <!-- 顶面渐变 -->
+      <path d="M10,16 L24,12 L24,36 L10,32 Z" fill="#FFFFFF" opacity="0.1"/>
+      
+      <!-- 裂痕线（锯齿状） -->
+      <path d="M17,14 L19,18 L16,22 L20,26 L17,30 L19,34" 
+            fill="none" stroke="#D98A5C" stroke-width="2" 
+            stroke-linecap="round" stroke-linejoin="round" 
+            filter="url(#handDrawn)" opacity="0.9"/>
+      
+      <!-- 裂痕发光 -->
+      <path d="M17,14 L19,18 L16,22 L20,26 L17,30 L19,34" 
+            fill="none" stroke="#FFB088" stroke-width="1" 
+            stroke-linecap="round" stroke-linejoin="round" 
+            filter="url(#glow)" opacity="0.5"/>
+
+      <!-- 骰子点数（裂痕两侧） -->
+      <!-- 左上点 -->
+      <circle cx="15" cy="18" r="1.2" fill="#4A3055" opacity="0.8"/>
+      <!-- 右上点 -->
+      <circle cx="30" cy="18" r="1.2" fill="#4A3055" opacity="0.8"/>
+      <!-- 中左点 -->
+      <circle cx="14" cy="24" r="1" fill="#4A3055" opacity="0.6"/>
+      <!-- 中右点 -->
+      <circle cx="31" cy="25" r="1.2" fill="#4A3055" opacity="0.8"/>
+      <!-- 左下点 -->
+      <circle cx="15" cy="30" r="1.2" fill="#4A3055" opacity="0.8"/>
+      <!-- 右下点 -->
+      <circle cx="30" cy="31" r="1" fill="#4A3055" opacity="0.6"/>
+    </g>
+  </g>
+
+  <!-- 能量爆裂线（珊瑚色） -->
+  <g filter="url(#handDrawn)">
+    <line x1="38" y1="14" x2="42" y2="11" stroke="#D98A5C" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+    <line x1="10" y1="10" x2="7" y2="7" stroke="#D98A5C" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+    <line x1="36" y1="36" x2="40" y2="38" stroke="#D98A5C" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>

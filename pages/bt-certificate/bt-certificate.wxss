@@ -1,0 +1,266 @@
+.cert-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #2D1B4E 0%, #1A0F2E 100%);
+  position: relative;
+  overflow: hidden;
+}
+.nav-header { position: relative; z-index: 10; }
+.nav-header-spacer { height: 44rpx; }
+
+.cert-scroll {
+  height: calc(100vh - var(--safe-bottom, 0px) - 88rpx);
+}
+
+.cert-body {
+  padding: 0 32rpx 60rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ===== 入场动画粒子 ===== */
+.confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.confetti-piece {
+  position: absolute;
+  top: -20rpx;
+  width: 16rpx;
+  height: 16rpx;
+  left: var(--x);
+  background: var(--color);
+  border-radius: 2rpx;
+  opacity: 0;
+}
+.confetti-container.active .confetti-piece {
+  animation: confettiFall 2200ms ease-out var(--delay) forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* ===== 顶部搞怪标题 ===== */
+.cert-hero {
+  position: relative;
+  text-align: center;
+  padding: 40rpx 0 36rpx;
+  width: 100%;
+}
+.cert-hero.fade-in {
+  animation: fadeSlideIn 600ms ease-out forwards;
+}
+@keyframes fadeSlideIn {
+  0% { opacity: 0; transform: translateY(40rpx); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.cert-hero-glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400rpx;
+  height: 400rpx;
+  background: radial-gradient(circle, rgba(155,123,184,0.25) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.cert-title-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  position: relative;
+}
+.cert-title-emoji { font-size: 72rpx; line-height: 1; }
+.cert-title-text {
+  font-size: 52rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 4rpx;
+}
+.cert-title-crown {
+  font-size: 52rpx;
+  line-height: 1;
+  animation: crownBounce 800ms ease-in-out 600ms infinite alternate;
+}
+@keyframes crownBounce {
+  0% { transform: scale(1) rotate(-8deg); }
+  100% { transform: scale(1.15) rotate(8deg); }
+}
+.cert-subtitle {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #B8A0D0;
+  line-height: 1.6;
+  padding: 0 20rpx;
+  position: relative;
+}
+
+/* ===== 证书主卡 ===== */
+.cert-card {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 32rpx;
+  padding: 0 32rpx 40rpx;
+  box-shadow: 0 8rpx 48rpx rgba(0,0,0,0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.cert-card.slide-up {
+  animation: slideUp 500ms ease-out 200ms both;
+}
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(60rpx); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 证书顶部彩带 */
+.cert-ribbon {
+  width: calc(100% + 64rpx);
+  margin: 0 -32rpx;
+  padding: 28rpx 0;
+  background: linear-gradient(135deg, #9B7BB8, #7B3FAF);
+  text-align: center;
+  margin-bottom: 36rpx;
+}
+.cert-ribbon-text {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 6rpx;
+}
+
+/* 用户名 */
+.cert-user {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #2D2A24;
+  margin-bottom: 28rpx;
+}
+
+/* 离谱事件 */
+.cert-challenge {
+  width: 100%;
+  background: #F8F0FF;
+  border: 2rpx solid #E8D8F8;
+  border-radius: 24rpx;
+  padding: 28rpx 24rpx;
+  text-align: center;
+  margin-bottom: 32rpx;
+}
+.cert-challenge-label {
+  display: block;
+  font-size: 22rpx;
+  color: #9B7BB8;
+  margin-bottom: 12rpx;
+  letter-spacing: 2rpx;
+}
+.cert-challenge-text {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #2D2A24;
+  line-height: 1.5;
+}
+
+/* 搞怪数据 */
+.cert-stats {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  margin-bottom: 24rpx;
+  width: 100%;
+  justify-content: center;
+}
+.cert-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  flex: 1;
+}
+.cert-stat-value {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #7B3FAF;
+  white-space: nowrap;
+}
+.cert-stat-label {
+  font-size: 22rpx;
+  color: #8A8678;
+}
+.cert-stat-divider {
+  width: 2rpx;
+  height: 56rpx;
+  background: #E0DDD0;
+}
+
+/* 鼓励语 */
+.cert-encourage {
+  font-size: 26rpx;
+  color: #D98A5C;
+  font-weight: 600;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+/* 日期城市 */
+.cert-meta {
+  font-size: 24rpx;
+  color: #8A8678;
+  margin-bottom: 28rpx;
+}
+
+/* 底部装饰 */
+.cert-footer-line {
+  width: 60%;
+  height: 2rpx;
+  background: linear-gradient(90deg, transparent, #9B7BB8, transparent);
+  margin-bottom: 16rpx;
+}
+.cert-footer-text {
+  font-size: 22rpx;
+  color: #B8B4A8;
+  letter-spacing: 2rpx;
+}
+
+/* ===== 按钮区 ===== */
+.cert-actions {
+  width: 100%;
+  padding-top: 48rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+.cert-actions.slide-up {
+  animation: slideUp 500ms ease-out both;
+}
+.cert-btn {
+  width: 100%;
+  height: 96rpx;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 600;
+  transition: all 200ms;
+}
+.cert-btn.primary {
+  background: linear-gradient(135deg, #9B7BB8, #7B3FAF);
+  color: #FFFFFF;
+  box-shadow: 0 4rpx 20rpx rgba(123,63,175,0.4);
+}
+.cert-btn.primary:active { transform: scale(0.97); }
+.cert-btn.secondary {
+  background: transparent;
+  border: 2rpx solid #9B7BB8;
+  color: #B8A0D0;
+}
+.cert-btn.secondary:active { background: rgba(155,123,184,0.1); }
+.bottom-spacer { height: 40rpx; }

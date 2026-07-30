@@ -107,7 +107,7 @@
         <view class="saved-btn ghost" bindtap="saveShareImage">保存到相册</view>
         <button class="saved-btn primary" open-type="share">分享给朋友</button>
       </view>
-      <view class="saved-later" bindtap="goMap">去地图看看</view>
+      <view class="saved-later" bindtap="goNext">{{isBreakthrough ? '去看看证书 ›' : '去地图看看 ›'}}</view>
     </view>
   </view>
 </view>

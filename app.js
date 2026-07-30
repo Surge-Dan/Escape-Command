@@ -2,6 +2,7 @@ const { normalizeType, getTypeMeta, MOODS, DEFAULT_STEPS, TYPE_STEPS } = require
 const BADGES = require('./data/badges.js')
 const challenges = require('./data/challenges.js')
 const themes = require('./data/themes.js')
+const breakthroughCommandsData = require('./data/breakthrough-commands.js')
 // v4: AI 场景插画 —— 启动时清理过期缓存
 const aiImage = require('./utils/ai-image.js')
 
@@ -21,6 +22,7 @@ App({
     locationMode: 'fuzzy',
     weather: null,
     reRollCount: 3,
+    breakthroughReRollCount: 5,
     records: [],
     completedCommandIds: [],
     badges: [],
@@ -42,7 +44,8 @@ App({
     currentChallenge: null,
     theme: wx.getStorageSync('currentTheme') || 'default',
     currentCity: wx.getStorageSync('currentCity') || '',
-    partnerRecords: wx.getStorageSync('partnerRecords') || []
+    partnerRecords: wx.getStorageSync('partnerRecords') || [],
+    breakthroughProfile: null
   },
 
   onLaunch() {
@@ -140,6 +143,7 @@ App({
       gd.avatarUrl = wx.getStorageSync('avatarUrl') || '/assets/images/avatar.webp'
       gd.onboarded = wx.getStorageSync('onboarded') || false
       gd.userPreferences = wx.getStorageSync('userPreferences') || gd.userPreferences
+      gd.breakthroughProfile = wx.getStorageSync('breakthroughProfile') || null
       const settings = wx.getStorageSync('settings')
       if (settings) gd.settings = Object.assign({}, gd.settings, settings)
 
@@ -177,6 +181,7 @@ App({
     this.saveToLocal('avatarUrl', gd.avatarUrl)
     this.saveToLocal('onboarded', gd.onboarded)
     this.saveToLocal('userPreferences', gd.userPreferences)
+    this.saveToLocal('breakthroughProfile', gd.breakthroughProfile)
   },
 
   saveCurrentCommand() {
@@ -194,6 +199,13 @@ App({
       this.globalData.commandPool = this.getFallbackCommands()
     }
     this.globalData.offlineCommands = this.globalData.commandPool.filter(c => !c.requirePOI).slice(0, 100)
+    // 初始化破圈指令池
+    this.initBreakthroughPool()
+  },
+
+  initBreakthroughPool() {
+    const raw = (breakthroughCommandsData && breakthroughCommandsData.BREAKTHROUGH_COMMANDS) || []
+    this.globalData.breakthroughPool = raw.map(cmd => this.normalizeCommand(cmd))
   },
 
   normalizeCommand(cmd) {
@@ -336,8 +348,18 @@ App({
     const savedDate = wx.getStorageSync('lastResetDate')
     if (savedDate !== today) {
       this.globalData.reRollCount = 3
+      this.globalData.breakthroughReRollCount = 5
       this.saveToLocal('reRollData', { date: today, count: 3 })
+      this.saveToLocal('breakthroughReRollData', { date: today, count: 5 })
       this.saveToLocal('lastResetDate', today)
+    } else {
+      // 从持久化恢复破圈次数
+      const btData = wx.getStorageSync('breakthroughReRollData')
+      if (btData && btData.date === today) {
+        this.globalData.breakthroughReRollCount = btData.count
+      } else {
+        this.globalData.breakthroughReRollCount = 5
+      }
     }
   },
 
@@ -407,6 +429,53 @@ App({
     return selected
   },
 
+  rollBreakthroughCommand() {
+    const pool = this.globalData.breakthroughPool || []
+    const completed = this.globalData.completedCommandIds
+    const profile = this.globalData.breakthroughProfile
+    const hour = this.getCurrentHour()
+    const isLateNight = hour >= 22 || hour < 6
+
+    // 将画像扁平化为 ["sport:often", "social:mid", ...] 方便匹配
+    const profileTags = profile ? this.flattenProfile(profile) : []
+
+    let candidates = pool.filter(cmd => {
+      if (completed.includes(cmd.id)) return false
+      if (isLateNight && !cmd.nightSafe) return false
+      // 反推荐：跳过用户日常已经做的事
+      if (cmd.avoidTypes && profileTags.some(t => cmd.avoidTypes.includes(t))) return false
+      return true
+    })
+    if (!candidates.length) candidates = pool // 无候选时回退全池
+    // 优先推荐：匹配 recommendTypes 的指令权重更高
+    if (profile && profileTags.length) {
+      const preferred = candidates.filter(cmd => cmd.recommendTypes && cmd.recommendTypes.some(t => profileTags.includes(t)))
+      if (preferred.length >= 1) candidates = preferred
+    }
+    if (!candidates.length) candidates = this.getFallbackCommands()
+    const selected = candidates[Math.floor(Math.random() * candidates.length)]
+    this.rememberLastType(selected.type)
+    return selected
+  },
+
+  // 将用户画像扁平化为 ["sport:often", "social:mid", ...] 标签数组
+  flattenProfile(profile) {
+    if (!profile || !profile.completed) return []
+    const tags = []
+    if (profile.sportFreq) tags.push('sport:' + profile.sportFreq)
+    if (profile.socialTendency) tags.push('social:' + profile.socialTendency)
+    if (profile.dailyRange) tags.push('range:' + profile.dailyRange)
+    if (profile.hobbies && profile.hobbies.length) {
+      profile.hobbies.forEach(h => tags.push('hobby:' + h))
+    }
+    return tags
+  },
+
+  // 检查用户是否已完成破圈画像
+  hasBreakthroughProfile() {
+    return !!(this.globalData.breakthroughProfile && this.globalData.breakthroughProfile.completed)
+  },
+
   // v2 core change: preferred types get a 20% probability lift.
   pickWeightedCommand(candidates) {
     const typePrefs = (this.globalData.userPreferences && this.globalData.userPreferences.type) || {}
@@ -431,6 +500,13 @@ App({
     if (this.globalData.reRollCount <= 0) return false
     this.globalData.reRollCount--
     this.saveToLocal('reRollData', { date: this.getTodayStr(), count: this.globalData.reRollCount })
+    return true
+  },
+
+  useBreakthroughReroll() {
+    if (this.globalData.breakthroughReRollCount <= 0) return false
+    this.globalData.breakthroughReRollCount--
+    this.saveToLocal('breakthroughReRollData', { date: this.getTodayStr(), count: this.globalData.breakthroughReRollCount })
     return true
   },
 

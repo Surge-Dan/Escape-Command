@@ -59,7 +59,8 @@ Page({
       dateStr: `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`,
       timeStr: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
       weatherText: `${weather.temperature || 26}℃ ${weather.description || '晴'}`,
-      locationText
+      locationText,
+      isBreakthrough: cmd.type === 'breakthrough' || cmd.mode === 'breakthrough'
     })
   },
 
@@ -278,8 +279,12 @@ Page({
     })
   },
 
-  goMap() {
-    wx.switchTab({ url: '/pages/map/map' })
+  goNext() {
+    if (this.data.isBreakthrough) {
+      wx.redirectTo({ url: '/pages/bt-certificate/bt-certificate' })
+    } else {
+      wx.switchTab({ url: '/pages/map/map' })
+    }
   },
 
   onShareAppMessage() {

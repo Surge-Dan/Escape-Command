@@ -813,7 +813,7 @@ Page({
   onViewGroupRecord() {
     if (!this.data.groupRecordId) return
     wx.navigateTo({
-      url: '/pages/record-detail/record-detail?id=' + this.data.groupRecordId
+      url: '/packageBiz/pages/record-detail/record-detail?id=' + this.data.groupRecordId
     })
   },
 

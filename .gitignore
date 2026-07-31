@@ -13,6 +13,9 @@ miniprogramRoot_backup/
 demo/
 screenshots/
 recordings/
+# 参考视频（大文件，不进 git，不进主包；packOptions.ignore 已排除 *.mp4）
+docs/video/
+*.mp4
 
 # ======================
 # Spec / 文档（团队文档托管在飞书，仓库里只留索引）

@@ -358,7 +358,7 @@ function on(matcher, handler) {
   })
   // Then 跳转目标不是个人页（静态契约：escape-record.js 不跳 /pages/profile/profile）
   on(/^跳转目标不是个人页$/, () => {
-    const src = fs.readFileSync(path.join(__dirname, '..', '..', 'pages', 'group', 'escape-record', 'escape-record.js'), 'utf-8')
+    const src = fs.readFileSync(path.join(__dirname, '..', '..', 'packageSync', 'pages', 'group', 'escape-record', 'escape-record.js'), 'utf-8')
     return src.indexOf("switchTab({ url: '/pages/profile/profile' })") < 0
   })
 })()
@@ -3579,7 +3579,7 @@ function on(matcher, handler) {
 // ============================================================
 ;(function registerBreakthroughFlow() {
   // 引入破圈指令池
-  const btData = require('../../data/breakthrough-commands.js')
+  const btData = require('../../packageBreakthrough/data/breakthrough-commands.js')
   const BT_POOL = btData.BREAKTHROUGH_COMMANDS
 
   // 模拟 app.rollBreakthroughCommand 核心逻辑（与 app.js 对齐）

@@ -6,38 +6,9 @@
     "pages/record/record",
     "pages/map/map",
     "pages/profile/profile",
-    "pages/collection/collection",
-    "pages/badges/badges",
-    "pages/settings/settings",
-    "pages/about/about",
-    "pages/member/member",
-    "pages/mode-intro/mode-intro",
-    "pages/command-detail/command-detail",
     "pages/escape-prep/escape-prep",
     "pages/photo-edit/photo-edit",
-    "pages/generating/generating",
-    "pages/record-detail/record-detail",
-    "pages/timeline/timeline",
-    "pages/year-review/year-review",
-    "pages/mood-journal/mood-journal",
-    "pages/city-progress/city-progress",
-    "pages/collection-category/collection-category",
-    "pages/daily-challenge/daily-challenge",
-    "pages/theme-market/theme-market",
-    "pages/community/community",
-    "pages/badge-detail/badge-detail",
-    "pages/achievements/achievements",
-    "pages/stats/stats",
-    "pages/map-route/map-route",
-    "pages/city-select/city-select",
-    "pages/profile-edit/profile-edit",
-    "pages/help/help",
-    "pages/data-export/data-export",
-    "pages/invite/invite",
-    "pages/partner-list/partner-list",
-    "pages/leaderboard/leaderboard",
-    "pages/breakthrough-profile/breakthrough-profile",
-    "pages/bt-certificate/bt-certificate"
+    "pages/generating/generating"
   ],
   "subPackages": [
     {
@@ -50,6 +21,47 @@
         "pages/group/hall/hall",
         "pages/group/hall/detail/detail",
         "pages/group/hall/create-task/create-task"
+      ]
+    },
+    {
+      "root": "packageBiz",
+      "name": "biz",
+      "pages": [
+        "pages/badge-detail/badge-detail",
+        "pages/command-detail/command-detail",
+        "pages/record-detail/record-detail",
+        "pages/timeline/timeline",
+        "pages/year-review/year-review",
+        "pages/mood-journal/mood-journal",
+        "pages/city-progress/city-progress",
+        "pages/city-select/city-select",
+        "pages/collection-category/collection-category",
+        "pages/daily-challenge/daily-challenge",
+        "pages/theme-market/theme-market",
+        "pages/community/community",
+        "pages/achievements/achievements",
+        "pages/stats/stats",
+        "pages/map-route/map-route",
+        "pages/profile-edit/profile-edit",
+        "pages/help/help",
+        "pages/data-export/data-export",
+        "pages/invite/invite",
+        "pages/partner-list/partner-list",
+        "pages/leaderboard/leaderboard",
+        "pages/mode-intro/mode-intro",
+        "pages/member/member",
+        "pages/about/about",
+        "pages/settings/settings",
+        "pages/badges/badges",
+        "pages/collection/collection"
+      ]
+    },
+    {
+      "root": "packageBreakthrough",
+      "name": "breakthrough",
+      "pages": [
+        "pages/breakthrough-profile/breakthrough-profile",
+        "pages/bt-certificate/bt-certificate"
       ]
     }
   ],

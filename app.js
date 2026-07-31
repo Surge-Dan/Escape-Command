@@ -235,19 +235,60 @@ App({
     // 破圈指令池不在启动时加载（124KB），见 initBreakthroughPool() 按需懒加载
   },
 
+  // 兼容旧调用：触发异步加载（不阻塞）。实际加载走 ensureBreakthroughPool。
+  // 保留方法名避免外部调用方报错；内部不再同步 require，避免主包引用分包资源。
   initBreakthroughPool() {
-    // 按需懒加载：避免 124KB 的 data/breakthrough-commands.js 在启动时同步进主包
-    // 调用方：rollBreakthroughCommand / breakthrough-profile / bt-certificate
     if (this._breakthroughPoolLoaded) return
-    this._breakthroughPoolLoaded = true
-    try {
-      const data = require('./data/breakthrough-commands.js')
-      const raw = (data && data.BREAKTHROUGH_COMMANDS) || []
-      this.globalData.breakthroughPool = raw.map(cmd => this.normalizeCommand(cmd))
-    } catch (e) {
-      console.error('加载破圈指令池失败', e)
-      this.globalData.breakthroughPool = []
+    this.ensureBreakthroughPool(null)
+  },
+
+  // 异步加载破圈指令池（事件总线模式 + require.async 分包异步化）
+  // 数据文件已移至 packageBreakthrough/data/（124KB），主包不持有，启动时不加载。
+  // 多个调用方可并发注册回调，加载完成后统一触发；加载过程幂等（_btLoading 去重）。
+  // 调用方：rollBreakthroughCommand / preloadBreakthroughPool / breakthrough-profile / bt-certificate
+  ensureBreakthroughPool(cb) {
+    // 已加载：直接回调
+    if (this._breakthroughPoolLoaded) {
+      if (typeof cb === 'function') cb(this.globalData.breakthroughPool)
+      return
     }
+    // 合并并发回调（事件总线）
+    this._btCbs = this._btCbs || []
+    if (typeof cb === 'function') this._btCbs.push(cb)
+    // 加载中：只注册回调，不重复触发
+    if (this._btLoading) return
+    this._btLoading = true
+    try {
+      if (typeof require.async === 'function') {
+        // 官方分包异步化方案（基础库 2.27.1+，当前 libVersion 2.33.0 支持）
+        require.async('packageBreakthrough/data/breakthrough-commands.js').then((data) => {
+          this._applyBreakthroughData(data)
+        }).catch((e) => {
+          console.error('[app] 异步加载破圈指令池失败', e)
+          this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] })
+        })
+      } else {
+        // 降级：低版本基础库不支持 require.async，空池兜底（破圈骰子会提示"今天先休息一下"）
+        console.warn('[app] 当前基础库不支持 require.async，破圈指令池为空')
+        this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] })
+      }
+    } catch (e) {
+      console.error('[app] 加载破圈指令池异常', e)
+      this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] })
+    }
+  },
+
+  // 内部：把原始数据归一化后写入 globalData，并触发所有挂起回调
+  _applyBreakthroughData(data) {
+    const raw = (data && data.BREAKTHROUGH_COMMANDS) || []
+    this.globalData.breakthroughPool = raw.map(cmd => this.normalizeCommand(cmd))
+    this._breakthroughPoolLoaded = true
+    this._btLoading = false
+    const cbs = this._btCbs || []
+    this._btCbs = []
+    cbs.forEach(fn => {
+      try { fn(this.globalData.breakthroughPool) } catch (e) { console.warn('[app] 破圈回调异常', e) }
+    })
   },
 
   // 异步加载 POI 指令构建器：仅在云函数 poiSearch 回调时按需引入
@@ -643,22 +684,30 @@ App({
   },
 
   // Henry: 破圈骰子独立摇取逻辑（100条专属指令池 + 画像推荐，不走 generator-engine）
+  // v2: 改为异步（cb 回调），因破圈指令池通过 require.async 分包异步加载
   // 修复：原 Henry 版 candidates 为空时调 this.getFallbackCommands() 会返回微逃指令，
   // 破圈骰子可能摇出微逃任务，改为回退到破圈全池 pool
-  rollBreakthroughCommand() {
-    // 首次调用时按需加载 124KB 破圈指令池（避免启动时进主包）
-    // 同步 require 仅在首次 ~50ms 内完成，第二次起走 _breakthroughPoolLoaded 短路
-    this.initBreakthroughPool()
-    const pool = this.globalData.breakthroughPool || []
-    const completed = this.globalData.completedCommandIds
+  rollBreakthroughCommand(cb) {
+    this.ensureBreakthroughPool((pool) => {
+      const selected = this._pickBreakthrough(pool)
+      if (selected) this.rememberLastType(selected.type)
+      if (typeof cb === 'function') cb(selected)
+    })
+  },
+
+  // 纯函数：从破圈池中按「完成去重 + 深夜安全 + 反推荐过滤 + 画像优先」挑选一条
+  // 抽出便于单元测试（零 wx 依赖，可直接在 Node 环境验证过滤链）
+  _pickBreakthrough(pool) {
+    pool = Array.isArray(pool) ? pool : []
+    const completed = this.globalData.completedCommandIds || []
     const profile = this.globalData.breakthroughProfile
     const hour = this.getCurrentHour()
     const isLateNight = hour >= 22 || hour < 6
-
     // 将画像扁平化为 ["sport:often", "social:mid", ...] 方便匹配
     const profileTags = profile ? this.flattenProfile(profile) : []
 
     let candidates = pool.filter(cmd => {
+      if (!cmd) return false
       if (completed.includes(cmd.id)) return false
       if (isLateNight && !cmd.nightSafe) return false
       // 反推荐：跳过用户日常已经做的事
@@ -673,19 +722,17 @@ App({
     }
     if (!candidates.length) candidates = pool // 双重兜底：破圈池非空时一定有候选
     if (!candidates.length) return null // 三重兜底：pool 也为空（数据加载失败）时返回 null，避免 undefined.type 崩溃
-    const selected = candidates[Math.floor(Math.random() * candidates.length)]
-    this.rememberLastType(selected.type)
-    return selected
+    return candidates[Math.floor(Math.random() * candidates.length)]
   },
 
   // 后台预加载破圈指令池：进入首页 1.5s 后异步加载，避免首次点破圈骰子卡顿
-  // 不阻塞启动主流程
+  // 不阻塞启动主流程；v2 改用 ensureBreakthroughPool（require.async 分包异步化）
   preloadBreakthroughPool() {
     if (this._breakthroughPoolLoaded) return
     // 延迟 1500ms 让首页先渲染完，避免抢占启动资源
     setTimeout(() => {
       try {
-        this.initBreakthroughPool()
+        this.ensureBreakthroughPool(null)
       } catch (e) {}
     }, 1500)
   },

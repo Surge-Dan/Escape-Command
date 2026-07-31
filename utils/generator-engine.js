@@ -259,8 +259,8 @@ function filterBySafety(cmds, ctx) {
     // 雨天户外非雨天过滤
     if (isRainy && cmd.rainy === false && cmd.outdoor !== false) return false
 
-    // 极端天气：只保留室内
-    if (isExtreme && cmd.outdoor === false) return false
+    // 极端天气：只保留室内（过滤户外）
+    if (isExtreme && cmd.outdoor !== false) return false
 
     return true
   })

@@ -276,7 +276,7 @@ Page({
   onTop9Tap(e) {
     const id = e.currentTarget.dataset.id
     if (!id) return
-    wx.navigateTo({ url: '/pages/record-detail/record-detail?id=' + id })
+    wx.navigateTo({ url: '/packageBiz/pages/record-detail/record-detail?id=' + id })
   },
 
   goHome() {

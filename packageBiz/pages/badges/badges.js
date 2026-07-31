@@ -91,7 +91,7 @@ Page({
       return
     }
     wx.navigateTo({
-      url: `/pages/badge-detail/badge-detail?id=${target.id}`,
+      url: `/packageBiz/pages/badge-detail/badge-detail?id=${target.id}`,
       fail: () => {
         // 兜底：badge-detail 页未就绪时弹窗展示
         wx.showModal({

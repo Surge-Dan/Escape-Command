@@ -359,29 +359,31 @@ Page({
     this.setData({ isBreakthroughRolling: true, isBouncing: true })
     try { wx.vibrateShort({ type: 'light' }) } catch (e) {}
     setTimeout(() => {
-      const cmd = app.rollBreakthroughCommand()
-      if (!cmd) {
-        this.setData({ isBreakthroughRolling: false, isBouncing: false })
-        wx.showToast({ title: '今天先休息一下', icon: 'none' })
-        return
-      }
-      // 每次摇取消耗 1 次（含首次）
-      app.useBreakthroughReroll()
-      this.refreshState()
-      const meta = getTypeMeta(cmd.type)
-      this.setData({
-        selectedCommand: Object.assign({}, cmd, {
-          typeName: meta.name,
-          typeColor: cmd.typeColor || meta.color,
-          typeIcon: meta.icon,
-          illustration: cmd.illustration || meta.scene
-        }),
-        rolling: false,
-        isBouncing: false,
-        isBreakthroughRolling: false
+      // v2: app.rollBreakthroughCommand 改为异步（破圈指令池通过 require.async 分包加载）
+      app.rollBreakthroughCommand((cmd) => {
+        if (!cmd) {
+          this.setData({ isBreakthroughRolling: false, isBouncing: false })
+          wx.showToast({ title: '今天先休息一下', icon: 'none' })
+          return
+        }
+        // 每次摇取消耗 1 次（含首次）
+        app.useBreakthroughReroll()
+        this.refreshState()
+        const meta = getTypeMeta(cmd.type)
+        this.setData({
+          selectedCommand: Object.assign({}, cmd, {
+            typeName: meta.name,
+            typeColor: cmd.typeColor || meta.color,
+            typeIcon: meta.icon,
+            illustration: cmd.illustration || meta.scene
+          }),
+          rolling: false,
+          isBouncing: false,
+          isBreakthroughRolling: false
+        })
+        if (app.playSound) app.playSound('shake')
+        this.refreshState()
       })
-      if (app.playSound) app.playSound('shake')
-      this.refreshState()
     }, 300)
   },
 
@@ -483,7 +485,7 @@ Page({
   },
 
   goCollection() {
-    wx.navigateTo({ url: '/pages/collection/collection' })
+    wx.navigateTo({ url: '/packageBiz/pages/collection/collection' })
   },
 
   // v4: 每日推荐 —— 每次进入随机且与上次不同
@@ -563,7 +565,7 @@ Page({
   // v3 快速入口导航
   goCommandDetail(e) {
     const id = e.currentTarget.dataset.id
-    wx.navigateTo({ url: '/pages/command-detail/command-detail?id=' + id })
+    wx.navigateTo({ url: '/packageBiz/pages/command-detail/command-detail?id=' + id })
   },
 
   onShareAppMessage() {

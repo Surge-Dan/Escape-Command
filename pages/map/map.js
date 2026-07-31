@@ -515,7 +515,7 @@ Page({
 
   goCitySelect() {
     wx.navigateTo({
-      url: '/pages/city-select/city-select',
+      url: '/packageBiz/pages/city-select/city-select',
       fail: () => {
         wx.showToast({ title: '城市选择页未就绪', icon: 'none' })
       }

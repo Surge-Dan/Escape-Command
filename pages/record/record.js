@@ -1,4 +1,4 @@
-const app = getApp()
+﻿const app = getApp()
 const { MOODS } = require('../../utils/constants.js')
 
 // v3: 6 滤镜本地定义（不修改 utils/constants.js）。css 字段直接作用于照片预览。
@@ -298,7 +298,7 @@ Page({
 
   goNext() {
     if (this.data.isBreakthrough) {
-      wx.redirectTo({ url: '/pages/bt-certificate/bt-certificate' })
+      wx.redirectTo({ url: '/packageBreakthrough/pages/bt-certificate/bt-certificate' })
     } else {
       wx.switchTab({ url: '/pages/map/map' })
     }

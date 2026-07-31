@@ -154,7 +154,7 @@ Page({
     const id = this.data.record && this.data.record.id
     if (!id) return
     wx.navigateTo({
-      url: `/pages/record-detail/record-detail?id=${id}`,
+      url: `/packageBiz/pages/record-detail/record-detail?id=${id}`,
       fail: () => {
         // record-detail 尚未上线时，退回到上一页避免卡死。
         wx.showToast({ title: '记录详情即将上线', icon: 'none' })

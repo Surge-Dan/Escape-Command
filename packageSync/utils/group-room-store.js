@@ -692,7 +692,7 @@ function buildClues(members, steps) {
   return mList.map((m, i) => ({
     openId: m.openId,
     nickname: m.nickname,
-    clue: '自由发挥'
+    clue: sList.length > 0 ? sList[i % sList.length] : '自由发挥'
   }))
 }
 

@@ -2,14 +2,18 @@
 
 ## 阶段 1：分包（subPackages）
 
-- [ ] **1.1 同频组局分包**（预计 300KB 节省）
-  - [ ] 创建 `packageSync/` 目录
-  - [ ] 移动 `pages/group/*` → `packageSync/pages/group/*`
-  - [ ] 移动 `utils/group-room-store.js` + `task-hall-store.js` + `chat-store.js` + `player-matcher.js` + `player-trust-store.js` + `mock-user-pool.js` → `packageSync/utils/*`
-  - [ ] app.json 新增 `subPackages` 配置
-  - [ ] 验证首页 `wx.navigateTo({ url: '/pages/group/.../...' })` 跳转（无需改 URL）
-  - [ ] 跑 23 套件测试 + check-bundle
-  - [ ] commit + push
+- [x] **1.1 同频组局分包**（预计 300KB 节省）✅ 2026-07-31 完成
+  - [x] 创建 `packageSync/` 目录
+  - [x] 移动 `pages/group/*` → `packageSync/pages/group/*`
+  - [x] 移动 `utils/group-room-store.js` + `task-hall-store.js` + `chat-store.js` + `player-matcher.js` + `player-trust-store.js` + `mock-user-pool.js` + `trust-score.js` → `packageSync/utils/*`
+  - [x] 移动 `data/guangzhou-districts.js` + `guangzhou-pois.js` + `escape-master-tasks.js` → `packageSync/data/*`（让分包自包含）
+  - [x] app.json 新增 `subPackages` 配置
+  - [x] 验证首页 `wx.navigateTo({ url: '/packageSync/pages/group/.../...' })` 跳转 + 分包内 9 处跳转改跨包路径
+  - [x] 升级 check-bundle.js 读取 `subPackages` 估算主包体积
+  - [x] 更新 tests/ 下所有 require 路径和静态路径（runner.js / check.js / coverage-report.js / mutation-test.js）
+  - [x] 7 层测试通过（unit/gherkin/property/adversarial/qa/coverage/mutation）
+  - [ ] commit + push origin/Daniel
+  - **效果**：主包 2.47MB → 2.11MB（节省 360KB，符合 spec 预期 300KB）
 
 - [ ] **1.2 破圈功能分包**（预计 161KB 节省）
   - [ ] 创建 `packageBreakthrough/` 目录

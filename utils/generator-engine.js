@@ -260,7 +260,7 @@ function filterBySafety(cmds, ctx) {
     if (isRainy && cmd.rainy === false && cmd.outdoor !== false) return false
 
     // 极端天气：只保留室内
-    if (isExtreme && cmd.outdoor !== false) return false
+    if (isExtreme && cmd.outdoor === false) return false
 
     return true
   })

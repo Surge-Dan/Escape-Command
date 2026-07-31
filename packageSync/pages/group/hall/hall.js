@@ -1,4 +1,4 @@
-// pages/group/hall/hall.js
+﻿// pages/group/hall/hall.js
 // C-P3 任务大厅主页
 //
 // 职责：
@@ -165,14 +165,14 @@ Page({
     const taskId = e.currentTarget.dataset.taskid
     if (!taskId) return
     wx.navigateTo({
-      url: '/pages/group/hall/detail/detail?taskId=' + taskId
+      url: '/packageSync/pages/group/hall/detail/detail?taskId=' + taskId
     })
   },
 
   // ===== 创建任务入口 =====
   onCreateTap() {
     wx.navigateTo({
-      url: '/pages/group/hall/create-task/create-task'
+      url: '/packageSync/pages/group/hall/create-task/create-task'
     })
   },
 
@@ -347,11 +347,11 @@ Page({
     // C-P3 联动：满员（有 roomId）→ 进房间；仍在招募 → 进详情页等更多人
     if (r.roomId) {
       wx.navigateTo({
-        url: '/pages/group/room/room?roomId=' + r.roomId + '&taskId=' + r.taskId
+        url: '/packageSync/pages/group/room/room?roomId=' + r.roomId + '&taskId=' + r.taskId
       })
     } else {
       wx.navigateTo({
-        url: '/pages/group/hall/detail/detail?taskId=' + r.taskId
+        url: '/packageSync/pages/group/hall/detail/detail?taskId=' + r.taskId
       })
     }
   }

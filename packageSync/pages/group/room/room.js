@@ -1,4 +1,4 @@
-const app = getApp()
+﻿const app = getApp()
 const roomStore = require('../../../utils/group-room-store.js')
 const hallStore = require('../../../utils/task-hall-store.js')
 const chatStore = require('../../../utils/chat-store.js')
@@ -591,7 +591,7 @@ Page({
     const roomId = this.data.roomId
     return {
       title: room ? `${room.topic} | 同频出逃等你加入` : '同频出逃等你加入',
-      path: `/pages/group/room/room?roomId=${roomId}&from=share`,
+      path: `/packageSync/pages/group/room/room?roomId=${roomId}&from=share`,
       imageUrl: '/assets/images/coffee-shop.webp'
     }
   },
@@ -805,7 +805,7 @@ Page({
       }
     } catch (e) {}
     wx.redirectTo({
-      url: '/pages/group/escape-record/escape-record?roomId=' + this.data.roomId
+      url: '/packageSync/pages/group/escape-record/escape-record?roomId=' + this.data.roomId
     })
   },
 

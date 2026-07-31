@@ -30,21 +30,21 @@ console.log('='.repeat(50))
 // ===== 1. 文件存在性检查 =====
 console.log('\n--- 1. 文件存在性 ---')
 const requiredFiles = [
-  'utils/group-room-store.js',
+  'packageSync/utils/group-room-store.js',
   'utils/generator-engine.js',
   'utils/record-builder.js',
   'utils/execution-progress.js',
   'utils/poi-command-builder.js',
   'cloudfunctions/poiSearch/index.js',
   'cloudfunctions/poiSearch/package.json',
-  'pages/group/create/create.js',
-  'pages/group/create/create.wxml',
-  'pages/group/create/create.wxss',
-  'pages/group/room/room.js',
-  'pages/group/room/room.wxml',
-  'pages/group/room/room.wxss',
-  'pages/group/escape-record/escape-record.js',
-  'pages/group/escape-record/escape-record.wxml'
+  'packageSync/pages/group/create/create.js',
+  'packageSync/pages/group/create/create.wxml',
+  'packageSync/pages/group/create/create.wxss',
+  'packageSync/pages/group/room/room.js',
+  'packageSync/pages/group/room/room.wxml',
+  'packageSync/pages/group/room/room.wxss',
+  'packageSync/pages/group/escape-record/escape-record.js',
+  'packageSync/pages/group/escape-record/escape-record.wxml'
 ]
 requiredFiles.forEach(f => {
   check('文件存在: ' + f, fs.existsSync(path.join(projectRoot, f)), 'error')
@@ -54,7 +54,7 @@ requiredFiles.forEach(f => {
 console.log('\n--- 2. 数据层函数完整性 ---')
 const wx = require('../mock-wx.js')
 global.wx = wx
-const store = require('../../utils/group-room-store.js')
+const store = require('../../packageSync/utils/group-room-store.js')
 const requiredFunctions = [
   'createRoom', 'loadRoom', 'cancelRoom',
   'joinRoom', 'addMockMember', 'fillMockMembers',
@@ -136,7 +136,7 @@ check('PREFERENCE_OPTIONS.intensity 有 3 项', store.PREFERENCE_OPTIONS.intensi
 
 // ===== 3a. C-P2 同频组局收尾函数 + 契约完整性（C-14~C-19）=====
 console.log('\n--- 3a. C-P2 同频组局收尾函数 + 契约完整性 ---')
-const storeJs = fs.readFileSync(path.join(projectRoot, 'utils/group-room-store.js'), 'utf-8')
+const storeJs = fs.readFileSync(path.join(projectRoot, 'packageSync/utils/group-room-store.js'), 'utf-8')
 // 函数导出
 ;['assignRoles', 'generateClues', 'listPublicRooms', 'requestJoin', 'approveJoin', 'rejectJoin', 'submitReview', 'reportRoom'].forEach(fn => {
   check('store 导出 C-P2 函数: ' + fn, typeof store[fn] === 'function', 'error')
@@ -230,18 +230,18 @@ check('store.js 无 new Function() (C-P2)', !storeJs.includes('new Function('), 
 
 // ===== 3b. C-P3 任务大厅与搭子匹配契约完整性 =====
 console.log('\n--- 3b. C-P3 任务大厅数据层契约 ---')
-// A. 数据文件存在性
-check('guangzhou-districts.js 存在', fs.existsSync(path.join(projectRoot, 'data/guangzhou-districts.js')), 'error')
-check('guangzhou-pois.js 存在', fs.existsSync(path.join(projectRoot, 'data/guangzhou-pois.js')), 'error')
-check('escape-master-tasks.js 存在', fs.existsSync(path.join(projectRoot, 'data/escape-master-tasks.js')), 'error')
-check('mock-user-pool.js 存在', fs.existsSync(path.join(projectRoot, 'utils/mock-user-pool.js')), 'error')
-check('task-hall-store.js 存在', fs.existsSync(path.join(projectRoot, 'utils/task-hall-store.js')), 'error')
+// A. 数据文件存在性（注意：同频业务已分包到 packageSync/data/）
+check('guangzhou-districts.js 存在', fs.existsSync(path.join(projectRoot, 'packageSync/data/guangzhou-districts.js')), 'error')
+check('guangzhou-pois.js 存在', fs.existsSync(path.join(projectRoot, 'packageSync/data/guangzhou-pois.js')), 'error')
+check('escape-master-tasks.js 存在', fs.existsSync(path.join(projectRoot, 'packageSync/data/escape-master-tasks.js')), 'error')
+check('mock-user-pool.js 存在', fs.existsSync(path.join(projectRoot, 'packageSync/utils/mock-user-pool.js')), 'error')
+check('task-hall-store.js 存在', fs.existsSync(path.join(projectRoot, 'packageSync/utils/task-hall-store.js')), 'error')
 
 // B. 数据文件导出与完整性
-const districts = require('../../data/guangzhou-districts.js')
-const pois = require('../../data/guangzhou-pois.js')
-const templates = require('../../data/escape-master-tasks.js')
-const userPool = require('../../utils/mock-user-pool.js')
+const districts = require('../../packageSync/data/guangzhou-districts.js')
+const pois = require('../../packageSync/data/guangzhou-pois.js')
+const templates = require('../../packageSync/data/escape-master-tasks.js')
+const userPool = require('../../packageSync/utils/mock-user-pool.js')
 
 // 广州区域
 check('GUANGZHOU_DISTRICTS 导出', Array.isArray(districts.GUANGZHOU_DISTRICTS), 'error')
@@ -288,7 +288,7 @@ check('getRandomPartner 导出', typeof userPool.getRandomPartner === 'function'
 check('Mock 用户 avatar 复用', userPool.MOCK_USERS.every(u => u.avatar === '/assets/images/avatar.webp'), 'error')
 
 // C. task-hall-store 函数导出
-const hallStore = require('../../utils/task-hall-store.js')
+const hallStore = require('../../packageSync/utils/task-hall-store.js')
 ;['initHallFromTemplates', 'listTasks', 'getTaskDetail', 'createUserTask', 'joinTask', 'diceMatch', 'linkRoom', 'updateTaskStatus', 'clearAllTasks'].forEach(fn => {
   check('hallStore 导出函数: ' + fn, typeof hallStore[fn] === 'function', 'error')
 })
@@ -301,7 +301,7 @@ check('hallStore._internal 导出', !!hallStore._internal, 'error')
 })
 
 // D. task-hall-store 契约（read source file）
-const hallStoreJs = fs.readFileSync(path.join(projectRoot, 'utils/task-hall-store.js'), 'utf-8')
+const hallStoreJs = fs.readFileSync(path.join(projectRoot, 'packageSync/utils/task-hall-store.js'), 'utf-8')
 check('task-hall 使用 STORAGE_KEY taskHall', hallStoreJs.includes("'taskHall'") || hallStoreJs.includes('"taskHall"'), 'error')
 check('listTasks 默认排除 cancelled', hallStoreJs.includes("'cancelled'"), 'error')
 check('listTasks 精简字段 membersCount', hallStoreJs.includes('membersCount'), 'error')
@@ -317,28 +317,28 @@ check('initHallFromTemplates 幂等 force 参数', hallStoreJs.includes('force')
 console.log('\n--- 3c. C-P3 任务大厅页面契约 ---')
 // E. 页面文件存在性
 const pageFiles = [
-  'pages/group/hall/hall.js',
-  'pages/group/hall/hall.wxml',
-  'pages/group/hall/hall.wxss',
-  'pages/group/hall/hall.json',
-  'pages/group/hall/detail/detail.js',
-  'pages/group/hall/detail/detail.wxml',
-  'pages/group/hall/detail/detail.wxss',
-  'pages/group/hall/detail/detail.json',
-  'pages/group/hall/create-task/create-task.js',
-  'pages/group/hall/create-task/create-task.wxml',
-  'pages/group/hall/create-task/create-task.wxss',
-  'pages/group/hall/create-task/create-task.json'
+  'packageSync/pages/group/hall/hall.js',
+  'packageSync/pages/group/hall/hall.wxml',
+  'packageSync/pages/group/hall/hall.wxss',
+  'packageSync/pages/group/hall/hall.json',
+  'packageSync/pages/group/hall/detail/detail.js',
+  'packageSync/pages/group/hall/detail/detail.wxml',
+  'packageSync/pages/group/hall/detail/detail.wxss',
+  'packageSync/pages/group/hall/detail/detail.json',
+  'packageSync/pages/group/hall/create-task/create-task.js',
+  'packageSync/pages/group/hall/create-task/create-task.wxml',
+  'packageSync/pages/group/hall/create-task/create-task.wxss',
+  'packageSync/pages/group/hall/create-task/create-task.json'
 ]
 pageFiles.forEach(f => {
   check('页面文件存在: ' + f, fs.existsSync(path.join(projectRoot, f)), 'error')
 })
 
 // F. 页面契约（read source files）
-const hallJs = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/hall.js'), 'utf-8')
-const hallWxml = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/hall.wxml'), 'utf-8')
-const detailJs = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/detail/detail.js'), 'utf-8')
-const createTaskJs = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/create-task/create-task.js'), 'utf-8')
+const hallJs = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/hall/hall.js'), 'utf-8')
+const hallWxml = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/hall/hall.wxml'), 'utf-8')
+const detailJs = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/hall/detail/detail.js'), 'utf-8')
+const createTaskJs = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/hall/create-task/create-task.js'), 'utf-8')
 const indexJs = fs.readFileSync(path.join(projectRoot, 'pages/index/index.js'), 'utf-8')
 
 // hall 页
@@ -365,16 +365,19 @@ check('create-task.js 调用 getPOIsByDistrict', createTaskJs.includes('getPOIsB
 check('index.js 含 showDiceSheet', indexJs.includes('showDiceSheet'), 'error')
 check('index.js 含 onInviteFriendsTap', indexJs.includes('onInviteFriendsTap'), 'error')
 check('index.js 含 onEnterHallTap', indexJs.includes('onEnterHallTap'), 'error')
-check('index.js 跳转 hall 路由', indexJs.includes('/pages/group/hall/hall'), 'error')
+check('index.js 跳转 hall 路由', indexJs.includes('/packageSync/pages/group/hall/hall'), 'error')
 
-// G. 路由注册
+// G. 路由注册（主包 pages + subPackages.pages 合并判断）
 const hallAppJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'app.json'), 'utf-8'))
-;['pages/group/hall/hall', 'pages/group/hall/detail/detail', 'pages/group/hall/create-task/create-task'].forEach(route => {
-  check('app.json 注册路由: ' + route, hallAppJson.pages.includes(route), 'error')
+const allRegisteredPages = (hallAppJson.pages || []).concat(
+  (hallAppJson.subPackages || []).flatMap(sp => (sp.pages || []).map(p => sp.root + '/' + p))
+)
+;['packageSync/pages/group/hall/hall', 'packageSync/pages/group/hall/detail/detail', 'packageSync/pages/group/hall/create-task/create-task'].forEach(route => {
+  check('app.json 注册路由: ' + route, allRegisteredPages.includes(route), 'error')
 })
 
 // H. group room 联动
-const hallRoomJs = fs.readFileSync(path.join(projectRoot, 'pages/group/room/room.js'), 'utf-8')
+const hallRoomJs = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/room/room.js'), 'utf-8')
 check('room.js 导入 task-hall-store', hallRoomJs.includes('task-hall-store'), 'error')
 check('room.js onLoad 接收 taskId', /onLoad[\s\S]{0,500}taskId/.test(hallRoomJs), 'error')
 check('room.js 回写 hall task finished', hallRoomJs.includes('updateTaskStatus') && hallRoomJs.includes('finished'), 'error')
@@ -394,7 +397,7 @@ check('D3 create-task.js 含 onCustomCategoryTap', createTaskJs.includes('onCust
 check('D3 create-task.js 含 onCustomCategoryConfirm', createTaskJs.includes('onCustomCategoryConfirm'), 'error')
 check('D3 create-task.js 含 onCustomCategoryClear', createTaskJs.includes('onCustomCategoryClear'), 'error')
 check('D3 create-task.js 含 showCustomCategory 弹层', createTaskJs.includes('showCustomCategory'), 'error')
-const createTaskWxml = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/create-task/create-task.wxml'), 'utf-8')
+const createTaskWxml = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/hall/create-task/create-task.wxml'), 'utf-8')
 check('D3 create-task.wxml 含自定义分类入口', createTaskWxml.includes('tag-custom'), 'error')
 check('D3 create-task.wxml 含自定义分类弹层', createTaskWxml.includes('custom-category-panel'), 'error')
 // 自定义分类创建后落到 task 字段
@@ -420,8 +423,8 @@ check('D4 模板覆盖 photo 主题', templateCategories.has('photo'), 'error')
 check('D4 模板覆盖 food 主题', templateCategories.has('food'), 'error')
 
 // D5: 真实玩家联动
-check('D5 player-matcher.js 存在', fs.existsSync(path.join(projectRoot, 'utils/player-matcher.js')), 'error')
-const playerMatcher = require('../../utils/player-matcher.js')
+check('D5 player-matcher.js 存在', fs.existsSync(path.join(projectRoot, 'packageSync/utils/player-matcher.js')), 'error')
+const playerMatcher = require('../../packageSync/utils/player-matcher.js')
 ;['normalizePlayer', 'rankByRelevance', 'mergeAndPick', 'shouldFallback', 'computePartnerCount', 'matchPlayersAsync'].forEach(fn => {
   check('D5 player-matcher 导出: ' + fn, typeof playerMatcher[fn] === 'function', 'error')
 })
@@ -485,7 +488,7 @@ check('无 eval/Function 注入', !rbCode.includes('eval(') && !rbCode.includes(
 
 // ===== 3f. 完成流页面契约（escape-record + app 数据联动）=====
 console.log('\n--- 3f. 完成流页面契约 ---')
-const escapeRecordJs = fs.readFileSync(path.join(projectRoot, 'pages/group/escape-record/escape-record.js'), 'utf-8')
+const escapeRecordJs = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/escape-record/escape-record.js'), 'utf-8')
 check('escape-record 完成后跳 record 拍照打卡页', escapeRecordJs.includes("navigateTo({ url: '/pages/record/record' })"), 'error')
 check('escape-record 完成流程不直接调 completeCommand（改由 record 页 onSave 触发）', !escapeRecordJs.includes('app.completeCommand'), 'error')
 check('escape-record 不跳个人页', !escapeRecordJs.includes("switchTab({ url: '/pages/profile/profile' })"), 'error')
@@ -539,7 +542,7 @@ check('executing.js onStepTap 持久化 markStepDone', executingJs.includes('mar
 check('executing.js 初始化 executionProgress initProgress', executingJs.includes('initProgress'), 'error')
 
 // escape-record.js 同步持久化
-const escapeRecordCode = fs.readFileSync(path.join(projectRoot, 'pages/group/escape-record/escape-record.js'), 'utf-8')
+const escapeRecordCode = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/escape-record/escape-record.js'), 'utf-8')
 check('escape-record require execution-progress', escapeRecordCode.includes('utils/execution-progress.js'), 'error')
 check('escape-record 持久化 currentGroupScript', escapeRecordCode.includes('setStorageSync(\'currentGroupScript\''), 'error')
 check('escape-record 完成后清理 storage', escapeRecordCode.includes('removeStorageSync(\'currentGroupScript\''), 'error')
@@ -615,7 +618,7 @@ checkLargeFiles(path.join(projectRoot, 'assets'), 200 * 1024)
 console.log('\n--- 5. 代码质量 ---')
 
 // 检查 room.js 是否有 onShareAppMessage
-const roomJs = fs.readFileSync(path.join(projectRoot, 'pages/group/room/room.js'), 'utf-8')
+const roomJs = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/room/room.js'), 'utf-8')
 check('room.js 有 onShareAppMessage (C-02)', roomJs.includes('onShareAppMessage'), 'error')
 check('room.js 有 USE_LOCAL_MODE 开关', roomJs.includes('USE_LOCAL_MODE'), 'warn')
 check('room.js 有 applyMockMemberView (C-02)', roomJs.includes('applyMockMemberView'), 'error')
@@ -626,7 +629,7 @@ check('room.js 有 onGenerateScript (C-08)', roomJs.includes('onGenerateScript')
 check('room.js 有 onCancelTap (C-01)', roomJs.includes('onCancelTap'), 'error')
 
 // 检查 room.wxml 是否有阶段渲染
-const roomWxml = fs.readFileSync(path.join(projectRoot, 'pages/group/room/room.wxml'), 'utf-8')
+const roomWxml = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/room/room.wxml'), 'utf-8')
 check('wxml 有 waiting_members 阶段', roomWxml.includes("status === 'waiting_members'"), 'error')
 check('wxml 有 voting 阶段', roomWxml.includes("status === 'voting'"), 'error')
 check('wxml 有 finished 阶段', roomWxml.includes("status === 'finished'"), 'error')
@@ -675,8 +678,8 @@ validStatuses.forEach(status => {
 console.log('\n--- 8. C-P4 社交增强契约 ---')
 
 // 8a. trust-score.js 纯函数 + 常量
-check('C-P4 trust-score.js 存在', fs.existsSync(path.join(projectRoot, 'utils/trust-score.js')), 'error')
-const trustScoreMod = require('../../utils/trust-score.js')
+check('C-P4 trust-score.js 存在', fs.existsSync(path.join(projectRoot, 'packageSync/utils/trust-score.js')), 'error')
+const trustScoreMod = require('../../packageSync/utils/trust-score.js')
 ;['computeTrustScore', 'tierFromScore', 'getTierWeight', 'getTierLabel', 'isValidReview'].forEach(fn => {
   check('C-P4 trust-score 导出: ' + fn, typeof trustScoreMod[fn] === 'function', 'error')
 })
@@ -690,7 +693,7 @@ check('C-P4 newbie 权重 0.8', trustScoreMod.TRUST_TIER_WEIGHT.newbie === 0.8, 
 check('C-P4 DEFAULT_TRUST score 5.0', trustScoreMod.DEFAULT_TRUST.score === 5.0, 'error')
 check('C-P4 DEFAULT_TRUST tier newbie', trustScoreMod.DEFAULT_TRUST.tier === 'newbie', 'error')
 check('C-P4 TIER_LABELS 5 项', Object.keys(trustScoreMod.TIER_LABELS).length === 5, 'error')
-const trustScoreJs = fs.readFileSync(path.join(projectRoot, 'utils/trust-score.js'), 'utf-8')
+const trustScoreJs = fs.readFileSync(path.join(projectRoot, 'packageSync/utils/trust-score.js'), 'utf-8')
 check('C-P4 trust-score 纯函数零 wx 依赖', !trustScoreJs.includes('wx.') && !trustScoreJs.includes('wx.cloud'), 'error')
 check('C-P4 trust-score 使用 strict mode', trustScoreJs.includes('use strict'), 'warn')
 check('C-P4 trust-score 无 eval/Function 注入', !trustScoreJs.includes('eval(') && !trustScoreJs.includes('new Function('), 'error')
@@ -702,14 +705,14 @@ check('C-P4 score 保留一位小数', trustScoreJs.includes('Math.round(avg * 1
 check('C-P4 count<3 返回 newbie', trustScoreJs.includes('count < 3'), 'error')
 
 // 8b. player-trust-store.js 数据层
-check('C-P4 player-trust-store.js 存在', fs.existsSync(path.join(projectRoot, 'utils/player-trust-store.js')), 'error')
-const trustStore = require('../../utils/player-trust-store.js')
+check('C-P4 player-trust-store.js 存在', fs.existsSync(path.join(projectRoot, 'packageSync/utils/player-trust-store.js')), 'error')
+const trustStore = require('../../packageSync/utils/player-trust-store.js')
 ;['submitReview', 'getTrust', 'getTrustBatch', 'reportPlayer', 'getCachedTrust', 'setCachedTrust', 'clearTrustCache', 'buildReviewDoc'].forEach(fn => {
   check('C-P4 player-trust-store 导出: ' + fn, typeof trustStore[fn] === 'function', 'error')
 })
 check('C-P4 player-trust-store 导出 CACHE_KEY', typeof trustStore.CACHE_KEY === 'string', 'error')
 check('C-P4 player-trust-store 导出 CLOUD_TIMEOUT', typeof trustStore.CLOUD_TIMEOUT === 'number', 'error')
-const trustStoreJs = fs.readFileSync(path.join(projectRoot, 'utils/player-trust-store.js'), 'utf-8')
+const trustStoreJs = fs.readFileSync(path.join(projectRoot, 'packageSync/utils/player-trust-store.js'), 'utf-8')
 check('C-P4 player-trust-store submitReview 降级 CLOUD_OFFLINE', trustStoreJs.includes("'CLOUD_OFFLINE'"), 'error')
 check('C-P4 player-trust-store submitReview 超时 CLOUD_TIMEOUT', trustStoreJs.includes("'CLOUD_TIMEOUT'"), 'error')
 check('C-P4 player-trust-store submitReview 云异常 CLOUD_ERROR', trustStoreJs.includes("'CLOUD_ERROR'"), 'error')
@@ -723,8 +726,8 @@ check('C-P4 player-trust-store 调用 reportPlayer 云函数', trustStoreJs.incl
 check('C-P4 player-trust-store 成功后缓存信任分 setCachedTrust', trustStoreJs.includes('setCachedTrust(doc.targetOpenId'), 'error')
 
 // 8c. chat-store.js 聊天数据层
-check('C-P4 chat-store.js 存在', fs.existsSync(path.join(projectRoot, 'utils/chat-store.js')), 'error')
-const chatStoreMod = require('../../utils/chat-store.js')
+check('C-P4 chat-store.js 存在', fs.existsSync(path.join(projectRoot, 'packageSync/utils/chat-store.js')), 'error')
+const chatStoreMod = require('../../packageSync/utils/chat-store.js')
 ;['sendMessage', 'fetchNewMessages', 'startPolling', 'stopPolling', 'loadMessages', 'saveMessages', 'dedupMessages', 'validateContent', 'buildMessageDoc', 'makeOptimisticId'].forEach(fn => {
   check('C-P4 chat-store 导出: ' + fn, typeof chatStoreMod[fn] === 'function', 'error')
 })
@@ -734,7 +737,7 @@ check('C-P4 chat-store 导出 MAX_CONTENT_LEN', chatStoreMod.MAX_CONTENT_LEN ===
 check('C-P4 chat-store 导出 PAGE_SIZE', chatStoreMod.PAGE_SIZE === 50, 'error')
 check('C-P4 chat-store 导出 _rollbackOptimistic（测试辅助）', typeof chatStoreMod._rollbackOptimistic === 'function', 'error')
 check('C-P4 chat-store 导出 _getPollingState（测试辅助）', typeof chatStoreMod._getPollingState === 'function', 'error')
-const chatStoreJs = fs.readFileSync(path.join(projectRoot, 'utils/chat-store.js'), 'utf-8')
+const chatStoreJs = fs.readFileSync(path.join(projectRoot, 'packageSync/utils/chat-store.js'), 'utf-8')
 check('C-P4 chat-store validateContent 超长拒绝', chatStoreJs.includes('MAX_CONTENT_LEN'), 'error')
 check('C-P4 chat-store sendMessage 乐观更新 isLocal', chatStoreJs.includes('isLocal: true') && chatStoreJs.includes('status: \'pending\''), 'error')
 check('C-P4 chat-store sendMessage 失败回滚 rollbackOptimistic', chatStoreJs.includes('rollbackOptimistic(roomId, optimisticId)'), 'error')
@@ -747,7 +750,7 @@ check('C-P4 chat-store 调用 fetchMessages 云函数', chatStoreJs.includes("na
 check('C-P4 chat-store 无 eval/Function 注入', !chatStoreJs.includes('eval(') && !chatStoreJs.includes('new Function('), 'error')
 
 // 8d. player-matcher trust 权重集成
-const playerMatcherJs = fs.readFileSync(path.join(projectRoot, 'utils/player-matcher.js'), 'utf-8')
+const playerMatcherJs = fs.readFileSync(path.join(projectRoot, 'packageSync/utils/player-matcher.js'), 'utf-8')
 check('C-P4 player-matcher 引入 trust-score', playerMatcherJs.includes('trust-score'), 'error')
 check('C-P4 player-matcher rankByRelevance 使用 trustMap', playerMatcherJs.includes('trustMap'), 'error')
 check('C-P4 player-matcher watch 玩家降级队尾', playerMatcherJs.includes("tier === 'watch'") || playerMatcherJs.includes("'watch'"), 'error')
@@ -775,8 +778,8 @@ check('C-P4 reportPlayer 累计 3 次标记 flagged', reportPlayerCode.includes(
 check('C-P4 reportPlayer 防重复 ALREADY_REPORTED', reportPlayerCode.includes('ALREADY_REPORTED'), 'error')
 
 // 8f. room 页面 Tab + 聊天 + 评价 UI 集成
-const roomJsCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/room/room.js'), 'utf-8')
-const roomWxmlCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/room/room.wxml'), 'utf-8')
+const roomJsCp4 = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/room/room.js'), 'utf-8')
+const roomWxmlCp4 = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/room/room.wxml'), 'utf-8')
 check('C-P4 room.js 导入 chat-store', roomJsCp4.includes('chat-store'), 'error')
 check('C-P4 room.js 导入 player-trust-store', roomJsCp4.includes('player-trust-store'), 'error')
 check('C-P4 room.js 含 activeTab 状态', roomJsCp4.includes('activeTab'), 'error')
@@ -792,14 +795,14 @@ check('C-P4 room.wxml 含聊天面板', roomWxmlCp4.includes('chat'), 'warn')
 check('C-P4 room.wxml 含评价弹窗', roomWxmlCp4.includes('review') || roomWxmlCp4.includes('cp4-modal'), 'warn')
 
 // 8g. hall / detail 信任标签展示
-const hallJsCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/hall.js'), 'utf-8')
-const hallWxmlCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/hall.wxml'), 'utf-8')
+const hallJsCp4 = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/hall/hall.js'), 'utf-8')
+const hallWxmlCp4 = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/hall/hall.wxml'), 'utf-8')
 check('C-P4 hall.js 导入 player-trust-store', hallJsCp4.includes('player-trust-store'), 'error')
 check('C-P4 hall.js 含 loadMatchPartnerTrust', hallJsCp4.includes('loadMatchPartnerTrust'), 'error')
 check('C-P4 hall.js 含 matchPartnerTrustMap', hallJsCp4.includes('matchPartnerTrustMap'), 'error')
 check('C-P4 hall.wxml 含信任标签 partner-trust-tag', hallWxmlCp4.includes('partner-trust-tag') || hallWxmlCp4.includes('trust-tag'), 'warn')
-const detailJsCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/detail/detail.js'), 'utf-8')
-const detailWxmlCp4 = fs.readFileSync(path.join(projectRoot, 'pages/group/hall/detail/detail.wxml'), 'utf-8')
+const detailJsCp4 = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/hall/detail/detail.js'), 'utf-8')
+const detailWxmlCp4 = fs.readFileSync(path.join(projectRoot, 'packageSync/pages/group/hall/detail/detail.wxml'), 'utf-8')
 check('C-P4 detail.js 导入 player-trust-store', detailJsCp4.includes('player-trust-store'), 'error')
 check('C-P4 detail.js 含 loadMemberTrust', detailJsCp4.includes('loadMemberTrust'), 'error')
 check('C-P4 detail.js 含 memberTrustMap', detailJsCp4.includes('memberTrustMap'), 'error')

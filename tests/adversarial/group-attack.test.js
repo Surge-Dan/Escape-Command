@@ -1,4 +1,4 @@
-// tests/adversarial/group-attack.test.js
+﻿// tests/adversarial/group-attack.test.js
 // C-14~C-19 同频组局对抗式攻击测试
 // 运行: node tests/adversarial/group-attack.test.js
 //
@@ -13,7 +13,7 @@
 const wx = require('../mock-wx.js')
 global.wx = wx
 
-const store = require('../../utils/group-room-store.js')
+const store = require('../../packageSync/utils/group-room-store.js')
 const I = store._internal
 
 // ===== 测试统计 =====

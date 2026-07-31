@@ -1,4 +1,4 @@
-// tests/property/player-matcher-property.test.js
+﻿// tests/property/player-matcher-property.test.js
 // D5 真实玩家联动 Property-Based Fuzz 测试
 // 运行: node tests/property/player-matcher-property.test.js
 //
@@ -10,7 +10,7 @@
 
 'use strict'
 
-var playerMatcher = require('../../utils/player-matcher.js')
+var playerMatcher = require('../../packageSync/utils/player-matcher.js')
 
 // ===== 种子化 PRNG（mulberry32）=====
 function makeRng(seed) {

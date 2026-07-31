@@ -1,4 +1,4 @@
-// tests/property/group-property.test.js
+﻿// tests/property/group-property.test.js
 // C-14~C-19 同频组局 Property-Based Fuzz 测试
 // 运行: node tests/property/group-property.test.js
 //
@@ -13,7 +13,7 @@
 const wx = require('../mock-wx.js')
 global.wx = wx
 
-const store = require('../../utils/group-room-store.js')
+const store = require('../../packageSync/utils/group-room-store.js')
 const I = store._internal
 
 // ===== 种子化 PRNG（mulberry32）=====

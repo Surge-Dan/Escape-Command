@@ -68,7 +68,7 @@ walk(root, fp => {
 const allOverThreshold = allResources.filter(r => r.size > THRESHOLD.SINGLE_FILE);
 
 // 1.5 读取 project.config.json 的 packOptions.ignore —— 模拟微信开发者工具扫描口径
-// 微信「主包」= 全仓文件 - packOptions.ignore 排除的目录/文件
+// 微信「主包」= 全仓文件 - packOptions.ignore 排除的目录/文件 - subPackages 整个 root
 let ignoredFolders = new Set();
 let ignoredFiles = new Set();   // 精确文件名
 let ignoredGlobs = [];          // glob 模式（如 *.mp4）
@@ -80,6 +80,15 @@ try {
       if (item.value.includes('*')) ignoredGlobs.push(item.value);
       else ignoredFiles.add(item.value);
     }
+  }
+} catch (e) {}
+
+// 1.6 读取 app.json 的 subPackages —— 分包整个 root 目录都不进主包
+// 例：{ root: 'packageSync', name: 'sync', pages: [...] } → packageSync/ 全排除
+try {
+  const aj = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf-8'));
+  for (const sp of (aj.subPackages || [])) {
+    if (sp && sp.root) ignoredFolders.add(sp.root);
   }
 } catch (e) {}
 

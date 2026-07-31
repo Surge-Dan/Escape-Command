@@ -1,4 +1,4 @@
-// pages/group/hall/create-task/create-task.js
+﻿// pages/group/hall/create-task/create-task.js
 // C-P3 任务大厅 - 创建出逃任务页
 //
 // 职责：
@@ -329,7 +329,7 @@ Page({
       if (result && result.ok) {
         wx.showToast({ title: '发布成功', icon: 'success' })
         setTimeout(() => {
-          wx.redirectTo({ url: '/pages/group/hall/hall' })
+          wx.redirectTo({ url: '/packageSync/pages/group/hall/hall' })
         }, 600)
       } else {
         this.setData({ creating: false })

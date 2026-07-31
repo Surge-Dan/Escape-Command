@@ -1,4 +1,4 @@
-// tests/unit/trust-score.test.js
+﻿// tests/unit/trust-score.test.js
 // 单元测试：trust-score.js (C-P4 信任分纯函数计算)
 // 运行: node tests/unit/trust-score.test.js
 //
@@ -9,7 +9,7 @@
 
 var assert = require('assert')
 
-var trustScore = require('../../utils/trust-score.js')
+var trustScore = require('../../packageSync/utils/trust-score.js')
 var computeTrustScore = trustScore.computeTrustScore
 var isValidReview = trustScore.isValidReview
 var tierFromScore = trustScore.tierFromScore

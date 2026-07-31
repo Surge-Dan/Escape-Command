@@ -1,4 +1,4 @@
-// pages/group/hall/detail/detail.js
+﻿// pages/group/hall/detail/detail.js
 // C-P3 任务详情页
 //
 // 职责：
@@ -275,7 +275,7 @@ Page({
 
     // 4. 跳转房间页
     wx.redirectTo({
-      url: '/pages/group/room/room?roomId=' + roomId + '&taskId=' + task.taskId
+      url: '/packageSync/pages/group/room/room?roomId=' + roomId + '&taskId=' + task.taskId
     })
   },
 
@@ -287,7 +287,7 @@ Page({
       return
     }
     wx.navigateTo({
-      url: '/pages/group/room/room?roomId=' + task.roomId + '&taskId=' + task.taskId
+      url: '/packageSync/pages/group/room/room?roomId=' + task.roomId + '&taskId=' + task.taskId
     })
   }
 })

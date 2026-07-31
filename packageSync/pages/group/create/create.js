@@ -1,4 +1,4 @@
-const app = getApp()
+﻿const app = getApp()
 const roomStore = require('../../../utils/group-room-store.js')
 
 // 开关：true = 本地存储 demo 模式，false = 云函数模式
@@ -113,7 +113,7 @@ Page({
       const result = roomStore.createRoom(topic, maxMembers)
       if (result.ok && result.roomId) {
         wx.redirectTo({
-          url: '/pages/group/room/room?roomId=' + result.roomId
+          url: '/packageSync/pages/group/room/room?roomId=' + result.roomId
         })
       } else {
         this.setData({ creating: false })
@@ -147,7 +147,7 @@ Page({
         const result = res && res.result
         if (result && result.ok && result.roomId) {
           wx.redirectTo({
-            url: '/pages/group/room/room?roomId=' + result.roomId
+            url: '/packageSync/pages/group/room/room?roomId=' + result.roomId
           })
         } else {
           this.setData({ creating: false })

@@ -1,4 +1,4 @@
-// tests/unit/player-matcher.test.js
+﻿// tests/unit/player-matcher.test.js
 // 单元测试：player-matcher.js (D5 真实玩家联动 · 混合模式匹配器)
 // 运行: node tests/unit/player-matcher.test.js
 //
@@ -12,7 +12,7 @@
 
 var assert = require('assert')
 
-var matcher = require('../../utils/player-matcher.js')
+var matcher = require('../../packageSync/utils/player-matcher.js')
 
 // ===== 测试框架（支持同步 + 异步）=====
 

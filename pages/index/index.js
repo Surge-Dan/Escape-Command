@@ -311,12 +311,12 @@ Page({
 
   onInviteFriendsTap() {
     this.setData({ showDiceSheet: false })
-    wx.navigateTo({ url: '/pages/group/create/create' })
+    wx.navigateTo({ url: '/packageSync/pages/group/create/create' })
   },
 
   onEnterHallTap() {
     this.setData({ showDiceSheet: false })
-    wx.navigateTo({ url: '/pages/group/hall/hall' })
+    wx.navigateTo({ url: '/packageSync/pages/group/hall/hall' })
   },
 
   // ===== home-dice-entry-01: 微逃细分弹窗 =====

@@ -218,9 +218,30 @@ describe('rankByRelevance 异常输入', function () {
   })
 
   attack('P20: rankByRelevance players 含 null/undefined 元素', function () {
-    var players = [null, undefined, { openId: 'p20', nickname: 'P20', interests: ['food'], district: '天河区' }]
-    var result = playerMatcher.rankByRelevance(players, '天河区', ['food'])
+    // 有效元素在前、null/undefined 在后：排序时 null/undefined 作为待插入的 a 与有效的 b 比较，
+    // 若 null 守卫失效（aValid 恒 true）会访问 a.district 崩溃
+    var players = [{ openId: 'p20', nickname: 'P20', interests: ['food'], district: '天河区' }, null, undefined]
+    var result = playerMatcher.rankByRelevance(players, { district: '天河区', interests: ['food'] })
     if (!Array.isArray(result)) return { ok: false, msg: '应返回数组' }
+    if (result.length !== 3) return { ok: false, msg: '长度应保持 3，null/undefined 不应被过滤' }
+    return { ok: true }
+  })
+
+  attack('P20b: rankByRelevance null 元素 + 有效 trustMap 不崩（trust 路径 null 守卫）', function () {
+    // 有效元素在前、null/undefined 在后，确保 null 作为 a 比较时走 trust 路径访问 a.openId
+    var players = [{ openId: 't1', district: '天河区' }, { openId: 't2', district: '越秀区' }, null, undefined]
+    var trustMap = { t1: { tier: 'gold' }, t2: { tier: 'watch' } }
+    var result = playerMatcher.rankByRelevance(players, { district: '天河区' }, trustMap)
+    if (!Array.isArray(result)) return { ok: false, msg: '应返回数组' }
+    if (result.length !== 4) return { ok: false, msg: '长度应保持 4' }
+    // null/undefined 排队尾，t1(gold+天河区) 应在 t2(watch) 前
+    var t1Idx = -1, t2Idx = -1
+    for (var i = 0; i < result.length; i++) {
+      if (result[i] && result[i].openId === 't1') t1Idx = i
+      if (result[i] && result[i].openId === 't2') t2Idx = i
+    }
+    if (t1Idx < 0 || t2Idx < 0) return { ok: false, msg: '有效玩家不应丢失' }
+    if (t1Idx > t2Idx) return { ok: false, msg: 'gold+同区 应排在 watch 前面' }
     return { ok: true }
   })
 

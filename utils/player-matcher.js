@@ -84,9 +84,17 @@ function rankByRelevance(players, filters, trustMap) {
   var district = filters.district
   var interests = filters.interests
   var list = Array.isArray(players) ? players.slice() : []
-  var hasTrust = trustMap && typeof trustMap === 'object'
+  // trustMap 必须是纯对象，排除数组（数组 typeof==='object' 但不是信任映射）
+  var hasTrust = trustMap && typeof trustMap === 'object' && !Array.isArray(trustMap)
 
   list.sort(function (a, b) {
+    // null/undefined/非对象元素排到队尾，不参与评分（防御性，避免 .district/.openId 抛错）
+    var aValid = a && typeof a === 'object'
+    var bValid = b && typeof b === 'object'
+    if (!aValid && !bValid) return 0
+    if (!aValid) return 1   // a 无效 → 排后面
+    if (!bValid) return -1  // b 无效 → 排后面
+
     var aD = district && a.district === district ? 1 : 0
     var bD = district && b.district === district ? 1 : 0
     var aI = interests && interests.length > 0 && hasInterestOverlap(a.interests, interests) ? 1 : 0

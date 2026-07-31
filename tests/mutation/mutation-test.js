@@ -835,6 +835,16 @@ const mutations = [
     test: 'node tests/unit/player-matcher.test.js',
     expectKilled: true
   },
+  {
+    name: 'PM11: rankByRelevance null 守卫失效（aValid 恒 true，null 元素抛错）',
+    file: 'utils/player-matcher.js',
+    find: 'var aValid = a && typeof a === \'object\'',
+    replace: 'var aValid = true',
+    test: 'node tests/adversarial/player-matcher-attack.test.js',
+    expectKilled: true
+  },
+  // PM12（hasTrust 数组排除移除）为等价变异：getTierWeight('normal')=1.0，
+  // 数组当 trustMap 时所有 tier fallback 到 normal(权重 1.0)，得分与无 trust 路径一致，无法杀死，故不纳入
 
   // ===== C-P4 社交增强变异（trust-score + player-trust-store + chat-store）=====
   // 每条变异针对纯函数的关键不变量（分级阈值/边界/降级/去重），由 unit/property/adversarial 精确断言守护

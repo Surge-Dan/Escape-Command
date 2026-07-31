@@ -1,5 +1,5 @@
 const app = getApp()
-const { MOODS, TYPE_META } = require('../../utils/constants.js')
+const { MOODS, TYPE_META } = require('../../../utils/constants.js')
 
 const MOOD_EMOJI = { happy: '😊', calm: '😌', surprise: '😲', heal: '🥰', fun: '😄' }
 const MOOD_SCORE = { happy: 5, fun: 4, surprise: 3, heal: 3, calm: 2 }

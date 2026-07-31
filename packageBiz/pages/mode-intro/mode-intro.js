@@ -1,5 +1,5 @@
 const app = getApp()
-const { MODE_LIST } = require('../../utils/constants.js')
+const { MODE_LIST } = require('../../../utils/constants.js')
 
 // v2 模式人格：每个模式的「性格」由 3-4 条具体描述构成，避免空话。
 const MODE_PERSONALITY = {

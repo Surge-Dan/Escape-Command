@@ -1,5 +1,5 @@
 const app = getApp()
-const { TYPE_META, DEFAULT_STEPS } = require('../../utils/constants.js')
+const { TYPE_META, DEFAULT_STEPS } = require('../../../utils/constants.js')
 
 // 容器高宽比近似（500rpx 高 / ~670rpx 宽），用于把百分比坐标换算成视觉角度与线长。
 const ASPECT_RATIO = 0.75

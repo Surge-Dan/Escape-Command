@@ -1,5 +1,5 @@
 const app = getApp()
-const { getTypeMeta, BADGES } = require('../../utils/constants.js')
+const { getTypeMeta, BADGES } = require('../../../utils/constants.js')
 
 Page({
   data: {

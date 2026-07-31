@@ -1,5 +1,5 @@
 const app = getApp()
-const { TYPE_META, MOODS, getTypeMeta, normalizeType } = require('../../utils/constants.js')
+const { TYPE_META, MOODS, getTypeMeta, normalizeType } = require('../../../utils/constants.js')
 
 const TYPE_ORDER = ['color', 'walk', 'sense', 'collect', 'food', 'culture']
 const SEASONS = [

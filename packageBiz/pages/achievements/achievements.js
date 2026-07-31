@@ -1,5 +1,5 @@
 const app = getApp()
-const BADGES = require('../../data/badges.js')
+const BADGES = require('../../../data/badges.js')
 
 // 里程碑定义
 const MILESTONES = [

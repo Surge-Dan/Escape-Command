@@ -1,6 +1,6 @@
 const app = getApp()
-const { MOODS, MODE_LIST, getTypeMeta } = require('../../utils/constants.js')
-const recordBuilder = require('../../utils/record-builder.js')
+const { MOODS, MODE_LIST, getTypeMeta } = require('../../../utils/constants.js')
+const recordBuilder = require('../../../utils/record-builder.js')
 
 Page({
   data: {

@@ -1,6 +1,6 @@
 const app = getApp()
-const community = require('../../data/community.js')
-const { normalizeType, getTypeMeta } = require('../../utils/constants.js')
+const community = require('../../../data/community.js')
+const { normalizeType, getTypeMeta } = require('../../../utils/constants.js')
 
 Page({
   data: {

@@ -1,6 +1,6 @@
 const app = getApp()
-const challenges = require('../../data/challenges.js')
-const { normalizeType } = require('../../utils/constants.js')
+const challenges = require('../../../data/challenges.js')
+const { normalizeType } = require('../../../utils/constants.js')
 
 const TYPE_KEYS = ['color', 'walk', 'sense', 'collect', 'food', 'culture']
 

@@ -1,5 +1,5 @@
 const app = getApp()
-const { MOODS, TYPE_META, MODE_LIST } = require('../../utils/constants.js')
+const { MOODS, TYPE_META, MODE_LIST } = require('../../../utils/constants.js')
 
 const MOOD_EMOJI = { happy: '😊', calm: '😌', surprise: '😲', heal: '🥰', fun: '😄' }
 const TYPE_NAME_CN = { color: '颜色探索', walk: '漫步发现', sense: '感官体验', collect: '收藏拼贴', food: '美食探索', culture: '如实文化' }

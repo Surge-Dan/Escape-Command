@@ -1,5 +1,5 @@
 const app = getApp()
-const { getTypeMeta, MODE_LIST } = require('../../utils/constants.js')
+const { getTypeMeta, MODE_LIST } = require('../../../utils/constants.js')
 
 // 状态筛选 tab
 const STATUS_FILTERS = [

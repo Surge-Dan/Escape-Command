@@ -1,5 +1,5 @@
 const app = getApp()
-const themes = require('../../data/themes.js')
+const themes = require('../../../data/themes.js')
 
 Page({
   data: {

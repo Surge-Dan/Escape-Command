@@ -1,5 +1,5 @@
 const app = getApp()
-const BADGES = require('../../data/badges.js')
+const BADGES = require('../../../data/badges.js')
 
 // 每个徽章的诗意故事（2-3 段）
 const BADGE_STORIES = {

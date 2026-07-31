@@ -1,5 +1,5 @@
 const app = getApp()
-const aiImage = require('../../utils/ai-image.js')
+const aiImage = require('../../../utils/ai-image.js')
 
 // 每步的实用小贴士（兜底，cmd 自带 steps.details 时优先用 cmd 的）。
 const STEP_HINTS = [

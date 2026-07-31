@@ -1,5 +1,5 @@
 const app = getApp()
-const BADGES = require('../../data/badges.js')
+const BADGES = require('../../../data/badges.js')
 
 // 徽章分组配置：category → 中文标题
 const CATEGORY_ORDER = [

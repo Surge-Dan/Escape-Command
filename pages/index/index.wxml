@@ -23,24 +23,66 @@
     </view>
 
     <!-- home-dice-entry-01: 单骰居中 + 右划切换 + 点击转动 -->
+    <!-- v18 融合：微逃(shake-card脉冲环) / 破圈(breakthrough-card裂变骰子) / 同频(简洁圆形) -->
     <view wx:if="{{!selectedCommand}}" class="dice-stage"
           bindtouchstart="onTouchStart"
           bindtouchend="onTouchEnd">
       <view class="dice-stage-inner">
         <view wx:for="{{diceList}}" wx:key="id"
-              class="dice-card {{currentDiceIndex === index ? 'active' : (index < currentDiceIndex ? 'prev' : 'next')}} {{isRolling && currentDiceIndex === index ? 'rolling' : ''}}"
+              class="dice-card {{currentDiceIndex === index ? 'active' : (index < currentDiceIndex ? 'prev' : 'next')}} {{isRolling && currentDiceIndex === index ? 'rolling' : ''}} {{item.id === 'breakthrough' ? 'dice-card-bt' : ''}} {{item.id === 'micro' ? 'dice-card-micro' : ''}}"
               data-index="{{index}}"
               bindtap="onDiceTap">
-          <view class="dice-card-inner" style="background: {{item.color}}1A;">
-            <image class="dice-ico" src="{{item.icon}}" mode="aspectFit"></image>
-          </view>
-          <text class="dice-name">{{item.name}}</text>
-          <text class="dice-hint">点击掷骰</text>
+
+          <!-- 微逃骰子：脉冲环 + 骰子盒（恢复 Henry shake-card 风格） -->
+          <block wx:if="{{item.id === 'micro'}}">
+            <view class="pulse-ring"></view>
+            <view class="pulse-ring pulse-ring-delay"></view>
+            <view class="dice-box {{isBouncing ? 'dice-bounce' : ''}}">
+              <image class="dice-ico" src="{{item.icon}}" mode="aspectFit"></image>
+            </view>
+            <text class="dice-card-title">{{item.name}}</text>
+            <text class="dice-card-sub">{{item.desc}}</text>
+            <view class="dice-card-remain">
+              <text>今日剩余 </text>
+              <text class="remain-num font-mono">{{remainCount}}</text>
+              <text> 次</text>
+            </view>
+          </block>
+
+          <!-- 破圈骰子：紫色脉冲环 + 裂变破壁骰子（恢复 Henry breakthrough-card 风格） -->
+          <block wx:elif="{{item.id === 'breakthrough'}}">
+            <view class="bt-pulse-ring"></view>
+            <view class="bt-pulse-ring bt-pulse-ring-delay"></view>
+            <view class="bt-dice-wrap {{isBouncing ? 'bt-dice-bounce' : ''}}">
+              <view class="bt-dice-bg"></view>
+              <view class="bt-dice-frag bt-frag-1"></view>
+              <view class="bt-dice-frag bt-frag-2"></view>
+              <view class="bt-dice-frag bt-frag-3"></view>
+              <image class="bt-dice-ico" src="{{item.icon}}" mode="aspectFit"></image>
+            </view>
+            <text class="dice-card-title bt-title">{{item.name}}</text>
+            <text class="dice-card-sub bt-sub">{{item.desc}}</text>
+            <view class="dice-card-remain bt-remain-row">
+              <text>今日剩余 </text>
+              <text class="bt-remain-num font-mono">{{breakthroughRemainCount}}</text>
+              <text> 次</text>
+            </view>
+          </block>
+
+          <!-- 同频骰子：简洁圆形图标 -->
+          <block wx:else>
+            <view class="dice-card-inner" style="background: {{item.color}}1A;">
+              <image class="dice-ico" src="{{item.icon}}" mode="aspectFit"></image>
+            </view>
+            <text class="dice-card-title">{{item.name}}</text>
+            <text class="dice-card-sub">{{item.desc}}</text>
+          </block>
         </view>
       </view>
       <view class="dice-dots">
         <view wx:for="{{diceList}}" wx:key="id"
-              class="dice-dot {{currentDiceIndex === index ? 'active' : ''}}"></view>
+              class="dice-dot {{currentDiceIndex === index ? 'active' : ''}}"
+              style="{{currentDiceIndex === index ? 'background: ' + item.color + ';' : ''}}"></view>
       </view>
       <view class="dice-info">
         <text class="dice-info-name">{{diceList[currentDiceIndex].name}}</text>

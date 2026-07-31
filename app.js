@@ -1,16 +1,17 @@
+const app = getApp()
 const { normalizeType, getTypeMeta, MOODS, DEFAULT_STEPS, TYPE_STEPS } = require('./utils/constants.js')
 const BADGES = require('./data/badges.js')
 const challenges = require('./data/challenges.js')
 const themes = require('./data/themes.js')
-const breakthroughCommandsData = require('./data/breakthrough-commands.js')
+// 破圈指令池（124KB）改为按需加载：仅在用户进入破圈骰子/画像/证书时引入，避免启动时进主包
 // v4: AI 场景插画 —— 启动时清理过期缓存
 const aiImage = require('./utils/ai-image.js')
 // B-02~B-06: 生成引擎（纯函数，零 wx 依赖）
 const generatorEngine = require('./utils/generator-engine.js')
 // 出逃记录构造器（普通 + 同频统一入口，纯函数零 wx 依赖）
 const recordBuilder = require('./utils/record-builder.js')
-// POI 指令构建器（真实周边商铺/打卡点 → 带具体地点的指令，纯函数零 wx 依赖）
-const poiCommandBuilder = require('./utils/poi-command-builder.js')
+// POI 指令构建器（真实周边商铺/打卡点 → 带具体地点的指令）—— 改为按需加载，避免启动时进主包
+// const poiCommandBuilder = require('./utils/poi-command-builder.js')  // 见 lazyRequirePoiBuilder()
 
 App({
   globalData: {
@@ -231,13 +232,34 @@ App({
       this.globalData.commandPool = this.getFallbackCommands()
     }
     this.globalData.offlineCommands = this.globalData.commandPool.filter(c => !c.requirePOI).slice(0, 100)
-    // 初始化破圈指令池
-    this.initBreakthroughPool()
+    // 破圈指令池不在启动时加载（124KB），见 initBreakthroughPool() 按需懒加载
   },
 
   initBreakthroughPool() {
-    const raw = (breakthroughCommandsData && breakthroughCommandsData.BREAKTHROUGH_COMMANDS) || []
-    this.globalData.breakthroughPool = raw.map(cmd => this.normalizeCommand(cmd))
+    // 按需懒加载：避免 124KB 的 data/breakthrough-commands.js 在启动时同步进主包
+    // 调用方：rollBreakthroughCommand / breakthrough-profile / bt-certificate
+    if (this._breakthroughPoolLoaded) return
+    this._breakthroughPoolLoaded = true
+    try {
+      const data = require('./data/breakthrough-commands.js')
+      const raw = (data && data.BREAKTHROUGH_COMMANDS) || []
+      this.globalData.breakthroughPool = raw.map(cmd => this.normalizeCommand(cmd))
+    } catch (e) {
+      console.error('加载破圈指令池失败', e)
+      this.globalData.breakthroughPool = []
+    }
+  },
+
+  // 异步加载 POI 指令构建器：仅在云函数 poiSearch 回调时按需引入
+  lazyRequirePoiBuilder() {
+    if (this._poiBuilderCached) return this._poiBuilderCached
+    try {
+      this._poiBuilderCached = require('./utils/poi-command-builder.js')
+    } catch (e) {
+      console.error('加载 POI 构建器失败', e)
+      this._poiBuilderCached = null
+    }
+    return this._poiBuilderCached
   },
 
   normalizeCommand(cmd) {
@@ -339,6 +361,11 @@ App({
   // POI 指令自带 location，完成后记录自动带坐标 → 地图标记闭环
   injectPOICommands(pois) {
     if (!Array.isArray(pois) || pois.length === 0) return
+    const poiCommandBuilder = this.lazyRequirePoiBuilder()
+    if (!poiCommandBuilder || typeof poiCommandBuilder.buildCommands !== 'function') {
+      console.warn('[app] POI 构建器未加载，跳过 POI 指令注入')
+      return
+    }
     const ctx = {
       city: this.globalData.currentCity || '',
       hour: this.getCurrentHour(),
@@ -619,6 +646,9 @@ App({
   // 修复：原 Henry 版 candidates 为空时调 this.getFallbackCommands() 会返回微逃指令，
   // 破圈骰子可能摇出微逃任务，改为回退到破圈全池 pool
   rollBreakthroughCommand() {
+    // 首次调用时按需加载 124KB 破圈指令池（避免启动时进主包）
+    // 同步 require 仅在首次 ~50ms 内完成，第二次起走 _breakthroughPoolLoaded 短路
+    this.initBreakthroughPool()
     const pool = this.globalData.breakthroughPool || []
     const completed = this.globalData.completedCommandIds
     const profile = this.globalData.breakthroughProfile
@@ -646,6 +676,18 @@ App({
     const selected = candidates[Math.floor(Math.random() * candidates.length)]
     this.rememberLastType(selected.type)
     return selected
+  },
+
+  // 后台预加载破圈指令池：进入首页 1.5s 后异步加载，避免首次点破圈骰子卡顿
+  // 不阻塞启动主流程
+  preloadBreakthroughPool() {
+    if (this._breakthroughPoolLoaded) return
+    // 延迟 1500ms 让首页先渲染完，避免抢占启动资源
+    setTimeout(() => {
+      try {
+        this.initBreakthroughPool()
+      } catch (e) {}
+    }, 1500)
   },
 
   // 将用户画像扁平化为 ["sport:often", "social:mid", ...] 标签数组

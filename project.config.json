@@ -7,6 +7,14 @@
         "type": "folder"
       },
       {
+        "value": "tests",
+        "type": "folder"
+      },
+      {
+        "value": "scripts",
+        "type": "folder"
+      },
+      {
         "value": "demo",
         "type": "folder"
       },
@@ -20,6 +28,22 @@
       },
       {
         "value": "OPTIMIZATION-PROMPT.md",
+        "type": "file"
+      },
+      {
+        "value": "*.mp4",
+        "type": "file"
+      },
+      {
+        "value": "*.mp3",
+        "type": "file"
+      },
+      {
+        "value": "*.wav",
+        "type": "file"
+      },
+      {
+        "value": "project.private.config.json",
         "type": "file"
       }
     ],

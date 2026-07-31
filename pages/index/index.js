@@ -94,6 +94,9 @@ Page({
     this.loadFontFace()
     // home-dice-entry-01: 恢复上次选中的骰子位置
     this.restoreLastDiceIndex()
+    // 破圈指令池后台预热：进入首页 1.5s 后异步加载，避免首次点破圈骰子卡顿
+    // 不阻塞启动主流程
+    if (app.preloadBreakthroughPool) app.preloadBreakthroughPool()
     if (options && options.mode === 'double' && options.cmd) this.applyInvitation(options.cmd)
   },
 
@@ -261,7 +264,13 @@ Page({
     const dice = this.data.diceList[index]
     if (!dice) return
 
-    // 触发酷炫转动动画
+    // 破圈骰子：直接首页摇取（有专属 bt-dice-bounce 动画，不走 isRolling 转动）
+    if (dice.id === 'breakthrough') {
+      this.rollBreakthroughCommand()
+      return
+    }
+
+    // 微逃/同频：触发酷炫转动动画，800ms 后分流
     this.setData({ isRolling: true })
     try { wx.vibrateShort({ type: 'medium' }) } catch (e) {}
 
@@ -285,8 +294,6 @@ Page({
         isRecommended: rec.isRecommended,
         selectedDuration: rec.duration
       })
-    } else if (dice.id === 'breakthrough') {
-      wx.navigateTo({ url: '/pages/generating/generating?mode=breakthrough' })
     } else if (dice.id === 'sync') {
       // sync-dice-sheet: 不再直达创建页，先弹底部 Sheet 让用户选择出逃方式
       this.setData({ showDiceSheet: true })

@@ -193,7 +193,7 @@
 /* 步骤内容 */
 .step-content { flex: 1; display: flex; flex-direction: column; gap: 4rpx; min-width: 0; }
 .step-label { font-size: 22rpx; color: var(--ink-faint); }
-.step-text { font-size: 28rpx; color: var(--ink); line-height: 1.5; }
+.step-text { font-size: 28rpx; color: var(--ink); line-height: 1.5; word-break: break-word; overflow-wrap: break-word; }
 .step-row.current .step-text { color: var(--brand-dark); font-weight: 600; }
 .step-row.finished .step-text { color: var(--ink-soft); text-decoration: line-through; text-decoration-color: var(--ink-faint); }
 
@@ -320,7 +320,7 @@
 }
 
 .tip-label { font-size: 22rpx; font-weight: 400; color: var(--brand-dark); }
-.tip-text { display: block; margin-top: 8rpx; font-size: 28rpx; color: var(--ink-soft); line-height: 1.5; }
+.tip-text { display: block; margin-top: 8rpx; font-size: 28rpx; color: var(--ink-soft); line-height: 1.5; word-break: break-word; overflow-wrap: break-word; }
 
 /* 完成按钮：底部安全区 */
 .ex-actions {
@@ -366,3 +366,139 @@
 
 .finish-btn image { width: 36rpx; height: 36rpx; }
 .bottom-spacer { height: 24rpx; }
+
+/* ===== 破圈模式专属样式 ===== */
+.bt-courage-card {
+  background: linear-gradient(135deg, #F3E8FF, #FFF5F0);
+  border: 2rpx solid #9B7BB8;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 36rpx 40rpx;
+  margin-bottom: 24rpx;
+}
+.bt-courage-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20rpx;
+}
+.bt-courage-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #7B3FAF;
+}
+.bt-courage-count {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #9B7BB8;
+}
+.bt-courage-sub {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #A55FA5;
+  text-align: center;
+}
+.bt-courage-steps {
+  display: flex;
+  justify-content: center;
+  gap: 28rpx;
+}
+.bt-courage-dot {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  background: #F4F3EE;
+  color: #B8B4A8;
+  border: 2rpx solid #E0DDD0;
+}
+.bt-courage-dot.done {
+  background: #9B7BB8;
+  color: #FFFFFF;
+  border-color: #9B7BB8;
+}
+.bt-courage-dot.current {
+  border-color: #A55FA5;
+  color: #A55FA5;
+  animation: btPulse 1400ms ease-in-out infinite;
+}
+@keyframes btPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(165, 95, 165, 0.4); }
+  50% { box-shadow: 0 0 0 16rpx rgba(165, 95, 165, 0); }
+}
+
+/* 破圈步骤行：竖向布局，更多呼吸空间 */
+.step-row.current .bt-step-badge {
+  background: #FFFFFF;
+  border-color: #A55FA5;
+  color: #A55FA5;
+}
+
+/* 破圈步骤专属布局：从flex row改成flex column让文字不拥挤 */
+.step-row.bt-step-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12rpx;
+  padding: 28rpx 20rpx;
+}
+.step-row.bt-step-row .step-row-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  width: 100%;
+}
+.step-row.bt-step-row .step-finish-btn {
+  margin-top: 8rpx;
+  align-self: center;
+  width: 100%;
+  justify-content: center;
+}
+
+/* 破圈步骤标签 */
+.bt-step-badge {
+  flex-shrink: 0;
+  padding: 8rpx 18rpx;
+  background: #F3E8FF;
+  border: 2rpx solid #9B7BB8;
+  border-radius: 20rpx;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #7B3FAF;
+  text-align: center;
+  white-space: nowrap;
+}
+.step-row.bt-step-row.finished .bt-step-badge {
+  background: #9B7BB8;
+  border-color: #9B7BB8;
+  color: #FFFFFF;
+}
+.step-row.bt-step-row.finished .step-text {
+  text-decoration: line-through;
+  text-decoration-color: #B8B4A8;
+}
+.step-row.bt-step-row.current {
+  background: #F8F0FF;
+  border-radius: var(--radius-md);
+  margin: 0 -8rpx;
+  padding: 24rpx 28rpx;
+}
+
+/* 破圈tip图标 */
+.tip-icon-dot.bt {
+  background: #9B7BB8;
+}
+
+/* 破圈完成按钮紫色 */
+.finish-btn.bt-purple {
+  background: linear-gradient(135deg, #9B7BB8, #7B3FAF);
+  box-shadow: 0 4rpx 16rpx rgba(123,63,175,0.3);
+}
+.finish-btn.bt-purple:active {
+  background: linear-gradient(135deg, #8A6BA8, #6B3095);
+}

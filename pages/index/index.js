@@ -51,7 +51,13 @@ Page({
     recommendedDuration: 15,
     isRecommended: false,
     // sync-dice-sheet: 同频骰子入口选择弹层
-    showDiceSheet: false
+    showDiceSheet: false,
+    // v18 破圈骰子
+    showLegacyDice: false,
+    breakthroughRemainCount: 5,
+    isBreakthroughRolling: false,
+    // v18: Hero 副标题（随选中骰子切换）
+    heroSubText: '用 15 分钟，给城市一个随机出口'
   },
 
   onLoad(options) {
@@ -142,6 +148,10 @@ Page({
     this.refreshState()
     this.loadDailyRecommend()
     if (typeof this.getTabBar === 'function' && this.getTabBar()) this.getTabBar().setData({ selected: 0 })
+    // 从完成页返回时清除已过期的指令显示
+    if (this.data.selectedCommand && !app.globalData.currentCommand) {
+      this.setData({ selectedCommand: null })
+    }
   },
 
   onHide() {},
@@ -160,6 +170,9 @@ Page({
   refreshState() {
     const gd = app.globalData
     const greetingData = this.buildGreeting()
+    const subText = this.data.currentDiceIndex === 0
+      ? '用 15 分钟，给城市一个随机出口'
+      : '破圈骰子 · 做一件平时不会做的事'
     this.setData({
       greetingText: greetingData.text,
       locationText: greetingData.location,
@@ -169,7 +182,9 @@ Page({
       weekdayText: greetingData.weekday,
       dateText: greetingData.dateText,
       collectedCount: (gd.collectedCommands || []).length,
-      remainCount: gd.reRollCount
+      remainCount: gd.reRollCount,
+      breakthroughRemainCount: gd.breakthroughReRollCount,
+      heroSubText: subText
     })
   },
 
@@ -313,6 +328,56 @@ Page({
     this.setData({ showMicroSheet: false })
   },
 
+  // v18 左右滑动切换骰子
+  onDiceSwiperChange(e) {
+    const index = e.detail.current
+    this.setData({ currentDiceIndex: index }, () => this.refreshState())
+  },
+
+  // v18 点击指示器切换骰子
+  onDiceIndicatorTap(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    if (index === this.data.currentDiceIndex) return
+    this.setData({ currentDiceIndex: index }, () => this.refreshState())
+  },
+
+  rollBreakthroughCommand() {
+    if (this.data.rolling || this.data.selectedCommand || this.data.isBreakthroughRolling) return
+    // 无剩余次数时禁止摇取
+    if (this.data.breakthroughRemainCount <= 0) {
+      wx.showToast({ title: '今日破圈次数已用完，明天再来', icon: 'none', duration: 2000 })
+      return
+    }
+    // 无画像时仍然可摇，只是随机推荐；有画像则更精准
+    this.setData({ isBreakthroughRolling: true, isBouncing: true })
+    try { wx.vibrateShort({ type: 'light' }) } catch (e) {}
+    setTimeout(() => {
+      const cmd = app.rollBreakthroughCommand()
+      if (!cmd) {
+        this.setData({ isBreakthroughRolling: false, isBouncing: false })
+        wx.showToast({ title: '今天先休息一下', icon: 'none' })
+        return
+      }
+      // 每次摇取消耗 1 次（含首次）
+      app.useBreakthroughReroll()
+      this.refreshState()
+      const meta = getTypeMeta(cmd.type)
+      this.setData({
+        selectedCommand: Object.assign({}, cmd, {
+          typeName: meta.name,
+          typeColor: cmd.typeColor || meta.color,
+          typeIcon: meta.icon,
+          illustration: cmd.illustration || meta.scene
+        }),
+        rolling: false,
+        isBouncing: false,
+        isBreakthroughRolling: false
+      })
+      if (app.playSound) app.playSound('shake')
+      this.refreshState()
+    }, 300)
+  },
+
   rollCommand() {
     if (this.data.rolling || this.data.selectedCommand) return
     this.setData({ rolling: true, isBouncing: true, collected: false })
@@ -341,6 +406,14 @@ Page({
 
   reroll(e) {
     if (e && e.stopPropagation) e.stopPropagation()
+    // 破圈骰子重摇：rollBreakthroughCommand 内部已处理扣次
+    if (this.data.currentDiceIndex === 1) {
+      this.setData({ selectedCommand: null }, () => {
+        this.rollBreakthroughCommand()
+      })
+      return
+    }
+    // 微逃骰子重摇（原有逻辑）
     if (!app.useReroll()) {
       wx.showModal({
         title: '自定义出逃',

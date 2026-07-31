@@ -11,6 +11,14 @@ const STEP_HINTS = [
   '感受不用写很长，一句话就够'
 ]
 
+// 破圈模式步骤标题（搞怪版）
+const BT_STEP_LABELS = [
+  '🎬 上吧！',
+  '😅 撑住别跑',
+  '💪 已经回不去了',
+  '🎉 破圈成功！'
+]
+
 Page({
   data: {
     statusBarHeight: 20,
@@ -31,7 +39,9 @@ Page({
     typeColor: '#5CBF9E',
     // v3: 步数统计（漫步模式或时长 >= 30 分钟）
     showStepCount: false,
-    stepCount: 0
+    stepCount: 0,
+    // 破圈模式专属
+    isBreakthrough: false
   },
 
   onLoad() {
@@ -42,13 +52,14 @@ Page({
       wx.switchTab({ url: '/pages/index/index' })
       return
     }
+    const isBT = cmd.type === 'breakthrough' || cmd.mode === 'breakthrough'
     // v4: 步骤改造 —— 转对象数组，含 id/text/done/hint
     const rawSteps = (cmd.steps && cmd.steps.length ? cmd.steps : DEFAULT_STEPS).slice(0, 4)
     const steps = rawSteps.map((s, i) => {
       const isObj = (typeof s === 'object' && s !== null)
       const text = isObj ? (s.text || '') : String(s || '')
-      const hint = isObj && s.details ? s.details : (STEP_HINTS[i] || '慢慢来，不着急')
-      return { id: i + 1, text, hint, done: false }
+      const hint = isObj && s.details ? s.details : (isBT ? (STEP_HINTS[i] || '深呼吸，你可以的') : (STEP_HINTS[i] || '慢慢来，不着急'))
+      return { id: i + 1, text, hint, done: false, label: isBT ? (BT_STEP_LABELS[i] || '') : '' }
     })
     // 进度持久化：冷启动恢复 done 状态 + completedAt 留痕
     // 首次进入初始化 executionProgress 挂到 currentCommand，复用 saveCurrentCommand 落盘
@@ -58,10 +69,11 @@ Page({
     }
     const merged = executionProgress.mergeProgress(steps, cmd.executionProgress)
     const typeMeta = getTypeMeta(cmd.type)
-    const typeColor = (typeMeta && typeMeta.color) || '#5CBF9E'
+    // 破圈模式用 TYPE_META.breakthrough.color（#9B7BB8），其他模式从指令/元数据取色
+    const typeColor = isBT ? (typeMeta.color || '#9B7BB8') : (cmd.typeColor || typeMeta.color || '#5CBF9E')
     const isWalk = cmd.mode === 'walk' || cmd.type === 'walk'
     const duration = cmd.duration || 20
-    const showStepCount = isWalk || duration >= 30
+    const showStepCount = !isBT && (isWalk || duration >= 30)
     const stepCount = duration * 100
     this.setData({
       command: cmd,
@@ -70,6 +82,7 @@ Page({
       typeColor,
       showStepCount,
       stepCount,
+      isBreakthrough: isBT,
       currentStep: merged.currentStep,
       doneCount: merged.doneCount,
       allDone: merged.allDone

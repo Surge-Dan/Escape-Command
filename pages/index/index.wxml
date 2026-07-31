@@ -19,7 +19,7 @@
           <text>{{heroTail}}</text>
         </text>
       </view>
-      <text class="hero-sub">用 15 分钟，给城市一个随机出口</text>
+      <text class="hero-sub">{{heroSubText}}</text>
     </view>
 
     <!-- home-dice-entry-01: 单骰居中 + 右划切换 + 点击转动 -->

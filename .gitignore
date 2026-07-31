@@ -19,6 +19,8 @@ recordings/
 # ======================
 .trae/specs/*/drafts/
 .trae/specs/*/notes/
+# TRAE Skill 缓存（IDE 本地 skill 资源，不进 git，避免污染分支）
+.trae/skills/
 
 # ======================
 # IDE / 工具

@@ -3575,6 +3575,197 @@ function on(matcher, handler) {
 })()
 
 // ============================================================
+// ===== Breakthrough-Flow 步骤处理器（破圈骰子）=====
+// ============================================================
+;(function registerBreakthroughFlow() {
+  // 引入破圈指令池
+  const btData = require('../../data/breakthrough-commands.js')
+  const BT_POOL = btData.BREAKTHROUGH_COMMANDS
+
+  // 模拟 app.rollBreakthroughCommand 核心逻辑（与 app.js 对齐）
+  function rollBT(opts) {
+    const pool = opts.pool || BT_POOL
+    const completed = opts.completed || []
+    const profile = opts.profile || null
+    const isLateNight = !!opts.isLateNight
+    const profileTags = profile ? Object.keys(profile).map(function (k) {
+      const v = profile[k]
+      return typeof v === 'string' ? (k + ':' + v) : null
+    }).filter(Boolean) : []
+
+    let candidates = pool.filter(function (cmd) {
+      if (completed.indexOf(cmd.id) >= 0) return false
+      if (isLateNight && !cmd.nightSafe) return false
+      if (cmd.avoidTypes && profileTags.some(function (t) { return cmd.avoidTypes.indexOf(t) >= 0 })) return false
+      return true
+    })
+    if (!candidates.length) candidates = pool
+    if (profile && profileTags.length) {
+      const preferred = candidates.filter(function (cmd) {
+        return cmd.recommendTypes && cmd.recommendTypes.some(function (t) { return profileTags.indexOf(t) >= 0 })
+      })
+      if (preferred.length >= 1) candidates = preferred
+    }
+    if (!candidates.length) candidates = pool
+    if (!candidates.length) return undefined
+    return candidates[Math.floor(Math.random() * candidates.length)]
+  }
+
+  // Given
+  on(/^破圈指令池已初始化 100 条指令$/, function (ctx) {
+    ctx.btPool = BT_POOL
+    return BT_POOL.length === 100
+  })
+  on(/^当前时段为白天$/, function (ctx) { ctx.isLateNight = false; return true })
+  on(/^当前时段为深夜$/, function (ctx) { ctx.isLateNight = true; return true })
+  on(/^用户画像为空$/, function (ctx) { ctx.profile = null; return true })
+  on(/^用户画像包含 (\w+:\w+)$/, function (ctx, m) {
+    const parts = m[1].split(':')
+    ctx.profile = ctx.profile || {}
+    ctx.profile[parts[0]] = parts[1]
+    return true
+  })
+  on(/^用户已完成指令 (bt\d{3}) 和 (bt\d{3})$/, function (ctx, m) {
+    ctx.completed = [m[1], m[2]]
+    return true
+  })
+  on(/^用户已完成全部 100 条破圈指令$/, function (ctx) {
+    ctx.completed = BT_POOL.map(function (c) { return c.id })
+    return ctx.completed.length === 100
+  })
+  on(/^今日破圈剩余次数为 (\d+)$/, function (ctx, m) {
+    ctx.btRemainCount = parseInt(m[1])
+    return true
+  })
+  on(/^用户完成了一条破圈指令 (bt\d{3})$/, function (ctx, m) {
+    ctx.lastBtCmd = BT_POOL.find(function (c) { return c.id === m[1] })
+    return !!ctx.lastBtCmd
+  })
+  on(/^用户已完成 (\d+) 条破圈指令$/, function (ctx, m) {
+    const n = parseInt(m[1])
+    ctx.btRecords = BT_POOL.slice(0, n).map(function (c) {
+      return { commandId: c.id, commandType: 'breakthrough', content: c.content, steps: c.steps }
+    })
+    return ctx.btRecords.length === n
+  })
+  on(/^用户又完成了一条普通出逃指令$/, function (ctx) {
+    ctx.normalRecord = { commandId: 'c001', commandType: 'walk', content: '去公园散步', steps: ['出门', '走', '回'] }
+    return true
+  })
+
+  // When
+  on(/^用户点击破圈骰子$/, function (ctx) {
+    if (ctx.btRemainCount !== undefined && ctx.btRemainCount <= 0) {
+      ctx.btRejected = true
+      return true
+    }
+    ctx.lastResult = rollBT({
+      completed: ctx.completed || [],
+      profile: ctx.profile,
+      isLateNight: ctx.isLateNight
+    })
+    if (ctx.lastResult && ctx.btRemainCount !== undefined) {
+      ctx.btRemainCount = Math.max(0, ctx.btRemainCount - 1)
+    }
+    return true
+  })
+  on(/^用户点击破圈骰子 (\d+) 次$/, function (ctx, m) {
+    const n = parseInt(m[1])
+    ctx.results = []
+    if (ctx.btRemainCount !== undefined && ctx.btRemainCount <= 0) {
+      ctx.btRejected = true
+      return true
+    }
+    for (let i = 0; i < n; i++) {
+      const cmd = rollBT({
+        completed: ctx.completed || [],
+        profile: ctx.profile,
+        isLateNight: ctx.isLateNight
+      })
+      if (cmd) ctx.results.push(cmd)
+    }
+    return true
+  })
+  on(/^记录入库$/, function (ctx) {
+    if (!ctx.lastBtCmd) return false
+    ctx.savedRecord = {
+      commandId: ctx.lastBtCmd.id,
+      commandType: 'breakthrough',
+      content: ctx.lastBtCmd.content,
+      steps: ctx.lastBtCmd.steps
+    }
+    return true
+  })
+  on(/^用户进入破圈证书页$/, function (ctx) {
+    // 模拟 bt-certificate.js onLoad 逻辑
+    const allRecords = (ctx.btRecords || []).concat(ctx.normalRecord ? [ctx.normalRecord] : [])
+    const btRecords = allRecords.filter(function (r) { return r.commandType === 'breakthrough' })
+    ctx.certTotalCount = btRecords.length
+    ctx.certLastBtRecord = btRecords.length > 0 ? btRecords[btRecords.length - 1] : null
+    ctx.certCmd = ctx.certLastBtRecord || null
+    return true
+  })
+
+  // Then
+  on(/^应返回一条 breakthrough 类型指令$/, function (ctx) {
+    return ctx.lastResult && ctx.lastResult.type === 'breakthrough'
+  })
+  on(/^该指令应在 bt001 到 bt100 范围内$/, function (ctx) {
+    return ctx.lastResult && /^bt\d{3}$/.test(ctx.lastResult.id)
+  })
+  on(/^应返回一条 nightSafe=true 的指令$/, function (ctx) {
+    return ctx.lastResult && ctx.lastResult.nightSafe === true
+  })
+  on(/^每次返回的指令都不在已完成列表中$/, function (ctx) {
+    const completed = ctx.completed || []
+    return (ctx.results || []).every(function (c) { return completed.indexOf(c.id) < 0 })
+  })
+  on(/^返回的指令 avoidTypes 都不包含 (\w+:\w+)$/, function (ctx, m) {
+    const tag = m[1]
+    return (ctx.results || []).every(function (c) {
+      return !c.avoidTypes || c.avoidTypes.indexOf(tag) < 0
+    })
+  })
+  on(/^返回的指令 recommendTypes 都包含 (\w+:\w+)$/, function (ctx, m) {
+    const tag = m[1]
+    return (ctx.results || []).every(function (c) {
+      return c.recommendTypes && c.recommendTypes.indexOf(tag) >= 0
+    })
+  })
+  on(/^应回退全池返回一条 breakthrough 类型指令$/, function (ctx) {
+    return ctx.lastResult && ctx.lastResult.type === 'breakthrough'
+  })
+  on(/^不应返回 undefined$/, function (ctx) {
+    return ctx.lastResult !== undefined
+  })
+  on(/^应提示"今日破圈次数已用完"$/, function (ctx) {
+    return ctx.btRejected === true
+  })
+  on(/^不应消耗任何指令$/, function (ctx) {
+    return ctx.lastResult === undefined
+  })
+  on(/^今日破圈剩余次数应为 (\d+)$/, function (ctx, m) {
+    return ctx.btRemainCount === parseInt(m[1])
+  })
+  on(/^记录的 commandType 应为 breakthrough$/, function (ctx) {
+    return ctx.savedRecord && ctx.savedRecord.commandType === 'breakthrough'
+  })
+  on(/^记录应包含 4 步 steps$/, function (ctx) {
+    return ctx.savedRecord && Array.isArray(ctx.savedRecord.steps) && ctx.savedRecord.steps.length === 4
+  })
+  on(/^证书页应显示破圈总数 (\d+)$/, function (ctx, m) {
+    return ctx.certTotalCount === parseInt(m[1])
+  })
+  on(/^证书页应读取最后一条破圈记录作为当前指令$/, function (ctx) {
+    return ctx.certCmd && ctx.certCmd.commandType === 'breakthrough'
+  })
+  on(/^不应误读普通出逃记录作为破圈数据$/, function (ctx) {
+    // 确保证书页取到的是破圈记录，而非普通出逃
+    return ctx.certCmd && ctx.certCmd.commandType === 'breakthrough' && ctx.certCmd.commandType !== 'walk'
+  })
+})()
+
+// ============================================================
 // ===== 通用：解析 feature 文件 =====
 // ============================================================
 function parseFeature(content) {

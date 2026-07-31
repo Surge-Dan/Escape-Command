@@ -65,7 +65,9 @@ Page({
       locationText,
       // 同频出逃识别（供分享卡绘制成员、默认文案选择）
       isGroup: cmd.isGroup === true,
-      members: Array.isArray(cmd.members) ? cmd.members.slice() : []
+      members: Array.isArray(cmd.members) ? cmd.members.slice() : [],
+      // 破圈出逃识别（供分享卡绘制破圈证书入口、文案选择）
+      isBreakthrough: cmd.type === 'breakthrough' || cmd.mode === 'breakthrough'
     })
   },
 
@@ -294,8 +296,12 @@ Page({
     })
   },
 
-  goMap() {
-    wx.switchTab({ url: '/pages/map/map' })
+  goNext() {
+    if (this.data.isBreakthrough) {
+      wx.redirectTo({ url: '/pages/bt-certificate/bt-certificate' })
+    } else {
+      wx.switchTab({ url: '/pages/map/map' })
+    }
   },
 
   onShareAppMessage() {

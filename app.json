@@ -41,7 +41,9 @@
     "pages/group/escape-record/escape-record",
     "pages/group/hall/hall",
     "pages/group/hall/detail/detail",
-    "pages/group/hall/create-task/create-task"
+    "pages/group/hall/create-task/create-task",
+    "pages/breakthrough-profile/breakthrough-profile",
+    "pages/bt-certificate/bt-certificate"
   ],
   "lazyCodeLoading": "requiredComponents",
   "window": {

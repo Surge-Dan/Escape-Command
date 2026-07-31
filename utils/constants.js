@@ -16,6 +16,7 @@ const TYPE_META = {
   collect: { name: '收藏拼贴', color: '#C9B037', icon: '/assets/icons/bookmark.svg', pin: '/assets/icons/pin-collect.svg', scene: '/assets/images/collect-scene.webp' },
   food: { name: '美食探索', color: '#A67C52', icon: '/assets/icons/coffee.svg', pin: '/assets/icons/pin-food.svg', scene: '/assets/images/food-scene.webp' },
   culture: { name: '如实文化', color: '#5CBF9E', icon: '/assets/icons/compass-brand.svg', pin: '/assets/icons/pin-culture.svg', scene: '/assets/images/culture-scene.webp' },
+  breakthrough: { name: '破圈行动', color: '#9B7BB8', icon: '/assets/icons/breakthrough-dice-purple.svg', pin: '/assets/icons/breakthrough-dice-purple.svg', scene: '/assets/images/sense-scene.webp' },
   custom: { name: '自定义', color: '#E07A5F', icon: '/assets/icons/pin-color.svg', pin: '/assets/icons/pin-color.svg', scene: '/assets/images/color-scene.webp' }
 }
 
@@ -25,7 +26,8 @@ const MODE_LIST = [
   { id: 'walk', name: '城市漫游', icon: '/assets/icons/footprints-coral.svg', activeIcon: '/assets/icons/footprints-white.svg', color: '#D98A5C', heroScene: '/assets/images/walk-scene.webp', desc: '户外长线，深度探索' },
   { id: 'double', name: '双人出逃', icon: '/assets/icons/users-lavender.svg', activeIcon: '/assets/icons/users-white.svg', color: '#9B7BB8', heroScene: '/assets/images/sense-scene.webp', desc: '邀请朋友，一起冒险' },
   { id: 'night', name: '深夜出逃', icon: '/assets/icons/moon-gray.svg', activeIcon: '/assets/icons/moon-white.svg', color: '#9B8EC4', heroScene: '/assets/images/sense-scene.webp', desc: '夜色独白，安静漫步' },
-  { id: 'rainy', name: '雨天出逃', icon: '/assets/icons/cloud-rain-sky-fg.svg', activeIcon: '/assets/icons/cloud-rain-white.svg', color: '#7EC8F5', heroScene: '/assets/images/sense-scene.webp', desc: '雨中漫步，室内寻觅' }
+  { id: 'rainy', name: '雨天出逃', icon: '/assets/icons/cloud-rain-sky-fg.svg', activeIcon: '/assets/icons/cloud-rain-white.svg', color: '#7EC8F5', heroScene: '/assets/images/sense-scene.webp', desc: '雨中漫步，室内寻觅' },
+  { id: 'breakthrough', name: '破圈骰子', icon: '/assets/icons/breakthrough-dice-purple.svg', activeIcon: '/assets/icons/breakthrough-dice-purple.svg', color: '#9B7BB8', heroScene: '/assets/images/sense-scene.webp', desc: '行为破圈，突破舒适区' }
 ]
 
 // v3.1: 模式选择 Sheet 仅展示 3 个（智能 / 微 / 漫游）；双人/深夜/雨天 留作加权状态
@@ -38,7 +40,7 @@ const SHEET_MODES = [
 // home-dice-entry-01: 首页骰子入口三选项（微逃 / 破圈 / 同频）
 const HOME_DICE_LIST = [
   { id: 'micro',       name: '微出逃',   icon: '/assets/icons/sprout-brand-strong.svg',  color: '#7BAE7F', desc: '碎片时间，快速出逃' },
-  { id: 'breakthrough', name: '破圈出逃', icon: '/assets/icons/footprints-coral.svg',    color: '#D98A5C', desc: '走出舒适，新鲜探索' },
+  { id: 'breakthrough', name: '破圈出逃', icon: '/assets/icons/breakthrough-dice-purple.svg', color: '#9B7BB8', desc: '做一件平时不会做的事' },
   { id: 'sync',        name: '同频组局', icon: '/assets/icons/dice-5-brand-strong.svg', color: '#5CBF9E', desc: '约上朋友，一起出逃' }
 ]
 
@@ -78,7 +80,8 @@ const TYPE_STEPS = {
   sense: ['找一个能坐下的角落', '闭上眼睛 30 秒', '记下你听到的 3 种声音', '给这段安静写一句话'],
   collect: ['带一个小袋子出门', '捡起第一眼吸引你的小物', '找个地方把它摆好', '拍下这张小小收藏'],
   food: ['走进一家没去过的店', '点一份今天想吃的', '慢慢吃完，不要刷手机', '记下这家店的味道'],
-  culture: ['找一个文化场所的入口', '走进去，挑一件展品多看一会', '拍下它的细节', '写一句它让你想到的事']
+  culture: ['找一个文化场所的入口', '走进去，挑一件展品多看一会', '拍下它的细节', '写一句它让你想到的事'],
+  breakthrough: ['深呼吸，准备好迈出第一步', '做一件你平时不敢或不想做的事', '感受做完后的心理变化', '写一句你今天突破的感受']
 }
 
 function normalizeType(type) {

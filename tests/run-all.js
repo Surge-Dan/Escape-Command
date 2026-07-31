@@ -27,8 +27,9 @@ const testSuites = [
   { name: '单元测试 - trust-score (C-P4 信任分)', cmd: 'node tests/unit/trust-score.test.js', timeout: 30000 },
   { name: '单元测试 - player-trust-store (C-P4 信任数据层)', cmd: 'node tests/unit/player-trust-store.test.js', timeout: 30000 },
   { name: '单元测试 - chat-store (C-P4 聊天数据层)', cmd: 'node tests/unit/chat-store.test.js', timeout: 30000 },
+  { name: '单元测试 - breakthrough (Henry 破圈骰子)', cmd: 'node tests/unit/breakthrough.test.js', timeout: 30000 },
   // ===== BDD =====
-  { name: 'Gherkin BDD (group + generator + completion + task-hall + c-p4-social)', cmd: 'node tests/gherkin/runner.js', timeout: 60000 },
+  { name: 'Gherkin BDD (group + generator + completion + task-hall + c-p4-social + breakthrough)', cmd: 'node tests/gherkin/runner.js', timeout: 60000 },
   // ===== Fuzz =====
   { name: 'Property Fuzz - generator (1000+ 次)', cmd: 'node tests/property/generator-property.test.js', timeout: 120000 },
   { name: 'Property Fuzz - group (C-14~C-19)', cmd: 'node tests/property/group-property.test.js', timeout: 120000 },

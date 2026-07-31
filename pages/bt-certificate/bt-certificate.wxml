@@ -1,0 +1,81 @@
+<view class="cert-page">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-spacer"></view>
+  </view>
+
+  <!-- 入场动画粒子 -->
+  <view class="confetti-container {{isAnimating ? 'active' : ''}}">
+    <view wx:for="{{20}}" wx:key="*this" class="confetti-piece" style="--delay: {{index * 120}}ms; --x: {{(index % 10) * 10}}%; --color: {{['#9B7BB8','#D98A5C','#FFD700','#7B3FAF','#FF6B6B'][index % 5]}};"></view>
+  </view>
+
+  <scroll-view scroll-y class="cert-scroll">
+    <view class="cert-body">
+
+      <!-- 顶部搞怪标题 -->
+      <view class="cert-hero {{isAnimating ? 'fade-in' : ''}}">
+        <view class="cert-hero-glow"></view>
+        <view class="cert-title-block">
+          <text class="cert-title-emoji">🎉</text>
+          <text class="cert-title-text">{{funTitle}}</text>
+          <text wx:if="{{showCrown}}" class="cert-title-crown">👑</text>
+        </view>
+        <text class="cert-subtitle">{{funSlogan}}</text>
+      </view>
+
+      <!-- 证书主卡 -->
+      <view class="cert-card {{isAnimating ? 'slide-up' : ''}}" id="certificate-card">
+        <view class="cert-ribbon">
+          <text class="cert-ribbon-text">破圈证书</text>
+        </view>
+
+        <text class="cert-user">{{userName}}</text>
+
+        <!-- 破圈项目 -->
+        <view class="cert-challenge">
+          <text class="cert-challenge-label">今日离谱事件</text>
+          <text class="cert-challenge-text">{{commandTitle}}</text>
+        </view>
+
+        <!-- 搞怪数据 -->
+        <view class="cert-stats">
+          <view class="cert-stat-item">
+            <text class="cert-stat-value">{{shameStars}}</text>
+            <text class="cert-stat-label">社死指数</text>
+          </view>
+          <view class="cert-stat-divider"></view>
+          <view class="cert-stat-item">
+            <text class="cert-stat-value">第 {{totalCount}} 次</text>
+            <text class="cert-stat-label">累计破圈</text>
+          </view>
+          <view class="cert-stat-divider"></view>
+          <view class="cert-stat-item">
+            <text class="cert-stat-value">{{shameLabel}}</text>
+            <text class="cert-stat-label">当前称号</text>
+          </view>
+        </view>
+
+        <!-- 鼓励语 -->
+        <text class="cert-encourage">🤘 继续保持，你已经不是你了！</text>
+
+        <!-- 日期城市 -->
+        <text class="cert-meta">{{dateStr}} · {{cityName}}</text>
+
+        <view class="cert-footer-line"></view>
+        <text class="cert-footer-text">出逃指令 · 破圈骰子</text>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="cert-actions {{isAnimating ? 'slide-up' : ''}}" style="animation-delay: 400ms;">
+        <view class="cert-btn primary" bindtap="goHome">
+          <text>回到首页</text>
+        </view>
+        <view class="cert-btn secondary" bindtap="shareCertificate">
+          <text>晒一下你的社死证书</text>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+</view>

@@ -5,25 +5,48 @@
     <view class="nav-header-back" bindtap="goBack">
       <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
     </view>
-    <text class="nav-header-title">执行中</text>
+    <text class="nav-header-title">{{isBreakthrough ? '破圈挑战' : '执行中'}}</text>
     <view class="nav-header-divider"></view>
   </view>
 
   <scroll-view scroll-y class="ex-scroll">
-    <!-- 计时卡：突出进度感 -->
-    <view class="timer-card">
-      <view class="timer-head">
-        <text class="timer-label">已探索</text>
-        <text class="timer-num font-mono">{{elapsedMinutes}}</text>
-        <text class="timer-unit">分钟</text>
-      </view>
-      <view class="progress-bar-bg">
-        <view class="progress-bar-fill" style="width: {{progressPct}}%; background: {{typeColor}};"></view>
-      </view>
-      <text class="timer-sub">预计还需 {{remainMin}} 分钟</text>
-    </view>
 
-    <!-- v3: 步数统计卡（漫步模式或时长 >= 30 分钟） -->
+    <!-- ============ 微逃模式：计时卡 ============ -->
+    <block wx:if="{{!isBreakthrough}}">
+      <view class="timer-card">
+        <view class="timer-head">
+          <text class="timer-label">已探索</text>
+          <text class="timer-num font-mono">{{elapsedMinutes}}</text>
+          <text class="timer-unit">分钟</text>
+        </view>
+        <view class="progress-bar-bg">
+          <view class="progress-bar-fill" style="width: {{progressPct}}%; background: {{typeColor}};"></view>
+        </view>
+        <text class="timer-sub">预计还需 {{remainMin}} 分钟</text>
+      </view>
+    </block>
+
+    <!-- ============ 破圈模式：勇气计 ============ -->
+    <block wx:else>
+      <view class="bt-courage-card">
+        <view class="bt-courage-head">
+          <text class="bt-courage-title">🔥 勇气进度</text>
+          <text class="bt-courage-count font-mono">{{doneCount}} / {{steps.length}}</text>
+        </view>
+        <view class="bt-courage-steps">
+          <view wx:for="{{steps}}" wx:key="id" class="bt-courage-dot {{item.done ? 'done' : (index === currentStep ? 'current' : '')}}">
+            <text wx:if="{{item.done}}">✓</text>
+            <text wx:elif="{{index === currentStep}}">●</text>
+            <text wx:else>○</text>
+          </view>
+        </view>
+        <text class="bt-courage-sub" wx:if="{{allDone}}">全部突破！你太强了 🎉</text>
+        <text class="bt-courage-sub" wx:elif="{{doneCount > 0}}">第 {{doneCount + 1}} 关，冲！</text>
+        <text class="bt-courage-sub" wx:else>深呼吸，开始你的破圈之旅</text>
+      </view>
+    </block>
+
+    <!-- 步数统计卡（仅微逃模式） -->
     <view wx:if="{{showStepCount}}" class="step-count-card">
       <view class="step-count-icon">
         <image src="/assets/icons/footprints-coral.svg" mode="aspectFit"></image>
@@ -34,37 +57,57 @@
       </view>
     </view>
 
-    <!-- 步骤卡：每步支持手动点击「完成」+ 进度条作参考 -->
+    <!-- ============ 步骤卡 ============ -->
     <view class="step-card">
-      <text class="step-card-title">出逃步骤</text>
-      <view wx:for="{{steps}}" wx:key="id" class="step-row {{item.done ? 'finished' : ''}} {{!item.done && index === currentStep ? 'current' : ''}}">
-        <!-- 步骤编号：16rpx 圆角矩形，使用类型色 -->
-        <view class="step-mark" style="--step-color: {{typeColor}};">
-          <text wx:if="{{item.done}}" class="step-mark-check">✓</text>
-          <text wx:else class="step-mark-num">{{index + 1}}</text>
-        </view>
-        <view class="step-content">
-          <text class="step-label">第 {{index + 1}} 步</text>
-          <text class="step-text">{{item.text}}</text>
-        </view>
-        <!-- 完成按钮（当前进行中或待完成的步骤可点击） -->
-        <view wx:if="{{!item.done}}" class="step-finish-btn"
-              data-index="{{index}}"
-              catchtap="onStepTap">
-          <image class="step-finish-ico" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
-          <text>完成</text>
-        </view>
-        <!-- 已完成态打勾（用 SVG） -->
-        <view wx:else class="step-done-mark">
-          <image src="/assets/icons/check-brand.svg" mode="aspectFit"></image>
-        </view>
+      <text class="step-card-title">{{isBreakthrough ? '闯关步骤' : '出逃步骤'}}</text>
+      <view wx:for="{{steps}}" wx:key="id" class="step-row {{item.done ? 'finished' : ''}} {{!item.done && index === currentStep ? 'current' : ''}} {{isBreakthrough ? 'bt-step-row' : ''}}">
+        <!-- 破圈模式：竖向布局（标签 + 文案 + 全宽按钮） -->
+        <block wx:if="{{isBreakthrough}}">
+          <view class="step-row-inner">
+            <view class="bt-step-badge">
+              <text>{{item.label || 'Step ' + (index + 1)}}</text>
+            </view>
+            <view class="step-content">
+              <text class="step-text">{{item.text}}</text>
+            </view>
+            <view wx:if="{{item.done}}" class="step-done-mark">
+              <image src="/assets/icons/check-brand.svg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <view wx:if="{{!item.done}}" class="step-finish-btn"
+                data-index="{{index}}"
+                catchtap="onStepTap">
+            <image class="step-finish-ico" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+            <text>挑战完成 ✓</text>
+          </view>
+        </block>
+        <!-- 微逃模式：原横向布局 -->
+        <block wx:else>
+          <view class="step-mark" style="--step-color: {{typeColor}};">
+            <text wx:if="{{item.done}}" class="step-mark-check">✓</text>
+            <text wx:else class="step-mark-num">{{index + 1}}</text>
+          </view>
+          <view class="step-content">
+            <text class="step-label">第 {{index + 1}} 步</text>
+            <text class="step-text">{{item.text}}</text>
+          </view>
+          <view wx:if="{{!item.done}}" class="step-finish-btn"
+                data-index="{{index}}"
+                catchtap="onStepTap">
+            <image class="step-finish-ico" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+            <text>完成</text>
+          </view>
+          <view wx:else class="step-done-mark">
+            <image src="/assets/icons/check-brand.svg" mode="aspectFit"></image>
+          </view>
+        </block>
       </view>
     </view>
 
     <!-- 拍照记录 -->
     <view class="photo-card">
       <view class="photo-head">
-        <text class="photo-title">拍照记录</text>
+        <text class="photo-title">{{isBreakthrough ? '记录你的社死现场' : '拍照记录'}}</text>
         <text class="photo-count font-mono">{{photos.length}} / 3</text>
       </view>
       <scroll-view scroll-x class="photo-list" enhanced show-scrollbar="{{false}}">
@@ -81,19 +124,19 @@
     <!-- 小贴士 -->
     <view class="tip-card">
       <view class="tip-head">
-        <view class="tip-icon-dot"></view>
-        <text class="tip-label">小贴士</text>
+        <view class="tip-icon-dot {{isBreakthrough ? 'bt' : ''}}"></view>
+        <text class="tip-label">{{isBreakthrough ? '破圈贴士' : '小贴士'}}</text>
       </view>
-      <text class="tip-text">{{command.tip || '慢慢走，留意街边的细节。'}}</text>
+      <text class="tip-text">{{command.tip || (isBreakthrough ? '深呼吸，迈出那一步就好' : '慢慢走，留意街边的细节。')}}</text>
     </view>
     <view class="bottom-spacer"></view>
   </scroll-view>
 
-  <!-- 完成按钮：底部安全区留白；未完成全部步骤时置灰 -->
+  <!-- 完成按钮 -->
   <view class="ex-actions">
-    <view class="finish-btn {{allDone ? '' : 'disabled'}}" bindtap="finishCommand">
+    <view class="finish-btn {{allDone ? '' : 'disabled'}} {{isBreakthrough ? 'bt-purple' : ''}}" bindtap="finishCommand">
       <image src="/assets/icons/check-white.svg" mode="aspectFit"></image>
-      <text>{{allDone ? '完成出逃' : '还有 ' + (steps.length - doneCount) + ' 步待完成'}}</text>
+      <text>{{allDone ? (isBreakthrough ? '🎉 我破圈了！' : '完成出逃') : '还有 ' + (steps.length - doneCount) + ' 步待完成'}}</text>
     </view>
   </view>
 </view>

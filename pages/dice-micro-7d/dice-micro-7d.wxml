@@ -1,0 +1,177 @@
+<!--pages/dice-micro-7d/dice-micro-7d.wxml-->
+<!--微逃骰子（7 维度版）- 条件选择页-->
+<view class="page">
+  <view class="hero safe-top">
+    <view class="hero__tag">MICRO ESCAPE · 7D</view>
+    <view class="hero__dice {{rolling ? 'hero__dice--rolling' : ''}}">🎲</view>
+    <view class="hero__title">微逃骰子</view>
+    <view class="hero__desc">先告诉我你现在的状态，我替你找一个小小的偏离。</view>
+  </view>
+
+  <view class="form">
+    <!-- 心情 -->
+    <view class="form-group">
+      <view class="form-group__label">
+        <text class="form-group__label-text">此刻的心情</text>
+        <text class="form-group__required">*</text>
+      </view>
+      <view class="chip-list">
+        <view
+          wx:for="{{moodOptions}}"
+          wx:key="value"
+          class="chip {{mood === item.value ? 'chip--active' : ''}}"
+          data-field="mood"
+          data-value="{{item.value}}"
+          bindtap="onSelect"
+          hover-class="chip--hover"
+          hover-stay-time="80"
+        >
+          <text class="chip__text">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 时长 -->
+    <view class="form-group">
+      <view class="form-group__label">
+        <text class="form-group__label-text">能拿出多少时间</text>
+        <text class="form-group__required">*</text>
+      </view>
+      <view class="chip-list">
+        <view
+          wx:for="{{durationOptions}}"
+          wx:key="value"
+          class="chip {{duration === item.value ? 'chip--active' : ''}}"
+          data-field="duration"
+          data-value="{{item.value}}"
+          bindtap="onSelect"
+          hover-class="chip--hover"
+          hover-stay-time="80"
+        >
+          <text class="chip__text">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 预算 -->
+    <view class="form-group">
+      <view class="form-group__label">
+        <text class="form-group__label-text">愿意花多少</text>
+        <text class="form-group__required">*</text>
+      </view>
+      <view class="chip-list">
+        <view
+          wx:for="{{budgetOptions}}"
+          wx:key="value"
+          class="chip {{budget === item.value ? 'chip--active' : ''}}"
+          data-field="budget"
+          data-value="{{item.value}}"
+          bindtap="onSelect"
+          hover-class="chip--hover"
+          hover-stay-time="80"
+        >
+          <text class="chip__text">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 距离 -->
+    <view class="form-group">
+      <view class="form-group__label">
+        <text class="form-group__label-text">能走多远</text>
+        <text class="form-group__required">*</text>
+      </view>
+      <view class="chip-list">
+        <view
+          wx:for="{{distanceOptions}}"
+          wx:key="value"
+          class="chip {{distance === item.value ? 'chip--active' : ''}}"
+          data-field="distance"
+          data-value="{{item.value}}"
+          bindtap="onSelect"
+          hover-class="chip--hover"
+          hover-stay-time="80"
+        >
+          <text class="chip__text">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 能量 -->
+    <view class="form-group">
+      <view class="form-group__label">
+        <text class="form-group__label-text">今天的能量</text>
+        <text class="form-group__required">*</text>
+      </view>
+      <view class="chip-list">
+        <view
+          wx:for="{{energyOptions}}"
+          wx:key="value"
+          class="chip {{energy === item.value ? 'chip--active' : ''}}"
+          data-field="energy"
+          data-value="{{item.value}}"
+          bindtap="onSelect"
+          hover-class="chip--hover"
+          hover-stay-time="80"
+        >
+          <text class="chip__text">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 人数 -->
+    <view class="form-group">
+      <view class="form-group__label">
+        <text class="form-group__label-text">几个人</text>
+      </view>
+      <view class="chip-list">
+        <view
+          wx:for="{{partyOptions}}"
+          wx:key="value"
+          class="chip {{partySize === item.value ? 'chip--active' : ''}}"
+          data-field="partySize"
+          data-value="{{item.value}}"
+          bindtap="onSelect"
+          hover-class="chip--hover"
+          hover-stay-time="80"
+        >
+          <text class="chip__text">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 室内外 -->
+    <view class="form-group">
+      <view class="form-group__label">
+        <text class="form-group__label-text">室内还是室外</text>
+      </view>
+      <view class="chip-list">
+        <view
+          wx:for="{{venueOptions}}"
+          wx:key="value"
+          class="chip {{venue === item.value ? 'chip--active' : ''}}"
+          data-field="venue"
+          data-value="{{item.value}}"
+          bindtap="onSelect"
+          hover-class="chip--hover"
+          hover-stay-time="80"
+        >
+          <text class="chip__text">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer safe-bottom">
+    <view
+      class="cta {{canRoll ? '' : 'cta--disabled'}} {{rolling ? 'cta--rolling' : ''}}"
+      bindtap="onRoll"
+      hover-class="{{canRoll && !rolling ? 'cta--hover' : ''}}"
+      hover-stay-time="100"
+    >
+      <text class="cta__icon">🎲</text>
+      <text class="cta__text">{{rolling ? '正在替你打开一个出口……' : '摇一下，看看会去哪'}}</text>
+    </view>
+    <view class="footer__hint" wx:if="{{!canRoll}}">把带 * 的都选上，就可以摇了</view>
+  </view>
+</view>

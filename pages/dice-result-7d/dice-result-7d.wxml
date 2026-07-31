@@ -1,0 +1,172 @@
+<!--pages/dice-result-7d/dice-result-7d.wxml-->
+<!--微逃骰子（7 维度版）- 结果页-->
+<view class="page">
+  <!-- 加载态 -->
+  <view wx:if="{{loading}}" class="loading">
+    <view class="loading__dice {{rolling ? 'loading__dice--rolling' : ''}}">🎲</view>
+    <view class="loading__phrase">{{loadingPhrase}}</view>
+    <view class="loading__dots">
+      <view class="dot"></view>
+      <view class="dot"></view>
+      <view class="dot"></view>
+    </view>
+  </view>
+
+  <!-- 错误态 -->
+  <view wx:elif="{{errorMsg}}" class="error">
+    <view class="error__icon">😞</view>
+    <view class="error__title">{{errorMsg}}</view>
+    <view class="error__btn" bindtap="onRetry" hover-class="error__btn--hover" hover-stay-time="100">再试一次</view>
+  </view>
+
+  <!-- 结果态 -->
+  <view wx:else class="result">
+    <!-- 顶部品牌 -->
+    <view class="result__header safe-top">
+      <view class="result__tag">YOUR ESCAPE</view>
+      <view class="result__sub">骰子落下了，这是它替你选的</view>
+    </view>
+
+    <!-- 剧本卡片 -->
+    <view class="script-card fade-in" wx:if="{{script}}">
+      <!-- 类别色条 -->
+      <view class="script-card__bar" style="background: {{categoryColor}};"></view>
+
+      <!-- 类别标签 -->
+      <view class="script-card__cat-tag" wx:if="{{categoryLabel}}" style="color: {{categoryColor}}; background: {{categorySoft}};">
+        {{categoryLabel}}
+      </view>
+
+      <!-- 标题 -->
+      <view class="script-card__title">{{script.title}}</view>
+
+      <!-- 缘由 -->
+      <view class="script-card__reason">{{script.reason}}</view>
+
+      <!-- 标签 -->
+      <view class="script-card__tags">
+        <view class="meta-tag">
+          <text class="meta-tag__icon">⏱</text>
+          <text class="meta-tag__text">{{durationLabel}}</text>
+        </view>
+        <view class="meta-tag">
+          <text class="meta-tag__icon">💰</text>
+          <text class="meta-tag__text">{{budgetLabel}}</text>
+        </view>
+        <view class="meta-tag">
+          <text class="meta-tag__icon">📍</text>
+          <text class="meta-tag__text">{{distanceLabel}}</text>
+        </view>
+        <view class="meta-tag">
+          <text class="meta-tag__icon">✨</text>
+          <text class="meta-tag__text">{{difficultyLabel}}</text>
+        </view>
+      </view>
+
+      <!-- 分隔 -->
+      <view class="script-card__divider"></view>
+
+      <!-- 目的地 -->
+      <view class="script-card__section">
+        <view class="script-card__section-label">目的地</view>
+        <view class="script-card__section-content">{{script.destination.description}}</view>
+      </view>
+
+      <!-- 第一阶段指令 -->
+      <view class="script-card__section">
+        <view class="script-card__section-label">第一阶段指令</view>
+        <view class="script-card__section-content">{{script.stageOne.instruction}}</view>
+      </view>
+
+      <!-- 隐藏任务提示 -->
+      <view class="script-card__hidden">
+        <view class="script-card__hidden-icon">🔒</view>
+        <view class="script-card__hidden-text">到达现场后，还有一条隐藏指令等你解锁</view>
+      </view>
+
+      <!-- 安全提示 -->
+      <view wx:if="{{script.safetyNotes.length > 0}}" class="script-card__safety">
+        <view class="script-card__safety-label">安全提示</view>
+        <view class="script-card__safety-text" wx:for="{{script.safetyNotes}}" wx:key="*this">· {{item}}</view>
+      </view>
+    </view>
+
+    <!-- POI 小地图 -->
+    <view wx:if="{{hasPoi}}" class="poi-map">
+      <view class="poi-map__header">
+        <text class="poi-map__icon">🗺️</text>
+        <text class="poi-map__title">目的地位置</text>
+      </view>
+      <map
+        class="poi-map__map"
+        latitude="{{poiLat}}"
+        longitude="{{poiLng}}"
+        markers="{{markers}}"
+        scale="15"
+        show-location
+      ></map>
+      <view class="poi-map__name" wx:if="{{poiName}}">📍 {{poiName}}</view>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="actions safe-bottom">
+      <view class="actions__primary" bindtap="onAccept" hover-class="actions__primary--hover" hover-stay-time="100">
+        <text class="actions__primary-text">接受指令</text>
+        <text class="actions__primary-arrow">→</text>
+      </view>
+      <view class="actions__secondary">
+        <view class="actions__btn" bindtap="onShowModify" hover-class="actions__btn--hover" hover-stay-time="80">
+          <text class="actions__btn-icon">🔄</text>
+          <text class="actions__btn-text">改一个条件</text>
+        </view>
+        <view class="actions__btn" bindtap="onSkip" hover-class="actions__btn--hover" hover-stay-time="80">
+          <text class="actions__btn-icon">🌙</text>
+          <text class="actions__btn-text">暂不出逃</text>
+        </view>
+      </view>
+      <view class="actions__hint">已重摇 {{rerollCount}}/{{3}} 次</view>
+    </view>
+  </view>
+
+  <!-- 修改条件面板 -->
+  <view wx:if="{{showModify}}" class="mask" bindtap="onCloseModify">
+    <view class="sheet" catchtap="">
+      <view class="sheet__header">
+        <view class="sheet__handle"></view>
+        <view class="sheet__close" catchtap="onCloseModify">×</view>
+      </view>
+      <view class="sheet__title">不喜欢这条指令?</view>
+      <view class="sheet__desc">改变一个条件，我重新摇一次。</view>
+      <scroll-view scroll-y class="sheet__list" enhanced show-scrollbar="{{false}}">
+        <view
+          wx:for="{{modifyGroups}}"
+          wx:key="field"
+          class="sheet__group"
+        >
+          <!-- 分组标题 -->
+          <view class="sheet__item sheet__item--label">
+            <text class="sheet__item-text">{{item.label}}</text>
+          </view>
+
+          <!-- 子选项：高亮当前已选 -->
+          <view class="sheet__sub">
+            <view
+              wx:for="{{item.options}}"
+              wx:for-item="opt"
+              wx:key="value"
+              class="sheet__sub-item {{selectedMap[item.field] === opt.value ? 'sheet__sub-item--active' : ''}}"
+              data-field="{{item.field}}"
+              data-value="{{opt.value}}"
+              bindtap="onTapSubOption"
+              hover-class="sheet__sub-item--hover"
+              hover-stay-time="80"
+            >
+              <text class="sheet__sub-text">{{opt.label}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="sheet__bottom-pad"></view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

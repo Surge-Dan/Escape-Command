@@ -43,7 +43,9 @@
     "pages/group/hall/detail/detail",
     "pages/group/hall/create-task/create-task",
     "pages/breakthrough-profile/breakthrough-profile",
-    "pages/bt-certificate/bt-certificate"
+    "pages/bt-certificate/bt-certificate",
+    "pages/dice-micro-7d/dice-micro-7d",
+    "pages/dice-result-7d/dice-result-7d"
   ],
   "lazyCodeLoading": "requiredComponents",
   "window": {

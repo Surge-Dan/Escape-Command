@@ -22,6 +22,7 @@ Page({
     milestones: [],
     milestoneUnlocked: 0,
     weekView: [],
+    theme: 'default',
     stats: {
       totalEscapes: 0,
       totalHours: 0,
@@ -39,6 +40,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ theme: app.globalData.theme || 'default' })
     this.loadAll()
   },
 

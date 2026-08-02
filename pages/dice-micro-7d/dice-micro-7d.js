@@ -2,96 +2,15 @@
 // 微逃骰子（7 维度版）- 条件选择页
 // 纯前端本地实现，不依赖后端 / 云函数
 // 风格对齐团队 pages/generating/generating.js：const/let + Page({ data, onLoad, 方法 })
+// 指令池与生成逻辑统一由 utils/micro-escape-config.js 提供（去重，单一数据源）
 const app = getApp()
 const microConfig = require('../../utils/micro-escape-config.js')
 const { Mood, Duration, Budget, Distance, Energy, PartySize, VenueType, DiceType } = microConfig
 
-// 本地指令池（微逃骰子专属，不依赖后端）
-const LOCAL_SCRIPTS = [
-  {
-    id: 'ms7d_001', category: 'sensory', title: '闭眼听三分钟',
-    reason: '给耳朵放个假，城市的声音比想象中丰富',
-    destination: { description: '最近的公园长椅或路边长椅' },
-    stageOne: { instruction: '找到长椅坐下，闭眼听 3 分钟，记下 5 种声音' },
-    hidden: { instruction: '把听到的声音画成一张"声音地图"' },
-    completionCondition: '记录下至少 5 种不同声音',
-    safetyNotes: ['注意随身物品'],
-    difficulty: 1, estimatedDuration: 10, estimatedBudget: 0, distance: 'nearby'
-  },
-  {
-    id: 'ms7d_002', category: 'walking', title: '左转左转再左转',
-    reason: '用规则打破惯性，迷路是最好的向导',
-    destination: { description: '任意路口' },
-    stageOne: { instruction: '出门左转，每个路口都左转，走 15 分钟' },
-    hidden: { instruction: '拍下你停下来的那个瞬间' },
-    completionCondition: '走够 15 分钟并拍一张照片',
-    safetyNotes: ['注意交通安全'],
-    difficulty: 1, estimatedDuration: 15, estimatedBudget: 0, distance: 'nearby'
-  },
-  {
-    id: 'ms7d_003', category: 'food', title: '让老板给你挑',
-    reason: '把选择权交出去，会有惊喜',
-    destination: { description: '最近的水果店或小吃店' },
-    stageOne: { instruction: '走进去跟老板说"给我挑一个最好吃的"' },
-    hidden: { instruction: '问老板今天什么卖得最好' },
-    completionCondition: '买到并尝一口',
-    safetyNotes: [],
-    difficulty: 1, estimatedDuration: 15, estimatedBudget: 20, distance: 'downstairs'
-  },
-  {
-    id: 'ms7d_004', category: 'observe', title: '数 5 种颜色',
-    reason: '放慢脚步，颜色就在身边',
-    destination: { description: '任意街道' },
-    stageOne: { instruction: '走 10 分钟，找到 5 种不同颜色的东西' },
-    hidden: { instruction: '把 5 种颜色按彩虹顺序排好' },
-    completionCondition: '拍一张包含 5 种颜色的照片',
-    safetyNotes: [],
-    difficulty: 1, estimatedDuration: 15, estimatedBudget: 0, distance: 'nearby'
-  },
-  {
-    id: 'ms7d_005', category: 'nature', title: '摸 3 种树皮',
-    reason: '用手感受城市的另一面',
-    destination: { description: '最近的公园或绿化带' },
-    stageOne: { instruction: '找到 3 棵不同的树，闭眼摸树皮 30 秒' },
-    hidden: { instruction: '给每棵树起一个名字' },
-    completionCondition: '摸够 3 种树皮',
-    safetyNotes: ['注意不要摸到带刺植物'],
-    difficulty: 1, estimatedDuration: 20, estimatedBudget: 0, distance: '3km'
-  },
-  {
-    id: 'ms7d_006', category: 'culture', title: '逛一家从没进过的店',
-    reason: '打破日常路线，发现身边的可能',
-    destination: { description: '路边任意你没进过的店' },
-    stageOne: { instruction: '走进去逛 5 分钟，不一定要买' },
-    hidden: { instruction: '问店主一个问题' },
-    completionCondition: '逛完 5 分钟',
-    safetyNotes: [],
-    difficulty: 1, estimatedDuration: 15, estimatedBudget: 0, distance: 'downstairs'
-  },
-  {
-    id: 'ms7d_007', category: 'night', title: '深夜便利店观察',
-    reason: '深夜的便利店是城市的缩影',
-    destination: { description: '最近的便利店' },
-    stageOne: { instruction: '进去观察 10 分钟，看都有什么人' },
-    hidden: { instruction: '买一样你从没买过的东西' },
-    completionCondition: '观察 10 分钟',
-    safetyNotes: ['注意夜间安全'],
-    difficulty: 1, estimatedDuration: 15, estimatedBudget: 10, distance: 'downstairs'
-  },
-  {
-    id: 'ms7d_008', category: 'social', title: '对陌生人微笑',
-    reason: '一个小小的连接，可能改变一天',
-    destination: { description: '人不太多的街道' },
-    stageOne: { instruction: '对路过的人微笑点头，试 3 次' },
-    hidden: { instruction: '如果有人回应，说一句"今天真好"' },
-    completionCondition: '完成 3 次微笑',
-    safetyNotes: ['不要打扰赶路的人'],
-    difficulty: 2, estimatedDuration: 10, estimatedBudget: 0, distance: 'downstairs'
-  }
-]
-
 Page({
   data: {
+    statusBarHeight: 20,
+    navHeaderStyle: '',
     mood: '',
     duration: '',
     budget: '',
@@ -136,10 +55,14 @@ Page({
       { value: Energy.NORMAL, label: '普通' },
       { value: Energy.BOLD,   label: '想大胆一点' }
     ],
+    // 人数用原始数值（PartySize.SOLO/DUO/GROUP），与 data.partySize 数字类型对齐；
+    // 此前用 String() 包裹导致 WXML「partySize === item.value」恒为 false（1 === '1'），
+    // 选中态永远不亮、点击无视觉反馈。duration/budget 仍保留 String() 是因为
+    // data.duration/data.budget 初始化为空字符串，字符串===字符串匹配正常。
     partyOptions: [
-      { value: String(PartySize.SOLO),  label: '一个人' },
-      { value: String(PartySize.DUO),  label: '两个人' },
-      { value: String(PartySize.GROUP), label: '多人' }
+      { value: PartySize.SOLO,  label: '一个人' },
+      { value: PartySize.DUO,  label: '两个人' },
+      { value: PartySize.GROUP, label: '多人' }
     ],
     venueOptions: [
       { value: VenueType.INDOOR,  label: '室内' },
@@ -154,9 +77,12 @@ Page({
   },
 
   onLoad() {
+    const nav = app.getNavMetrics ? app.getNavMetrics() : {}
     const district = (app.globalData && app.globalData.currentCity) || 'tianhe'
     const info = microConfig.getDistrict(district)
     this.setData({
+      statusBarHeight: nav.statusBarHeight || 20,
+      navHeaderStyle: nav.navHeaderStyle || '',
       district: district,
       districtName: info ? info.name : '天河区',
       partySize: PartySize.SOLO,
@@ -175,30 +101,6 @@ Page({
     const d = this.data
     const canRoll = !!(d.mood && d.duration && d.budget && d.distance && d.energy)
     this.setData({ canRoll })
-  },
-
-  // 本地生成指令（不依赖后端）
-  generateLocalScript(params) {
-    let pool = LOCAL_SCRIPTS
-    // 按预算筛选
-    if (Number(params.budget) === 0) {
-      pool = pool.filter(s => s.estimatedBudget === 0)
-    }
-    // 按距离筛选
-    if (params.distance === Distance.DOWNSTAIRS) {
-      pool = pool.filter(s => s.distance === 'downstairs')
-    }
-    if (pool.length === 0) pool = LOCAL_SCRIPTS
-    // 随机选一个
-    const script = JSON.parse(JSON.stringify(pool[Math.floor(Math.random() * pool.length)]))
-    // 注入 POI 信息（从 6 区虚拟坐标）
-    const loc = microConfig.getLocationByDistrict(params.district)
-    script.poi = {
-      name: script.destination.description,
-      lat: loc.latitude,
-      lng: loc.longitude
-    }
-    return script
   },
 
   onRoll() {
@@ -228,7 +130,7 @@ Page({
 
     setTimeout(() => {
       try {
-        const script = this.generateLocalScript(req)
+        const script = microConfig.generateLocalScript(req)
         wx.setStorageSync('dice_result_script', script)
         wx.setStorageSync('dice_result_request', req)
         this.setData({ rolling: false })

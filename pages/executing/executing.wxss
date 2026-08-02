@@ -11,6 +11,8 @@
 .ex-scroll {
   flex: 1;
   height: 0;
+  /* 顶部呼吸距离：避免计时卡/勇气卡压住 nav-header-divider（项目规范：内容区 32rpx） */
+  padding-top: 32rpx;
   padding-left: 40rpx;
   padding-right: 40rpx;
 }
@@ -492,6 +494,112 @@
 /* 破圈tip图标 */
 .tip-icon-dot.bt {
   background: #9B7BB8;
+}
+
+/* ===== B-安全: 安全提示卡（PRD §15） ===== */
+.safety-card {
+  background: var(--white);
+  border: 2rpx solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 28rpx 32rpx 24rpx;
+  margin-bottom: 20rpx;
+}
+
+/* 三档视觉：info 蓝灰 / warn 琥珀 / danger 警示红 */
+.safety-card.safety-info {
+  background: linear-gradient(135deg, #F4F7FB 0%, #FFFFFF 60%);
+  border-color: #C8D3E0;
+}
+.safety-card.safety-warn {
+  background: linear-gradient(135deg, #FFF6E8 0%, #FFFFFF 60%);
+  border-color: #E8C896;
+}
+.safety-card.safety-danger {
+  background: linear-gradient(135deg, #FFEFEC 0%, #FFFFFF 60%);
+  border-color: #E8B4AE;
+}
+
+.safety-head {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 10rpx;
+}
+
+.safety-icon-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: #5B8FB9;
+  flex-shrink: 0;
+}
+
+.safety-card.safety-warn .safety-icon-dot { background: #D98A5C; }
+.safety-card.safety-danger .safety-icon-dot { background: #E07A5F; }
+
+.safety-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.safety-card.safety-warn .safety-title { color: #A66A38; }
+.safety-card.safety-danger .safety-title { color: #B5522E; }
+
+.safety-text {
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* 安全操作按钮：分享位置 / 紧急退出 并排 */
+.safety-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 16rpx;
+  margin-top: 18rpx;
+}
+
+.safety-btn {
+  flex: 1;
+  height: 64rpx;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+  transition: all 200ms var(--ease-standard);
+}
+
+.safety-btn.share {
+  background: var(--brand-tint);
+  color: var(--brand-dark);
+  border: 2rpx solid var(--brand);
+}
+
+.safety-btn.share:active {
+  transform: scale(0.97);
+  background: var(--brand);
+  color: var(--white);
+}
+
+.safety-btn.exit {
+  background: #FFF0EC;
+  color: #B5522E;
+  border: 2rpx solid #E8B4AE;
+}
+
+.safety-btn.exit:active {
+  transform: scale(0.97);
+  background: #E07A5F;
+  color: var(--white);
+  border-color: #E07A5F;
 }
 
 /* 破圈完成按钮紫色 */

@@ -1,10 +1,14 @@
 <!--pages/dice-micro-7d/dice-micro-7d.wxml-->
 <!--微逃骰子（7 维度版）- 条件选择页-->
 <view class="page">
-  <view class="hero safe-top">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <text class="nav-header-title">微逃骰子</text>
+    <view class="nav-header-divider"></view>
+  </view>
+  <view class="hero">
     <view class="hero__tag">MICRO ESCAPE · 7D</view>
     <view class="hero__dice {{rolling ? 'hero__dice--rolling' : ''}}">🎲</view>
-    <view class="hero__title">微逃骰子</view>
     <view class="hero__desc">先告诉我你现在的状态，我替你找一个小小的偏离。</view>
   </view>
 

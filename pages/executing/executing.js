@@ -2,6 +2,8 @@ const app = getApp()
 const { DEFAULT_STEPS, getTypeMeta } = require('../../utils/constants.js')
 // 执行进度持久化（中途退出/锁屏/进程清除后可续，每步 completedAt 留痕）
 const executionProgress = require('../../utils/execution-progress.js')
+// B-安全: 安全与信任体系（PRD §15）—— 纯函数，零 wx 依赖
+const safetyTip = require('../../utils/safety-tip.js')
 
 // 每步的实用小贴士（兜底，cmd 自带 steps.details 时优先用 cmd 的）。
 const STEP_HINTS = [
@@ -41,7 +43,13 @@ Page({
     showStepCount: false,
     stepCount: 0,
     // 破圈模式专属
-    isBreakthrough: false
+    isBreakthrough: false,
+    // B-安全: 安全提示卡状态（PRD §15 基础安全原则）
+    safety: {
+      tip: { title: '', content: '', level: 'info', action: 'continue' },
+      pause: { blocked: false, reason: '' },
+      exit: { title: '紧急退出', hint: '', confirmText: '确认退出' }
+    }
   },
 
   onLoad() {
@@ -75,6 +83,17 @@ Page({
     const duration = cmd.duration || 20
     const showStepCount = !isBT && (isWalk || duration >= 30)
     const stepCount = duration * 100
+    // B-安全: 综合时间/天气/任务类型/同频状态构造安全状态
+    // 数据全部来自 app.globalData，避免页面重复取数
+    const safety = safetyTip.buildSafetyState({
+      hour: app.getCurrentHour(),
+      weather: app.globalData.weather || null,
+      commandType: cmd.type,
+      isGroup: cmd.isGroup === true,
+      outdoor: cmd.outdoor !== false,
+      partners: cmd.isGroup ? '同频成员' : '独自出逃',
+      distanceKm: Number((cmd.distance || '').toString().replace(/[^0-9.]/g, '')) || 0
+    })
     this.setData({
       command: cmd,
       steps: merged.steps,
@@ -85,9 +104,23 @@ Page({
       isBreakthrough: isBT,
       currentStep: merged.currentStep,
       doneCount: merged.doneCount,
-      allDone: merged.allDone
+      allDone: merged.allDone,
+      safety: safety
     })
     this.startTimer()
+    // 极端天气阻断：户外任务在极端天气下提示暂停（不强制关闭页面，给用户选择权）
+    if (safety.pause.blocked) {
+      wx.showModal({
+        title: '安全提示',
+        content: safety.pause.reason,
+        showCancel: true,
+        confirmText: '去室内',
+        cancelText: '继续出逃',
+        success: (res) => {
+          if (res.confirm) this.emergencyExit()
+        }
+      })
+    }
   },
 
   onUnload() {
@@ -122,7 +155,10 @@ Page({
   tickTimer() {
     const cmd = app.globalData.currentCommand
     if (!cmd) return
-    const elapsed = Math.max(0, Math.floor((Date.now() - cmd.startTime) / 1000))
+    // startTime 兜底：个别入口（旧版骰子流程）可能未走 app.startCommand 注入 startTime，
+    // 缺失时 Date.now()-undefined=NaN → 分钟显示 null。此处兜底为当前时间，保证计时不崩。
+    const startTime = cmd.startTime || Date.now()
+    const elapsed = Math.max(0, Math.floor((Date.now() - startTime) / 1000))
     const durationSec = Math.max(1, (cmd.duration || 20) * 60)
     const pct = Math.min(100, Math.round(elapsed / durationSec * 100))
     this.setData({
@@ -208,5 +244,72 @@ Page({
     }
     if (app.playSound) app.playSound('complete')
     wx.navigateTo({ url: '/pages/record/record' })
+  },
+
+  // B-安全: 紧急退出（PRD §15.1「支持一键结束任务」）
+  // 二次确认，避免误触；执行后保留已完成的步骤（持久化在 storage），下次可继续
+  emergencyExit() {
+    const exit = this.data.safety.exit
+    wx.showModal({
+      title: exit.title,
+      content: exit.hint,
+      confirmText: exit.confirmText,
+      cancelText: '再想想',
+      confirmColor: '#E07A5F',
+      success: (res) => {
+        if (!res.confirm) return
+        // 调用方页已有 progress 持久化，abandonCommand 只清 currentCommand/status
+        // executionProgress 已落盘在 storage.currentCommand 内，下次相同 taskId 可恢复
+        app.abandonCommand()
+        try { wx.vibrateShort({ type: 'medium' }) } catch (e) {}
+        wx.switchTab({ url: '/pages/index/index' })
+      }
+    })
+  },
+
+  // B-安全: 分享位置（PRD §15.1「支持分享位置」）
+  // 优先用 wx.openLocation 展示当前位置；无定位时回退到 onShareAppMessage 文本分享
+  shareLocation() {
+    const cmd = app.globalData.currentCommand || {}
+    const loc = (cmd.location && cmd.location.latitude && cmd.location.longitude)
+      ? cmd.location
+      : (app.globalData.location || null)
+    if (loc && typeof loc.latitude === 'number') {
+      const payload = safetyTip.buildShareLocationPayload(loc, app.globalData.escapeName)
+      if (payload.ok && typeof wx.openLocation === 'function') {
+        wx.openLocation({
+          latitude: payload.payload.latitude,
+          longitude: payload.payload.longitude,
+          scale: payload.payload.scale,
+          name: payload.payload.name,
+          address: payload.payload.address,
+          fail: () => {
+            // 基础库不支持 openLocation 时回退到分享卡片
+            wx.showToast({ title: '已生成分享卡片', icon: 'none' })
+            this.shareToFriend()
+          }
+        })
+        return
+      }
+    }
+    // 无定位：触发右上角分享按钮提示
+    wx.showToast({ title: '点击右上角 ··· 分享给朋友', icon: 'none', duration: 2000 })
+  },
+
+  // 内部：触发分享卡片（onShareAppMessage）
+  shareToFriend() {
+    if (wx.showShareMenu) {
+      wx.showShareMenu({ withShareTicket: true, menus: ['shareAppMessage', 'shareTimeline'] })
+    }
+  },
+
+  // B-安全: 转发分享卡片 —— 带 escapeName + 指令标题
+  onShareAppMessage() {
+    const cmd = this.data.command || {}
+    const card = safetyTip.buildShareCardPayload(app.globalData.escapeName, cmd.title)
+    return {
+      title: card.payload.title,
+      path: card.payload.path
+    }
   }
 })

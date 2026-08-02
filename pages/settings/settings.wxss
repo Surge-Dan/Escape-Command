@@ -3,7 +3,8 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background: transparent;
+  /* v11: 背景使用主题变量，切换主题时自动跟随 */
+  background: var(--bg-gradient);
 }
 
 .status-bar { flex-shrink: 0; }

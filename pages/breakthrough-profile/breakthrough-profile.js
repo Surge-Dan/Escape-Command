@@ -48,7 +48,8 @@ Page({
       { value: 'culture', label: '探索文化/艺术' },
       { value: 'food', label: '吃没吃过的' },
       { value: 'body', label: '突破身体极限' }
-    ]
+    ],
+    theme: 'default'
   },
 
   onLoad() {
@@ -73,6 +74,7 @@ Page({
 
   onShow() {
     this.applyNavMetrics()
+    this.setData({ theme: app.globalData.theme || 'default' })
   },
 
   applyNavMetrics() {

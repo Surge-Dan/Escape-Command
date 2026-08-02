@@ -129,6 +129,23 @@
       </view>
       <text class="tip-text">{{command.tip || (isBreakthrough ? '深呼吸，迈出那一步就好' : '慢慢走，留意街边的细节。')}}</text>
     </view>
+
+    <!-- ============ B-安全: 安全提示卡（PRD §15） ============ -->
+    <view class="safety-card safety-{{safety.tip.level}}">
+      <view class="safety-head">
+        <view class="safety-icon-dot"></view>
+        <text class="safety-title">{{safety.tip.title}}</text>
+      </view>
+      <text class="safety-text">{{safety.tip.content}}</text>
+      <view class="safety-actions">
+        <view class="safety-btn share" catchtap="shareLocation">
+          <text>分享位置</text>
+        </view>
+        <view class="safety-btn exit" catchtap="emergencyExit">
+          <text>紧急退出</text>
+        </view>
+      </view>
+    </view>
     <view class="bottom-spacer"></view>
   </scroll-view>
 

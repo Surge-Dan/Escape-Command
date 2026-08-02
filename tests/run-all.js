@@ -3,7 +3,7 @@
 // 运行: node tests/run-all.js
 //
 // 测试金字塔：
-//   1. 单元测试（store + generator-engine + record-builder + execution-progress + poi-command-builder + task-hall-store + player-matcher）：函数级正确性
+//   1. 单元测试（store + generator-engine + record-builder + execution-progress + poi-command-builder + task-hall-store + player-matcher + breakthrough + micro-escape-config）：函数级正确性
 //   2. Gherkin BDD：业务流程场景
 //   3. Property-Based Fuzz：1000+ 次随机输入不变量
 //   4. Adversarial Attack：~130 攻击向量，安全不变量
@@ -28,6 +28,8 @@ const testSuites = [
   { name: '单元测试 - player-trust-store (C-P4 信任数据层)', cmd: 'node tests/unit/player-trust-store.test.js', timeout: 30000 },
   { name: '单元测试 - chat-store (C-P4 聊天数据层)', cmd: 'node tests/unit/chat-store.test.js', timeout: 30000 },
   { name: '单元测试 - breakthrough (Henry 破圈骰子)', cmd: 'node tests/unit/breakthrough.test.js', timeout: 30000 },
+  { name: '单元测试 - micro-escape-config (微逃骰子 C-P8)', cmd: 'node tests/unit/micro-escape-config.test.js', timeout: 30000 },
+  { name: '单元测试 - safety-tip (B-安全 PRD §15)', cmd: 'node tests/unit/safety-tip.test.js', timeout: 30000 },
   // ===== BDD =====
   { name: 'Gherkin BDD (group + generator + completion + task-hall + c-p4-social + breakthrough)', cmd: 'node tests/gherkin/runner.js', timeout: 60000 },
   // ===== Fuzz =====

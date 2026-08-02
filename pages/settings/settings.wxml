@@ -1,4 +1,4 @@
-<view class="page-container settings-page paper-texture">
+<view class="page-container settings-page paper-texture theme-{{currentTheme}}">
   <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
 
   <view class="nav-header" style="{{navHeaderStyle}}">

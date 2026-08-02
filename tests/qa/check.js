@@ -817,6 +817,182 @@ check('C-P4 detail.wxml 含成员信任标签', detailWxmlCp4.includes('member-t
   check('C-P4 测试文件存在: ' + tf, fs.existsSync(path.join(projectRoot, tf)), 'error')
 })
 
+// ===== 9. C-P8 微逃骰子（7D）契约完整性 =====
+console.log('\n--- 9. C-P8 微逃骰子（7D）契约 ---')
+const microConfigPath = path.join(projectRoot, 'utils/micro-escape-config.js')
+const microDice7dJsPath = path.join(projectRoot, 'pages/dice-micro-7d/dice-micro-7d.js')
+const microDice7dWxssPath = path.join(projectRoot, 'pages/dice-micro-7d/dice-micro-7d.wxss')
+const diceResult7dJsPath = path.join(projectRoot, 'pages/dice-result-7d/dice-result-7d.js')
+const diceResult7dWxssPath = path.join(projectRoot, 'pages/dice-result-7d/dice-result-7d.wxss')
+const indexJsPath = path.join(projectRoot, 'pages/index/index.js')
+const indexWxmlPath = path.join(projectRoot, 'pages/index/index.wxml')
+const indexWxssPath = path.join(projectRoot, 'pages/index/index.wxss')
+
+check('C-P8 micro-escape-config.js 存在', fs.existsSync(microConfigPath), 'error')
+if (fs.existsSync(microConfigPath)) {
+  const microConfigMod = require(microConfigPath)
+  const microConfigJs = fs.readFileSync(microConfigPath, 'utf-8')
+  // 导出契约
+  ;['Mood', 'Duration', 'Budget', 'Distance', 'Energy', 'PartySize', 'VenueType', 'DiceType'].forEach(k => {
+    check('C-P8 导出枚举: ' + k, !!microConfigMod[k], 'error')
+  })
+  ;['DEFAULT_CITY', 'MAX_REROLL_COUNT', 'DISTRICTS', 'CATEGORY_MAP', 'LOADING_PHRASES', 'LOCAL_SCRIPTS'].forEach(k => {
+    check('C-P8 导出常量: ' + k, !!microConfigMod[k], 'error')
+  })
+  ;['getDistrict', 'getLocationByDistrict', 'getCategoryInfo', 'getLoadingPhrase', 'generateLocalScript', 'buildExecutableCommand'].forEach(fn => {
+    check('C-P8 导出函数: ' + fn, typeof microConfigMod[fn] === 'function', 'error')
+  })
+  // 数据契约
+  check('C-P8 DISTRICTS 6 区', Array.isArray(microConfigMod.DISTRICTS) && microConfigMod.DISTRICTS.length === 6, 'error')
+  check('C-P8 LOCAL_SCRIPTS 8 条', Array.isArray(microConfigMod.LOCAL_SCRIPTS) && microConfigMod.LOCAL_SCRIPTS.length === 8, 'error')
+  check('C-P8 LOCAL_SCRIPTS 字段含 stageOne/hidden/completionCondition', microConfigJs.includes('stageOne') && microConfigJs.includes('hidden') && microConfigJs.includes('completionCondition'), 'error')
+  check('C-P8 LOCAL_SCRIPTS 为单一数据源（dice-micro-7d/dice-result-7d 不重复定义）', !fs.readFileSync(microDice7dJsPath, 'utf-8').includes("var LOCAL_SCRIPTS =") && !fs.readFileSync(diceResult7dJsPath, 'utf-8').includes("var LOCAL_SCRIPTS ="), 'error')
+  // 纯函数 + 安全
+  check('C-P8 micro-escape-config 纯函数零 wx 依赖', !microConfigJs.includes('wx.') && !microConfigJs.includes('wx.cloud'), 'error')
+  check('C-P8 micro-escape-config 使用 strict mode', microConfigJs.includes('use strict'), 'warn')
+  check('C-P8 micro-escape-config 无 eval/Function 注入', !microConfigJs.includes('eval(') && !microConfigJs.includes('new Function('), 'error')
+  // buildExecutableCommand 契约
+  check('C-P8 buildExecutableCommand 输出 type=micro', microConfigJs.includes("type: 'micro'"), 'error')
+  check('C-P8 buildExecutableCommand 输出 mode=micro', microConfigJs.includes("mode: 'micro'"), 'error')
+  check('C-P8 buildExecutableCommand 输出 source=microdice', microConfigJs.includes("source: 'microdice'"), 'error')
+  check('C-P8 generateLocalScript 含深拷贝 JSON.parse', microConfigJs.includes('JSON.parse(JSON.stringify'), 'error')
+  check('C-P8 generateLocalScript 注入 poi', microConfigJs.includes('script.poi ='), 'error')
+}
+
+// 入口页契约
+check('C-P8 dice-micro-7d.js 存在', fs.existsSync(microDice7dJsPath), 'error')
+if (fs.existsSync(microDice7dJsPath)) {
+  const microDice7dJs = fs.readFileSync(microDice7dJsPath, 'utf-8')
+  check('C-P8 dice-micro-7d 引用 micro-escape-config', microDice7dJs.includes('micro-escape-config'), 'error')
+  check('C-P8 dice-micro-7d 使用 generateLocalScript', microDice7dJs.includes('generateLocalScript'), 'error')
+  check('C-P8 dice-micro-7d 不含重复 generateLocalScript 定义', !microDice7dJs.includes('function generateLocalScript'), 'error')
+}
+
+// 结果页契约
+check('C-P8 dice-result-7d.js 存在', fs.existsSync(diceResult7dJsPath), 'error')
+if (fs.existsSync(diceResult7dJsPath)) {
+  const diceResult7dJs = fs.readFileSync(diceResult7dJsPath, 'utf-8')
+  check('C-P8 dice-result-7d 引用 micro-escape-config', diceResult7dJs.includes('micro-escape-config'), 'error')
+  check('C-P8 dice-result-7d 使用 buildExecutableCommand', diceResult7dJs.includes('buildExecutableCommand'), 'error')
+  check('C-P8 dice-result-7d 写入 currentCommand', diceResult7dJs.includes('currentCommand'), 'error')
+  check('C-P8 dice-result-7d 跳转 executing', diceResult7dJs.includes('/pages/executing/executing'), 'error')
+}
+
+// 首页集成契约
+if (fs.existsSync(indexJsPath)) {
+  const indexJs = fs.readFileSync(indexJsPath, 'utf-8')
+  check('C-P8 首页 routeDice 含 micro 分支', indexJs.includes("dice.id === 'micro'"), 'error')
+  check('C-P8 首页 routeDice 跳转 dice-micro-7d', indexJs.includes('/pages/dice-micro-7d/dice-micro-7d'), 'error')
+  check('C-P8 首页含 loadEscapeRecords', indexJs.includes('loadEscapeRecords'), 'error')
+  check('C-P8 首页含 goRecordDetail', indexJs.includes('goRecordDetail'), 'error')
+  check('C-P8 首页含 lastRecord 数据字段', indexJs.includes('lastRecord'), 'error')
+  check('C-P8 首页含 recentRecords 数据字段', indexJs.includes('recentRecords'), 'error')
+  check('C-P8 首页不含遗留 micro-sheet', !indexJs.includes('showMicroSheet') && !indexJs.includes('microSheet'), 'error')
+}
+if (fs.existsSync(indexWxmlPath)) {
+  const indexWxml = fs.readFileSync(indexWxmlPath, 'utf-8')
+  check('C-P8 首页 wxml 含上次出逃记录卡', indexWxml.includes('last-record-card'), 'error')
+  check('C-P8 首页 wxml 含最近出逃滚动区', indexWxml.includes('recent-section'), 'error')
+  check('C-P8 首页 wxml 不含遗留 micro-sheet', !indexWxml.includes('micro-sheet'), 'error')
+  check('C-P8 首页保留 Cover Flow 骰子交互', indexWxml.includes('dice-stage') && indexWxml.includes('onDiceTap'), 'error')
+}
+if (fs.existsSync(indexWxssPath)) {
+  const indexWxss = fs.readFileSync(indexWxssPath, 'utf-8')
+  check('C-P8 首页 wxss 含 last-record-card 样式', indexWxss.includes('.last-record-card'), 'error')
+  check('C-P8 首页 wxss 含转动动画 diceRoll', indexWxss.includes('@keyframes diceRoll'), 'error')
+}
+
+// UI 风格对齐暖棕褐系（全局 CSS 变量）
+;[microDice7dWxssPath, diceResult7dWxssPath].forEach(p => {
+  if (fs.existsSync(p)) {
+    const css = fs.readFileSync(p, 'utf-8')
+    const rel = path.relative(projectRoot, p)
+    check('C-P8 ' + rel + ' 使用全局变量 var(--brand)', css.includes('var(--brand)'), 'error')
+    check('C-P8 ' + rel + ' 不含遗留深蓝灰 #1a1f2e', !css.includes('#1a1f2e'), 'warn')
+  }
+})
+
+// 测试套件存在性
+;[
+  'tests/unit/micro-escape-config.test.js'
+].forEach(tf => {
+  check('C-P8 测试文件存在: ' + tf, fs.existsSync(path.join(projectRoot, tf)), 'error')
+})
+
+// ===== 22. B-安全 模块完整性（PRD §15 安全与信任体系）=====
+console.log('\n--- 22. B-安全模块完整性 ---')
+const safetyTipPath = path.join(projectRoot, 'utils/safety-tip.js')
+check('utils/safety-tip.js 文件存在', fs.existsSync(safetyTipPath), 'error')
+if (fs.existsSync(safetyTipPath)) {
+  const safetyMod = require(safetyTipPath)
+  ;['getTip', 'shouldPauseOutdoorTask', 'emergencyExitHint', 'buildShareLocationPayload', 'buildShareCardPayload', 'buildSafetyState'].forEach(fn => {
+    check('safety-tip 导出函数: ' + fn, typeof safetyMod[fn] === 'function', 'error')
+  })
+  check('safety-tip 导出 LEVEL 常量', !!safetyMod.LEVEL && typeof safetyMod.LEVEL === 'object', 'error')
+  check('safety-tip LEVEL.INFO/WARN/DANGER', safetyMod.LEVEL.INFO === 'info' && safetyMod.LEVEL.WARN === 'warn' && safetyMod.LEVEL.DANGER === 'danger', 'error')
+  check('safety-tip _internal 导出判定函数', typeof safetyMod._internal.isExtremeWeather === 'function' && typeof safetyMod._internal.isNight === 'function' && typeof safetyMod._internal.isLateNight === 'function', 'error')
+}
+
+// executing 页安全模块集成
+const executingJsPath = path.join(projectRoot, 'pages/executing/executing.js')
+const executingWxmlPath = path.join(projectRoot, 'pages/executing/executing.wxml')
+const executingWxssPath = path.join(projectRoot, 'pages/executing/executing.wxss')
+if (fs.existsSync(executingJsPath)) {
+  const execJs = fs.readFileSync(executingJsPath, 'utf-8')
+  check('executing 引入 safety-tip', execJs.includes("require('../../utils/safety-tip.js')"), 'error')
+  check('executing data.safety 初始化', execJs.includes('safety:') && execJs.includes('buildSafetyState'), 'error')
+  check('executing 含 emergencyExit 方法', execJs.includes('emergencyExit'), 'error')
+  check('executing 含 shareLocation 方法', execJs.includes('shareLocation'), 'error')
+  check('executing 含 onShareAppMessage', execJs.includes('onShareAppMessage'), 'error')
+  check('executing emergencyExit 调用 abandonCommand', execJs.includes('app.abandonCommand()'), 'error')
+  check('executing shareLocation 优先 wx.openLocation', execJs.includes('wx.openLocation'), 'error')
+  check('executing extreme weather modal 提示', execJs.includes('safety.pause.blocked'), 'error')
+}
+if (fs.existsSync(executingWxmlPath)) {
+  const execWxml = fs.readFileSync(executingWxmlPath, 'utf-8')
+  check('executing wxml 含 safety-card', execWxml.includes('safety-card'), 'error')
+  check('executing wxml 含 safety-{{level}} 动态类', execWxml.includes('safety-{{safety.tip.level}}'), 'error')
+  check('executing wxml 含 emergencyExit 绑定', execWxml.includes('catchtap="emergencyExit"'), 'error')
+  check('executing wxml 含 shareLocation 绑定', execWxml.includes('catchtap="shareLocation"'), 'error')
+}
+if (fs.existsSync(executingWxssPath)) {
+  const execWxss = fs.readFileSync(executingWxssPath, 'utf-8')
+  check('executing wxss 含 .safety-card 样式', execWxss.includes('.safety-card'), 'error')
+  check('executing wxss 含三档视觉 info/warn/danger', execWxss.includes('.safety-card.safety-info') && execWxss.includes('.safety-card.safety-warn') && execWxss.includes('.safety-card.safety-danger'), 'error')
+}
+
+// 地图页 marker 弹窗富化
+const mapWxmlPath = path.join(projectRoot, 'pages/map/map.wxml')
+const mapJsPath = path.join(projectRoot, 'pages/map/map.js')
+const mapWxssPath = path.join(projectRoot, 'pages/map/map.wxss')
+if (fs.existsSync(mapWxmlPath)) {
+  const mapWxml = fs.readFileSync(mapWxmlPath, 'utf-8')
+  check('map wxml 弹窗含出逃模式', mapWxml.includes('popupRecord.modeName'), 'error')
+  check('map wxml 弹窗含搭子', mapWxml.includes('popupRecord.partnersText'), 'error')
+  check('map wxml 弹窗含时长', mapWxml.includes('popupRecord.durationText'), 'error')
+  check('map wxml 弹窗含心情', mapWxml.includes('popupRecord.moodName'), 'error')
+  check('map wxml 弹窗含天气', mapWxml.includes('popupRecord.weatherText'), 'error')
+  check('map wxml 弹窗含缩略图', mapWxml.includes('popupRecord.photoThumb'), 'error')
+  check('map wxml 含查看完整记录按钮', mapWxml.includes('goRecordDetailFromMap'), 'error')
+}
+if (fs.existsSync(mapJsPath)) {
+  const mapJs = fs.readFileSync(mapJsPath, 'utf-8')
+  check('map formatPopup 含 modeName', mapJs.includes('modeName:'), 'error')
+  check('map formatPopup 含 partnersText', mapJs.includes('partnersText:'), 'error')
+  check('map formatPopup 含 durationText', mapJs.includes('durationText:'), 'error')
+  check('map 含 goRecordDetailFromMap 方法', mapJs.includes('goRecordDetailFromMap'), 'error')
+}
+if (fs.existsSync(mapWxssPath)) {
+  const mapWxss = fs.readFileSync(mapWxssPath, 'utf-8')
+  check('map wxss 含 .popup-thumb 缩略图样式', mapWxss.includes('.popup-thumb'), 'error')
+  check('map wxss 含 .popup-mode-pill pill 样式', mapWxss.includes('.popup-mode-pill'), 'error')
+  check('map wxss 含 .popup-meta 信息行样式', mapWxss.includes('.popup-meta'), 'error')
+  check('map wxss 含 .popup-cta CTA 样式', mapWxss.includes('.popup-cta'), 'error')
+}
+
+// 测试套件存在性 - safety-tip
+check('B-安全 测试文件存在: tests/unit/safety-tip.test.js', fs.existsSync(path.join(projectRoot, 'tests/unit/safety-tip.test.js')), 'error')
+
 // ===== 结果 =====
 console.log('\n' + '='.repeat(50))
 console.log(`QA 检查结果: ${checks} checks, ${passed} passed, ${warnings} warnings, ${errors} errors`)

@@ -1,5 +1,6 @@
 /* pages/dice-result-7d/dice-result-7d.wxss */
 /* 微逃骰子（7 维度版）- 结果页样式 */
+/* 配色对齐 Daniel 暖棕品牌色，复用 app.wxss 全局变量 */
 
 .page {
   min-height: 100vh;
@@ -18,7 +19,7 @@
 
 /* ===== 加载态 ===== */
 .loading {
-  padding: 200rpx 0 0;
+  padding: 120rpx 0 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -43,7 +44,7 @@
 
 .loading__phrase {
   font-size: 28rpx;
-  color: #6b7280;
+  color: var(--ink-soft);
   margin-bottom: 32rpx;
   text-align: center;
   padding: 0 40rpx;
@@ -59,7 +60,7 @@
   width: 12rpx;
   height: 12rpx;
   border-radius: 50%;
-  background: #d4a574;
+  background: var(--brand);
   animation: dotBounce 1.4s ease-in-out infinite;
 }
 
@@ -73,7 +74,7 @@
 
 /* ===== 错误态 ===== */
 .error {
-  padding: 200rpx 0 0;
+  padding: 120rpx 0 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -86,14 +87,14 @@
 
 .error__title {
   font-size: 28rpx;
-  color: #6b7280;
+  color: var(--ink-soft);
   margin-bottom: 40rpx;
 }
 
 .error__btn {
   padding: 20rpx 48rpx;
-  background: #1a1f2e;
-  color: #f7f5f0;
+  background: var(--brand);
+  color: #ffffff;
   border-radius: 999rpx;
   font-size: 28rpx;
   font-weight: 500;
@@ -107,13 +108,13 @@
 
 /* ===== 结果态 ===== */
 .result__header {
-  padding: 48rpx 0 32rpx;
+  padding: 32rpx 0 32rpx;
   text-align: center;
 }
 
 .result__tag {
   font-size: 22rpx;
-  color: #d4a574;
+  color: var(--brand);
   letter-spacing: 6rpx;
   font-weight: 500;
   margin-bottom: 12rpx;
@@ -121,7 +122,7 @@
 
 .result__sub {
   font-size: 24rpx;
-  color: #9ca3af;
+  color: var(--ink-faint);
   letter-spacing: 1rpx;
 }
 
@@ -131,7 +132,7 @@
   border-radius: 32rpx;
   padding: 40rpx 36rpx;
   margin-bottom: 32rpx;
-  box-shadow: 0 8rpx 32rpx rgba(26, 31, 46, 0.08);
+  box-shadow: 0 8rpx 32rpx rgba(168, 123, 82, 0.08);
   position: relative;
   overflow: hidden;
 }
@@ -165,7 +166,7 @@
 
 .script-card__title {
   font-size: 44rpx;
-  color: #1a1f2e;
+  color: var(--ink);
   font-weight: 600;
   line-height: 1.3;
   margin-bottom: 16rpx;
@@ -174,7 +175,7 @@
 
 .script-card__reason {
   font-size: 26rpx;
-  color: #6b7280;
+  color: var(--ink-soft);
   line-height: 1.6;
   margin-bottom: 28rpx;
 }
@@ -193,7 +194,7 @@
   background: #f3f4f6;
   border-radius: 999rpx;
   font-size: 24rpx;
-  color: #4b5563;
+  color: var(--ink-soft);
 }
 
 .meta-tag__icon {
@@ -226,7 +227,7 @@
 
 .script-card__section-content {
   font-size: 28rpx;
-  color: #1a1f2e;
+  color: var(--ink);
   line-height: 1.6;
 }
 
@@ -246,7 +247,7 @@
 
 .script-card__hidden-text {
   font-size: 24rpx;
-  color: #9b7a5c;
+  color: var(--brand-dark);
   line-height: 1.5;
   flex: 1;
 }
@@ -277,7 +278,7 @@
   background: #ffffff;
   border-radius: 32rpx;
   overflow: hidden;
-  box-shadow: 0 8rpx 32rpx rgba(26, 31, 46, 0.08);
+  box-shadow: 0 8rpx 32rpx rgba(168, 123, 82, 0.08);
   margin-bottom: 32rpx;
 }
 
@@ -294,7 +295,7 @@
 
 .poi-map__title {
   font-size: 26rpx;
-  color: #1a1f2e;
+  color: var(--ink);
   font-weight: 600;
 }
 
@@ -306,7 +307,7 @@
 .poi-map__name {
   padding: 20rpx 28rpx;
   font-size: 24rpx;
-  color: #6b7280;
+  color: var(--ink-soft);
   border-top: 2rpx solid #f3f4f6;
 }
 
@@ -326,8 +327,8 @@
   justify-content: center;
   height: 100rpx;
   border-radius: 999rpx;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3548 100%);
-  box-shadow: 0 12rpx 32rpx rgba(26, 31, 46, 0.3);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  box-shadow: 0 12rpx 32rpx rgba(168, 123, 82, 0.3);
   margin-bottom: 16rpx;
   transition: all 0.2s ease;
 }
@@ -339,7 +340,7 @@
 
 .actions__primary-text {
   font-size: 30rpx;
-  color: #f7f5f0;
+  color: #ffffff;
   font-weight: 500;
   letter-spacing: 2rpx;
   margin-right: 12rpx;
@@ -347,7 +348,7 @@
 
 .actions__primary-arrow {
   font-size: 32rpx;
-  color: #f7f5f0;
+  color: #ffffff;
 }
 
 .actions__secondary {
@@ -363,7 +364,7 @@
   height: 80rpx;
   background: #ffffff;
   border-radius: 999rpx;
-  box-shadow: 0 4rpx 16rpx rgba(26, 31, 46, 0.06);
+  box-shadow: 0 4rpx 16rpx rgba(168, 123, 82, 0.06);
   transition: all 0.2s ease;
 }
 
@@ -379,7 +380,7 @@
 
 .actions__btn-text {
   font-size: 24rpx;
-  color: #4b5563;
+  color: var(--ink-soft);
   font-weight: 500;
 }
 
@@ -448,7 +449,7 @@
 
 .sheet__title {
   font-size: 36rpx;
-  color: #1a1f2e;
+  color: var(--ink);
   font-weight: 600;
   text-align: center;
   margin-bottom: 12rpx;
@@ -483,7 +484,7 @@
 
 .sheet__item-text {
   font-size: 28rpx;
-  color: #1a1f2e;
+  color: var(--ink);
   font-weight: 600;
   letter-spacing: 1rpx;
 }
@@ -508,8 +509,8 @@
 }
 
 .sheet__sub-item--active {
-  background: rgba(212, 165, 116, 0.15);
-  border-color: #d4a574;
+  background: rgba(200, 149, 110, 0.15);
+  border-color: var(--brand);
 }
 
 .sheet__sub-text {
@@ -518,7 +519,7 @@
 }
 
 .sheet__sub-item--active .sheet__sub-text {
-  color: #d4a574;
+  color: var(--brand);
   font-weight: 600;
 }
 

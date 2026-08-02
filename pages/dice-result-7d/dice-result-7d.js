@@ -2,6 +2,8 @@
 // 微逃骰子（7 维度版）- 结果页
 // 展示生成的指令、POI 小地图、改条件重摇
 // 纯前端本地实现，不依赖后端 / 云函数
+// 指令池与生成逻辑统一由 utils/micro-escape-config.js 提供（去重，单一数据源）
+const app = getApp()
 const microConfig = require('../../utils/micro-escape-config.js')
 const {
   Mood, Duration, Budget, Distance, Energy, PartySize, VenueType
@@ -56,6 +58,9 @@ function extractCategory(script) {
 
 Page({
   data: {
+    // 顶部 nav-header 安全区（避开右上角胶囊按钮）
+    statusBarHeight: 20,
+    navHeaderStyle: '',
     loading: false,
     rolling: false,
     loadingPhrase: '',
@@ -157,16 +162,24 @@ Page({
   phraseTimer: null,
 
   onLoad() {
+    // 顶部 nav-header 安全区：与 dice-micro-7d / index 保持统一顶部规范
+    const nav = app.getNavMetrics ? app.getNavMetrics() : {}
     // 从 storage 读取摇骰子结果和请求参数（由 dice-micro-7d 页面写入）
     const script = wx.getStorageSync('dice_result_script')
     const requestParams = wx.getStorageSync('dice_result_request')
 
     if (!script) {
-      this.setData({ errorMsg: '没有摇骰子结果，请返回重试' })
+      this.setData({
+        statusBarHeight: nav.statusBarHeight || 20,
+        navHeaderStyle: nav.navHeaderStyle || '',
+        errorMsg: '没有摇骰子结果，请返回重试'
+      })
       return
     }
 
     this.setData({
+      statusBarHeight: nav.statusBarHeight || 20,
+      navHeaderStyle: nav.navHeaderStyle || '',
       script,
       requestParams: requestParams || null,
       loading: false,
@@ -222,117 +235,20 @@ Page({
     wx.vibrateShort({ type: 'light' })
   },
 
-  /** 本地重摇生成新指令（不依赖后端） */
-  generateLocalScript(params) {
-    // 复用 dice-micro-7d 的逻辑（这里独立实现一份，保持页面独立）
-    const LOCAL_SCRIPTS = [
-      {
-        id: 'ms7d_001', category: 'sensory', title: '闭眼听三分钟',
-        reason: '给耳朵放个假，城市的声音比想象中丰富',
-        destination: { description: '最近的公园长椅或路边长椅' },
-        stageOne: { instruction: '找到长椅坐下，闭眼听 3 分钟，记下 5 种声音' },
-        hidden: { instruction: '把听到的声音画成一张"声音地图"' },
-        completionCondition: '记录下至少 5 种不同声音',
-        safetyNotes: ['注意随身物品'],
-        difficulty: 1, estimatedDuration: 10, estimatedBudget: 0, distance: 'nearby'
-      },
-      {
-        id: 'ms7d_002', category: 'walking', title: '左转左转再左转',
-        reason: '用规则打破惯性，迷路是最好的向导',
-        destination: { description: '任意路口' },
-        stageOne: { instruction: '出门左转，每个路口都左转，走 15 分钟' },
-        hidden: { instruction: '拍下你停下来的那个瞬间' },
-        completionCondition: '走够 15 分钟并拍一张照片',
-        safetyNotes: ['注意交通安全'],
-        difficulty: 1, estimatedDuration: 15, estimatedBudget: 0, distance: 'nearby'
-      },
-      {
-        id: 'ms7d_003', category: 'food', title: '让老板给你挑',
-        reason: '把选择权交出去，会有惊喜',
-        destination: { description: '最近的水果店或小吃店' },
-        stageOne: { instruction: '走进去跟老板说"给我挑一个最好吃的"' },
-        hidden: { instruction: '问老板今天什么卖得最好' },
-        completionCondition: '买到并尝一口',
-        safetyNotes: [],
-        difficulty: 1, estimatedDuration: 15, estimatedBudget: 20, distance: 'downstairs'
-      },
-      {
-        id: 'ms7d_004', category: 'observe', title: '数 5 种颜色',
-        reason: '放慢脚步，颜色就在身边',
-        destination: { description: '任意街道' },
-        stageOne: { instruction: '走 10 分钟，找到 5 种不同颜色的东西' },
-        hidden: { instruction: '把 5 种颜色按彩虹顺序排好' },
-        completionCondition: '拍一张包含 5 种颜色的照片',
-        safetyNotes: [],
-        difficulty: 1, estimatedDuration: 15, estimatedBudget: 0, distance: 'nearby'
-      },
-      {
-        id: 'ms7d_005', category: 'nature', title: '摸 3 种树皮',
-        reason: '用手感受城市的另一面',
-        destination: { description: '最近的公园或绿化带' },
-        stageOne: { instruction: '找到 3 棵不同的树，闭眼摸树皮 30 秒' },
-        hidden: { instruction: '给每棵树起一个名字' },
-        completionCondition: '摸够 3 种树皮',
-        safetyNotes: ['注意不要摸到带刺植物'],
-        difficulty: 1, estimatedDuration: 20, estimatedBudget: 0, distance: '3km'
-      },
-      {
-        id: 'ms7d_006', category: 'culture', title: '逛一家从没进过的店',
-        reason: '打破日常路线，发现身边的可能',
-        destination: { description: '路边任意你没进过的店' },
-        stageOne: { instruction: '走进去逛 5 分钟，不一定要买' },
-        hidden: { instruction: '问店主一个问题' },
-        completionCondition: '逛完 5 分钟',
-        safetyNotes: [],
-        difficulty: 1, estimatedDuration: 15, estimatedBudget: 0, distance: 'downstairs'
-      },
-      {
-        id: 'ms7d_007', category: 'night', title: '深夜便利店观察',
-        reason: '深夜的便利店是城市的缩影',
-        destination: { description: '最近的便利店' },
-        stageOne: { instruction: '进去观察 10 分钟，看都有什么人' },
-        hidden: { instruction: '买一样你从没买过的东西' },
-        completionCondition: '观察 10 分钟',
-        safetyNotes: ['注意夜间安全'],
-        difficulty: 1, estimatedDuration: 15, estimatedBudget: 10, distance: 'downstairs'
-      },
-      {
-        id: 'ms7d_008', category: 'social', title: '对陌生人微笑',
-        reason: '一个小小的连接，可能改变一天',
-        destination: { description: '人不太多的街道' },
-        stageOne: { instruction: '对路过的人微笑点头，试 3 次' },
-        hidden: { instruction: '如果有人回应，说一句"今天真好"' },
-        completionCondition: '完成 3 次微笑',
-        safetyNotes: ['不要打扰赶路的人'],
-        difficulty: 2, estimatedDuration: 10, estimatedBudget: 0, distance: 'downstairs'
-      }
-    ]
-
-    let pool = LOCAL_SCRIPTS
-    if (Number(params.budget) === 0) {
-      pool = pool.filter(s => s.estimatedBudget === 0)
-    }
-    if (params.distance === Distance.DOWNSTAIRS) {
-      pool = pool.filter(s => s.distance === 'downstairs')
-    }
-    if (pool.length === 0) pool = LOCAL_SCRIPTS
-
-    const script = JSON.parse(JSON.stringify(pool[Math.floor(Math.random() * pool.length)]))
-    const loc = microConfig.getLocationByDistrict(params.district)
-    script.poi = {
-      name: script.destination.description,
-      lat: loc.latitude,
-      lng: loc.longitude
-    }
-    return script
-  },
-
-  /** 接受指令 → 跳转到执行页 */
+  /** 接受指令 → 转成 executing 能消费的 currentCommand，跳转执行页 */
   onAccept() {
     const { script } = this.data
     if (!script) return
-    // 通过 storage 暂存 script，执行页读取
-    wx.setStorageSync('pending_script', script)
+    // 将 7D script 转换为 executing.onLoad 期望的 currentCommand 结构
+    const cmd = microConfig.buildExecutableCommand(script)
+    if (!cmd) {
+      wx.showToast({ title: '指令异常，请重摇', icon: 'none' })
+      return
+    }
+    // 统一走 app.startCommand：它会 normalizeCommand + 注入 startTime + 落盘。
+    // 此前直接赋值 currentCommand 缺 startTime，导致 executing 的 tickTimer
+    // 计算 (Date.now() - undefined) = NaN → 分钟数显示 null。
+    app.startCommand(cmd)
     wx.redirectTo({ url: '/pages/executing/executing' })
   },
 
@@ -413,7 +329,7 @@ Page({
     const self = this
     setTimeout(() => {
       try {
-        const script = self.generateLocalScript(newParams)
+        const script = microConfig.generateLocalScript(newParams)
         self.applyScript(script)
       } catch (err) {
         self.setData({
@@ -451,7 +367,7 @@ Page({
     const self = this
     setTimeout(() => {
       try {
-        const script = self.generateLocalScript(requestParams)
+        const script = microConfig.generateLocalScript(requestParams)
         self.applyScript(script)
       } catch (err) {
         self.setData({

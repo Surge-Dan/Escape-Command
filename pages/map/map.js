@@ -1,5 +1,5 @@
 const app = getApp()
-const { getTypeMeta } = require('../../utils/constants.js')
+const { getTypeMeta, MOODS } = require('../../utils/constants.js')
 const markerBuilder = require('../../utils/map-marker-builder.js')
 
 // v4: 顶部模式 tab —— 三类：普通地图 / 卫星地图 / 路线模式
@@ -17,6 +17,19 @@ const TIME_FILTERS = [
   { key: 'all', name: '全部' }
 ]
 
+// 类型筛选（出逃模式：微逃 / 破圈 / 同频）
+const TYPE_FILTERS = [
+  { key: 'all', name: '全部' },
+  { key: 'micro', name: '微逃' },
+  { key: 'breakthrough', name: '破圈' },
+  { key: 'sync', name: '同频' }
+]
+
+// 心情筛选（全部 + MOODS 5 项）
+const MOOD_FILTERS = [{ key: 'all', name: '全部' }].concat(
+  MOODS.map(function (m) { return { key: m.id, name: m.name } })
+)
+
 // 类型 → pin 图标
 const TYPE_PIN_MAP = {
   color: '/assets/icons/pin-color.svg',
@@ -27,21 +40,51 @@ const TYPE_PIN_MAP = {
   collect: '/assets/icons/pin-collect.svg'
 }
 
+// 推导出逃模式名（微逃/破圈/同频）——产品文档 12.8「类型筛选（微逃、破圈、同频）」
+function getModeName(record) {
+  if (!record) return '微逃'
+  if (record.isGroup === true) return '同频'
+  if (record.commandType === 'breakthrough') return '破圈'
+  return '微逃'
+}
+
+// 推导搭子文案
+function getPartnersText(record) {
+  if (!record) return '独行'
+  if (record.isGroup === true) {
+    var members = Array.isArray(record.members) ? record.members : []
+    if (!members.length) return '同频组局'
+    // 成员可能是字符串或对象，取昵称
+    var names = members.map(function (m) {
+      if (m && typeof m === 'object') return m.nickname || m.name || ''
+      return typeof m === 'string' ? m : String(m)
+    }).filter(function (n) { return n })
+    if (!names.length) return '同频组局'
+    return names.length > 2 ? names.slice(0, 2).join('、') + '等' + names.length + '人'
+      : names.join('、')
+  }
+  if (record.commandType === 'breakthrough') return '独自破圈'
+  return '独行'
+}
+
 Page({
   data: {
     statusBarHeight: 20,
     navHeaderStyle: '',
     mapTabs: MAP_TABS,
     timeFilters: TIME_FILTERS,
+    typeFilters: TYPE_FILTERS,
+    moodFilters: MOOD_FILTERS,
     activeTab: 'standard',
     activeTime: 'all',
+    activeType: 'all',
+    activeMood: 'all',
     currentCity: '',
     // 原生地图状态
-    // 去掉北京硬编码：优先用真实定位，无定位时用中性兜底（中国中部）+ hasLocation=false 空状态引导
     mapCenter: { latitude: 35, longitude: 105 },
     hasLocation: false,
     mapScale: 12,
-    mapHeight: 400,  // px，onLoad 中按系统信息计算
+    mapHeight: 400,
     mapMarkers: [],
     mapPolyline: [],
     // 路线模式固定出发点（家）
@@ -52,9 +95,11 @@ Page({
     popupRecord: null,
     // 统计
     totalCount: 0,
+    unlocatedCount: 0,
     uniquePlaces: 0,
     totalDistance: 0,
-    cityCount: 0
+    cityCount: 0,
+    theme: 'default'
   },
 
   onLoad() {
@@ -79,20 +124,18 @@ Page({
     })
     this.loadCurrentCity()
     this.refresh()
-    // 首次进入若已有真实定位，立即以真实定位为中心（修复「默认北京」）
     this.locateIfAvailable()
   },
 
   onShow() {
+    this.setData({ theme: app.globalData.theme || 'default' })
     this.refresh()
-    // 后台返回时若拿到新定位，平滑回正到真实位置
     this.locateIfAvailable()
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 1 })
     }
   },
 
-  // 有真实定位时把地图中心设为真实位置（避免显示北京/中性兜底）
   locateIfAvailable() {
     const loc = app.globalData.location
     if (loc && loc.latitude && loc.longitude) {
@@ -126,27 +169,33 @@ Page({
       markers = this.buildMarkers(located)
       polyline = this.buildPolyline(located)
     }
-    // fallback 链：真实定位 > 家 > 中性兜底（中国中部，避免硬编码北京）
     const NEUTRAL_CENTER = { latitude: 35, longitude: 105 }
     const fallback = app.globalData.location || this.data.homePoint || NEUTRAL_CENTER
     const center = located[0] ? located[0].location : fallback
     const hasLocation = !!(app.globalData.location && app.globalData.location.latitude)
+    // B4 修复：totalCount 用 located.length（有坐标记录数）作空状态判断；
+    // 无坐标记录单独统计 unlocatedCount，避免「有计数无点位也无空状态」的灰色地带。
     this.setData({
       filteredRecords: located,
       mapMarkers: markers,
       mapPolyline: polyline,
       mapCenter: { latitude: center.latitude, longitude: center.longitude },
       hasLocation: hasLocation,
-      totalCount: allFiltered.length,
+      totalCount: located.length,
+      unlocatedCount: Math.max(0, allFiltered.length - located.length),
       uniquePlaces: this.countUniquePlaces(located),
       totalDistance: this.computeTotalDistance(located),
       cityCount: this.countCities(located)
     })
   },
 
+  // 组合筛选：时间 + 类型 + 心情
   filterRecords() {
     const records = app.globalData.records || []
-    return this.filterByTime(records, this.data.activeTime)
+    let result = this.filterByTime(records, this.data.activeTime)
+    result = this.filterByType(result, this.data.activeType)
+    result = this.filterByMood(result, this.data.activeMood)
+    return result
   },
 
   // ===== 时间筛选 =====
@@ -170,14 +219,30 @@ Page({
     })
   },
 
+  // ===== 类型筛选（微逃/破圈/同频）=====
+  filterByType(records, key) {
+    if (key === 'all') return records.slice()
+    return records.filter(r => getModeName(r) === this.typeKeyToName(key))
+  },
+
+  typeKeyToName(key) {
+    if (key === 'micro') return '微逃'
+    if (key === 'breakthrough') return '破圈'
+    if (key === 'sync') return '同频'
+    return ''
+  },
+
+  // ===== 心情筛选 =====
+  filterByMood(records, key) {
+    if (key === 'all') return records.slice()
+    return records.filter(r => r.mood === key)
+  },
+
   toDateStr(d) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   },
 
   // ===== 标记构建 =====
-  // C-13: 同频记录按 groupId 聚合为聚合 marker（成员数角标），普通记录各自 marker
-  // solo marker id: 0..n-1（反查 this.markerRecords）
-  // group marker id: 200000..（反查 this.markerGroups），避开「家」marker id 100000
   buildMarkers(records) {
     const solo = markerBuilder.buildSoloMarkers(records)
     const group = markerBuilder.buildGroupMarkers(records)
@@ -213,7 +278,6 @@ Page({
           }
         })
       } else {
-        // C-13: 聚合 marker —— 复用现有 pin 图标，成员数用 label 文字渲染（不新增图片资源）
         const id = groupId++
         markerGroups.push(m.data)
         markers.push({
@@ -249,11 +313,9 @@ Page({
       }
     })
 
-    // 保存反查表（实例属性，不进 data 避免渲染开销）
     this.markerRecords = markerRecords
     this.markerGroups = markerGroups
 
-    // 路线模式下额外标记固定出发点「家」
     if (this.data.activeTab === 'route' && this.data.homePoint) {
       const home = this.data.homePoint
       markers.push({
@@ -362,16 +424,33 @@ Page({
     return `${m}月${day}日`
   },
 
+  // 富化弹窗：出逃模式 / 搭子 / 时长 / 心情 / 天气 / 照片缩略图
   formatPopup(record) {
     if (!record) return null
     const meta = getTypeMeta(record.commandType)
     const dateText = this.formatDateText(record.date) + (record.time ? ' ' + record.time : '')
+    const mood = MOODS.find(m => m.id === record.mood)
+    const w = record.weather || {}
+    const weatherText = w.description
+      ? `${w.temperature !== undefined && w.temperature !== null ? w.temperature : ''}℃ ${w.description}`
+      : (w.condition || '')
+    const duration = record.duration
+    const durationText = duration ? (duration >= 60 ? (Math.round(duration / 60 * 10) / 10) + ' 小时' : duration + ' 分钟') : ''
+    const photoThumb = (record.photos && record.photos.length) ? record.photos[0] : ''
     return {
       id: record.id,
       typeColor: meta.color,
       typeName: meta.name,
+      modeName: getModeName(record),
       commandTitle: record.commandTitle || record.commandContent || '出逃记忆',
-      dateText
+      dateText,
+      partnersText: getPartnersText(record),
+      durationText,
+      moodName: mood ? mood.name : (record.mood || ''),
+      weatherText,
+      photoThumb,
+      isBreakthrough: record.commandType === 'breakthrough',
+      isGroup: record.isGroup === true
     }
   },
 
@@ -379,8 +458,10 @@ Page({
   onTabTap(e) {
     const key = e.currentTarget.dataset.key
     if (key === this.data.activeTab) return
+    // B1 修复：route 无 homePoint 时提示后不切换，与文案「路线将从这里开始」一致
     if (key === 'route' && !this.data.homePoint) {
       wx.showToast({ title: '先设置出发点，路线将从这里开始', icon: 'none' })
+      return
     }
     this.setData({ activeTab: key, popupRecord: null })
     this.refresh()
@@ -393,27 +474,49 @@ Page({
     this.refresh()
   },
 
+  onTypeTap(e) {
+    const key = e.currentTarget.dataset.key
+    if (key === this.data.activeType) return
+    this.setData({ activeType: key, popupRecord: null })
+    this.refresh()
+  },
+
+  onMoodTap(e) {
+    const key = e.currentTarget.dataset.key
+    if (key === this.data.activeMood) return
+    this.setData({ activeMood: key, popupRecord: null })
+    this.refresh()
+  },
+
   onMarkerTap(e) {
     const markerId = e.detail.markerId
     // C-13: group 聚合 marker（id >= 200000）展示聚合弹窗
     if (markerId >= 200000) {
       const g = (this.markerGroups || [])[markerId - 200000]
       if (g) {
+        // 同频聚合：也走富弹窗，成员数作为搭子文案
         this.setData({
           popupRecord: {
             id: g.groupId,
             typeColor: '#5CBF9E',
             typeName: '同频',
+            modeName: '同频',
             commandTitle: g.title,
-            dateText: g.memberCount + ' 位朋友'
+            dateText: '',
+            partnersText: g.memberCount + ' 位朋友',
+            durationText: '',
+            moodName: '',
+            weatherText: '',
+            photoThumb: '',
+            isBreakthrough: false,
+            isGroup: true,
+            isGroupAgg: true
           }
         })
       }
       return
     }
-    // 家 marker（id === 100000）不弹记录窗
     if (markerId === 100000) return
-    // solo marker：反查 this.markerRecords
     const record = (this.markerRecords || [])[markerId]
     if (record) {
       this.setData({ popupRecord: this.formatPopup(record) })
@@ -424,6 +527,20 @@ Page({
     if (this.data.popupRecord) {
       this.setData({ popupRecord: null })
     }
+  },
+
+  // A2: 跳转 record-detail 详情页（复用已有页，参数 ?id= 与首页 goRecordDetail 一致）
+  goRecordDetailFromMap() {
+    const popup = this.data.popupRecord
+    if (!popup || !popup.id || popup.isGroupAgg) {
+      // 聚合 group 无单条 record id，不跳转
+      if (popup && popup.isGroupAgg) {
+        wx.showToast({ title: '同频记录请在「我的」查看', icon: 'none' })
+      }
+      return
+    }
+    this.setData({ popupRecord: null })
+    wx.navigateTo({ url: '/pages/record-detail/record-detail?id=' + popup.id })
   },
 
   // v4: 定位 —— 用 mapContext.moveToLocation 平滑回正
@@ -453,7 +570,6 @@ Page({
 
   // v14: 调用微信原生地图选点设置固定出发点；不可用时 fallback 到手动输入
   setHomePoint() {
-    // 不支持 chooseLocation 时直接走 fallback
     if (typeof wx.chooseLocation !== 'function') {
       this.setHomePointFallback()
       return
@@ -473,7 +589,6 @@ Page({
         wx.showToast({ title: '已设为出发点', icon: 'success' })
       },
       fail: (err) => {
-        // 取消或失败：仅在不支持时 fallback 到手动输入；其余情况（用户取消、权限拒绝）静默返回
         const msg = (err && err.errMsg) || ''
         if (/not\s*support/i.test(msg)) {
           this.setHomePointFallback()
@@ -482,9 +597,12 @@ Page({
     })
   },
 
-  // fallback：原 v12 基于地图中心 + showModal 手动输入名称（兜底）
+  // B5 修复：fallback 优先用 globalData.location（真实定位），其次 mapCenter
   setHomePointFallback() {
-    const center = this.data.mapCenter
+    const loc = app.globalData.location
+    const center = (loc && loc.latitude && loc.longitude)
+      ? { latitude: loc.latitude, longitude: loc.longitude }
+      : this.data.mapCenter
     if (!center || !center.latitude || !center.longitude) {
       wx.showToast({ title: '无法获取当前位置', icon: 'none' })
       return

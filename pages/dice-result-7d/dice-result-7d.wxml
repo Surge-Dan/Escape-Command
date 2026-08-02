@@ -1,6 +1,11 @@
 <!--pages/dice-result-7d/dice-result-7d.wxml-->
 <!--微逃骰子（7 维度版）- 结果页-->
 <view class="page">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <text class="nav-header-title">微逃骰子</text>
+    <view class="nav-header-divider"></view>
+  </view>
   <!-- 加载态 -->
   <view wx:if="{{loading}}" class="loading">
     <view class="loading__dice {{rolling ? 'loading__dice--rolling' : ''}}">🎲</view>
@@ -22,7 +27,7 @@
   <!-- 结果态 -->
   <view wx:else class="result">
     <!-- 顶部品牌 -->
-    <view class="result__header safe-top">
+    <view class="result__header">
       <view class="result__tag">YOUR ESCAPE</view>
       <view class="result__sub">骰子落下了，这是它替你选的</view>
     </view>

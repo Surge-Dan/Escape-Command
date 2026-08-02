@@ -61,7 +61,10 @@ page {
   --page-pad-bottom: calc(var(--tabbar-floating-height) + var(--tabbar-bottom-gap) + var(--safe-bottom) + 24rpx);
   --shadow-button: 0 4rpx 12rpx rgba(160, 110, 70, 0.25);
 
-  background: linear-gradient(180deg, #FFF6F0 0%, #F5F3EF 60%, #F5F3EF 100%);
+  /* v11: 页面背景渐变变量 —— 主题切换时由 .theme-{{id}} 类覆盖 */
+  --bg-gradient: linear-gradient(180deg, #FFF6F0 0%, #F5F3EF 60%, #F5F3EF 100%);
+
+  background: var(--bg-gradient);
   color: var(--ink);
   font-size: 28rpx;
   line-height: 1.5;
@@ -71,6 +74,59 @@ page {
 
 view, text, button, input, textarea, scroll-view {
   box-sizing: border-box;
+}
+
+/* ===== 主题切换：通过 root view 的 .theme-{{id}} 类覆盖 CSS 变量 ===== */
+/* default 主题直接使用 page 上的默认变量，无需额外覆盖 */
+
+/* 深夜墨色主题 */
+.theme-dark {
+  --canvas: #1A1B1E;
+  --white: #26282C;
+  --ink: #EDEEF1;
+  --ink-soft: #A0A4AD;
+  --ink-faint: #6B7079;
+  --brand-tint: #2A2520;
+  --brand-weak: #1F1C19;
+  --line: rgba(255, 255, 255, 0.08);
+  --shadow-card: 0 2rpx 16rpx rgba(0, 0, 0, 0.32);
+  --shadow-elevated: 0 4rpx 24rpx rgba(0, 0, 0, 0.40);
+  --shadow-popup: 0 8rpx 40rpx rgba(0, 0, 0, 0.48);
+  --shadow-float: 0 2rpx 12rpx rgba(0, 0, 0, 0.36);
+  --border: 2rpx solid rgba(255, 255, 255, 0.06);
+  --bg-gradient: linear-gradient(180deg, #211F1B 0%, #1A1B1E 60%, #1A1B1E 100%);
+  background: var(--bg-gradient);
+  color: var(--ink);
+}
+
+/* 黄昏暖橙主题 */
+.theme-warm-orange {
+  --canvas: #FFF8F0;
+  --brand: #D98A5C;
+  --brand-dark: #B87042;
+  --brand-strong: #B87042;
+  --brand-tint: #FFE8D6;
+  --brand-weak: #FFF0E6;
+  --accent: #E89B6E;
+  --accent-tint: #FFE8D6;
+  --bg-gradient: linear-gradient(180deg, #FFF1E0 0%, #FFF8F0 60%, #FFF8F0 100%);
+  background: var(--bg-gradient);
+  color: var(--ink);
+}
+
+/* 薰衣草夜主题 */
+.theme-lavender {
+  --canvas: #F5F0FA;
+  --brand: #9B7BB8;
+  --brand-dark: #7B5B98;
+  --brand-strong: #7B5B98;
+  --brand-tint: #E8D5F5;
+  --brand-weak: #F2EAF8;
+  --accent: #B095C8;
+  --accent-tint: #EFE5F7;
+  --bg-gradient: linear-gradient(180deg, #EDE3F5 0%, #F5F0FA 60%, #F5F0FA 100%);
+  background: var(--bg-gradient);
+  color: var(--ink);
 }
 
 button {
@@ -85,6 +141,7 @@ button::after { border: 0; }
 
 .page-container {
   min-height: 100vh;
+  background: var(--bg-gradient);
 }
 
 /* .paper-texture 不再覆盖背景色，页面背景由 page 统一渐变提供 */

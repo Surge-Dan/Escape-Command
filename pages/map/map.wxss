@@ -3,8 +3,8 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  /* v9: 顶部暖色渐变，与全局统一 */
-  background: linear-gradient(180deg, #FFF0E4 0%, #FFF6F0 18%, #F5F3EF 55%, #F5F3EF 100%);
+  /* v11: 背景使用主题变量，切换主题时自动跟随 */
+  background: var(--bg-gradient);
 }
 
 .status-bar { flex-shrink: 0; background: transparent; }
@@ -370,18 +370,20 @@
   text-align: center;
 }
 
-/* 标记弹窗 */
+/* 标记弹窗（C-12 富化版） */
 .map-popup {
   position: absolute;
   left: 24rpx;
   right: 24rpx;
-  top: 200rpx;
+  top: 180rpx;
   background-color: var(--white);
   border-radius: var(--radius-lg);
-  padding: 28rpx;
+  padding: 28rpx 28rpx 0;
   border-width: 2rpx;
   border-style: solid;
   border-color: var(--line);
+  box-shadow: 0 8rpx 32rpx rgba(46, 47, 51, 0.16);
+  z-index: 110;
 }
 
 .popup-inner {
@@ -389,22 +391,89 @@
   flex-direction: column;
 }
 
+/* 顶部头：类型名 + 模式 pill 左右分布 */
+.popup-head {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+
 .popup-type {
   font-size: 22rpx;
   font-weight: 600;
-  margin-bottom: 8rpx;
+}
+
+.popup-mode-pill {
+  padding: 4rpx 14rpx;
+  border-radius: 100rpx;
+  font-size: 20rpx;
+  font-weight: 600;
 }
 
 .popup-title {
   font-size: 30rpx;
   font-weight: 600;
   color: var(--ink);
-  margin-bottom: 8rpx;
+  margin-bottom: 6rpx;
 }
 
 .popup-date {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: var(--ink-soft);
+  margin-bottom: 14rpx;
+}
+
+/* 缩略图：宽屏横图，圆角 */
+.popup-thumb {
+  width: 100%;
+  height: 200rpx;
+  border-radius: var(--radius-md);
+  margin-bottom: 14rpx;
+  background-color: var(--canvas);
+}
+
+/* 信息行：搭子 / 时长 / 心情 / 天气 */
+.popup-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  padding-bottom: 18rpx;
+}
+
+.popup-meta-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.popup-meta-label {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  width: 80rpx;
+  flex-shrink: 0;
+}
+
+.popup-meta-val {
+  font-size: 24rpx;
+  color: var(--ink);
+  flex: 1;
+}
+
+/* 查看完整记录按钮 */
+.popup-cta {
+  border-top: 2rpx solid var(--line);
+  padding: 22rpx 0;
+  margin: 0 -28rpx;
+  text-align: center;
+}
+
+.popup-cta-text {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--brand);
+  text-align: center;
 }
 
 /* ===== TabBar 占位 ===== */

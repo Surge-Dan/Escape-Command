@@ -1,4 +1,4 @@
-<view class="profile-page paper-texture">
+<view class="profile-page paper-texture theme-{{theme}}">
   <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
 
   <view class="nav-header" style="{{navHeaderStyle}}">

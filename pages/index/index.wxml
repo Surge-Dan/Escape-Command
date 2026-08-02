@@ -1,4 +1,4 @@
-<view class="page-container home-page paper-texture {{fontLoaded ? 'font-loaded' : ''}}">
+<view class="page-container home-page paper-texture theme-{{theme}} {{fontLoaded ? 'font-loaded' : ''}}">
   <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
   <!-- v7: 统一导航栏，与 map/profile 一致，避开胶囊按钮 -->
   <view class="nav-header" style="{{navHeaderStyle}}">
@@ -65,7 +65,45 @@
       <image class="collect-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
     </view>
 
-    <!-- 每日推荐（v9：进入首屏） -->
+    <!-- C-P8: 上次出逃记录（单卡高亮） -->
+    <view wx:if="{{!selectedCommand && lastRecord}}" class="last-record-card" data-id="{{lastRecord.id}}" bindtap="goRecordDetail">
+      <view class="last-record-head">
+        <view class="last-record-tag" style="background: {{lastRecord.typeColor}}14; color: {{lastRecord.typeColor}};">
+          <text>{{lastRecord.typeName}}</text>
+        </view>
+        <text class="last-record-date">{{lastRecord.dateLabel}} · {{lastRecord.time}}</text>
+      </view>
+      <text class="last-record-title">{{lastRecord.commandTitle}}</text>
+      <view class="last-record-meta">
+        <view wx:if="{{lastRecord.duration}}" class="last-record-meta-item">
+          <image class="last-record-meta-ico" src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+          <text>约 {{lastRecord.duration}} 分钟</text>
+        </view>
+        <view wx:if="{{lastRecord.location && lastRecord.location.latitude}}" class="last-record-meta-item">
+          <image class="last-record-meta-ico" src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+          <text>已留痕</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- C-P8: 最近出逃记录（横向滚动） -->
+    <view wx:if="{{!selectedCommand && recentRecords.length}}" class="daily-section recent-section">
+      <view class="section-header">
+        <text class="section-title">最近出逃</text>
+        <text class="section-sub">{{recentRecords.length}} 条记录</text>
+      </view>
+      <scroll-view scroll-x class="daily-scroll" enhanced show-scrollbar="{{false}}">
+        <view wx:for="{{recentRecords}}" wx:key="id" class="daily-card recent-card" data-id="{{item.id}}" bindtap="goRecordDetail">
+          <view class="daily-type" style="background: {{item.typeColor}}14; color: {{item.typeColor}};">
+            <text>{{item.typeName}}</text>
+          </view>
+          <text class="daily-title">{{item.commandTitle}}</text>
+          <text class="daily-meta">{{item.dateLabel}}{{item.duration ? ' · ' + item.duration + '分钟' : ''}}</text>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 每日推荐（v9：进入首屏，即"推荐出逃任务"） -->
     <view wx:if="{{!selectedCommand && dailyRecommend.length}}" class="daily-section">
       <view class="section-header">
         <text class="section-title">今日推荐</text>
@@ -77,7 +115,7 @@
             <text>{{item.typeName}}</text>
           </view>
           <text class="daily-title">{{item.title}}</text>
-          <text class="daily-meta">约 {{item.duration}} 分钟</text>
+          <text class="daily-meta">{{item.duration ? '约 ' + item.duration + ' 分钟' : ''}}</text>
         </view>
       </scroll-view>
     </view>
@@ -119,7 +157,7 @@
 
         <!-- 元信息 -->
         <view class="cmd-meta">
-          <view class="meta-item">
+          <view wx:if="{{selectedCommand.duration}}" class="meta-item">
             <image src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
             <text>约 {{selectedCommand.duration}} 分钟</text>
           </view>
@@ -163,28 +201,6 @@
     </view>
     <view class="bottom-spacer"></view>
   </scroll-view>
-
-  <!-- home-dice-entry-01: 微逃时长细分弹窗 -->
-  <view wx:if="{{showMicroSheet}}" class="micro-sheet-mask" bindtap="onMicroCancel">
-    <view class="micro-sheet" catchtap="">
-      <view class="micro-sheet-handle"></view>
-      <text class="micro-sheet-title">选择出逃时长</text>
-      <view class="micro-options">
-        <view wx:for="{{[5, 10, 15, 20]}}" wx:key="*this"
-              class="micro-option {{selectedDuration === item ? 'active' : ''}} {{isRecommended && recommendedDuration === item ? 'recommended' : ''}}"
-              data-duration="{{item}}"
-              bindtap="onMicroOptionTap">
-          <text class="micro-option-num">{{item}}</text>
-          <text class="micro-option-unit">分钟</text>
-          <text wx:if="{{isRecommended && recommendedDuration === item}}" class="micro-option-tag">推荐</text>
-        </view>
-      </view>
-      <view class="micro-start-btn {{selectedDuration ? 'enabled' : 'disabled'}}" bindtap="onMicroStart">
-        <text>开始出逃</text>
-      </view>
-      <view class="micro-cancel" bindtap="onMicroCancel">取消</view>
-    </view>
-  </view>
 
   <!-- sync-dice-sheet: 同频骰子入口选择弹层 -->
   <view wx:if="{{showDiceSheet}}" class="dice-sheet-mask" bindtap="onDiceSheetMaskTap">

@@ -1,6 +1,5 @@
 const app = getApp()
 const { MODE_LIST, SHEET_MODES, HOME_DICE_LIST, getTypeMeta } = require('../../utils/constants.js')
-const { recommendDuration } = require('../../utils/duration-recommender.js')
 
 Page({
   data: {
@@ -36,8 +35,11 @@ Page({
     heroScene: '/assets/images/color-scene.webp',
     heroDesc: '算法懂你，随机推荐',
     nightHint: false,
-    // v3 每日推荐
+    // v3 每日推荐（即"推荐出逃任务"）
     dailyRecommend: [],
+    // C-P8: 出逃记录板块（上次 + 最近）
+    lastRecord: null,
+    recentRecords: [],
     // home-dice-entry-01: 3 骰子 Cover Flow 状态机
     diceList: HOME_DICE_LIST,
     currentDiceIndex: 0,
@@ -45,19 +47,15 @@ Page({
     touchStartX: 0,
     // home-dice-entry-01: 点击掷骰转动动画
     isRolling: false,
-    // home-dice-entry-01: 微逃细分弹窗
-    showMicroSheet: false,
-    selectedDuration: 0,
-    recommendedDuration: 15,
-    isRecommended: false,
-    // sync-dice-sheet: 同频骰子入口选择弹层
+    // sync-dice-sheet: 同频骰子入口选择弹层（邀请好友组局 / 进入任务大厅）
     showDiceSheet: false,
     // v18 破圈骰子
     showLegacyDice: false,
     breakthroughRemainCount: 5,
     isBreakthroughRolling: false,
     // v18: Hero 副标题（随选中骰子切换）
-    heroSubText: '用 15 分钟，给城市一个随机出口'
+    heroSubText: '用 15 分钟，给城市一个随机出口',
+    theme: 'default'
   },
 
   onLoad(options) {
@@ -91,6 +89,7 @@ Page({
     this.checkNightMode()
     this.refreshState()
     this.loadDailyRecommend()
+    this.loadEscapeRecords()
     this.loadFontFace()
     // home-dice-entry-01: 恢复上次选中的骰子位置
     this.restoreLastDiceIndex()
@@ -145,8 +144,10 @@ Page({
     // v7 guard：onLoad 已决定 redirect 到 onboarding，跳过本页逻辑避免竞态
     if (this._redirecting) return
     this.applyNavMetrics()
+    this.setData({ theme: app.globalData.theme || 'default' })
     this.refreshState()
     this.loadDailyRecommend()
+    this.loadEscapeRecords()
     if (typeof this.getTabBar === 'function' && this.getTabBar()) this.getTabBar().setData({ selected: 0 })
     // 从完成页返回时清除已过期的指令显示
     if (this.data.selectedCommand && !app.globalData.currentCommand) {
@@ -275,18 +276,15 @@ Page({
   // 实际路由逻辑（转动动画结束后调用）
   routeDice(dice) {
     if (dice.id === 'micro') {
-      // 微逃：弹细分窗，并按历史推荐时长
-      let records = []
-      try { records = wx.getStorageSync('records') || [] } catch (e) {}
-      const rec = recommendDuration(records)
-      this.setData({
-        showMicroSheet: true,
-        recommendedDuration: rec.duration,
-        isRecommended: rec.isRecommended,
-        selectedDuration: rec.duration
-      })
+      // 微逃7D：跳条件选择页（替换老的时长细分弹窗）
+      wx.navigateTo({ url: '/pages/dice-micro-7d/dice-micro-7d' })
     } else if (dice.id === 'breakthrough') {
-      wx.navigateTo({ url: '/pages/generating/generating?mode=breakthrough' })
+      // 破圈骰子：在首页直接摇取并展示指令卡（插画/小贴士/接受-重摇），
+      // 走 rollBreakthroughCommand → selectedCommand → 首页 command-sheet 卡片。
+      // 不再跳 generating 页：generating 的生成引擎没有 breakthrough 分支，
+      // 会从普通池抽普通指令（type≠breakthrough），导致 executing 无勇气进度、
+      // record 不识别破圈 → 误跳地图页，且永远到不了 bt-certificate。
+      this.rollBreakthroughCommand()
     } else if (dice.id === 'sync') {
       // sync-dice-sheet: 不再直达创建页，先弹底部 Sheet 让用户选择出逃方式
       this.setData({ showDiceSheet: true })
@@ -312,21 +310,7 @@ Page({
     wx.navigateTo({ url: '/pages/group/hall/hall' })
   },
 
-  // ===== home-dice-entry-01: 微逃细分弹窗 =====
-  onMicroOptionTap(e) {
-    this.setData({ selectedDuration: e.currentTarget.dataset.duration })
-  },
-
-  onMicroStart() {
-    if (!this.data.selectedDuration) return
-    const duration = this.data.selectedDuration
-    this.setData({ showMicroSheet: false })
-    wx.navigateTo({ url: `/pages/generating/generating?mode=micro&duration=${duration}` })
-  },
-
-  onMicroCancel() {
-    this.setData({ showMicroSheet: false })
-  },
+  // 微逃细分弹窗已移除：改用 dice-micro-7d 7维条件选择页（见 routeDice micro 分支）
 
   // v18 左右滑动切换骰子
   onDiceSwiperChange(e) {
@@ -557,6 +541,82 @@ Page({
   goCommandDetail(e) {
     const id = e.currentTarget.dataset.id
     wx.navigateTo({ url: '/pages/command-detail/command-detail?id=' + id })
+  },
+
+  // C-P8: 加载出逃记录（上次 + 最近）—— 从 globalData.records 按时间倒序取
+  // records 字段：id, commandTitle, commandType, typeColor, duration, date, time, mood, location
+  loadEscapeRecords() {
+    const records = (app.globalData.records || []).slice()
+    if (!records.length) {
+      this.setData({ lastRecord: null, recentRecords: [] })
+      return
+    }
+    // 按 date+time 字符串倒序（YYYY-MM-DD HH:MM 字符串比较等价时间比较）
+    records.sort((a, b) => {
+      const ka = (a.date || '') + ' ' + (a.time || '')
+      const kb = (b.date || '') + ' ' + (b.time || '')
+      return kb.localeCompare(ka)
+    })
+    const lastRecord = this.decorateRecord(records[0])
+    // 最近出逃：取前 5 条（不含已被选作 lastRecord 的首条以避免重复展示）
+    const recentRaw = records.slice(1, 6)
+    const recentRecords = recentRaw.map(r => this.decorateRecord(r))
+    this.setData({ lastRecord: lastRecord, recentRecords: recentRecords })
+  },
+
+  // 给记录补展示用元数据（类型名/颜色/日期摘要）—— 纯函数，不改原对象
+  decorateRecord(r) {
+    if (!r) return null
+    const meta = getTypeMeta(r.commandType)
+    const typeColor = r.typeColor || meta.color
+    // duration 防御：历史/破圈记录可能缺字段，统一归一为数字（0 表示未记录），
+    // 避免 WXML {{duration}} 渲染成 "null 分钟" / "null分钟"
+    const rawDur = r.duration
+    const dur = (rawDur != null && rawDur !== '' && !isNaN(Number(rawDur))) ? Number(rawDur) : 0
+    // 日期摘要：今天/昨天/前天/具体日期
+    let dateLabel = r.date || ''
+    try {
+      const today = this._todayStr()
+      const yesterday = this._shiftDateStr(today, -1)
+      const beforeY = this._shiftDateStr(today, -2)
+      if (r.date === today) dateLabel = '今天'
+      else if (r.date === yesterday) dateLabel = '昨天'
+      else if (r.date === beforeY) dateLabel = '前天'
+      else {
+        // M月D日
+        const parts = String(r.date).split('-')
+        if (parts.length === 3) dateLabel = (parseInt(parts[1], 10) || 0) + '月' + (parseInt(parts[2], 10) || 0) + '日'
+      }
+    } catch (e) {}
+    return Object.assign({}, r, {
+      typeName: meta.name,
+      typeColor: typeColor,
+      typeIcon: meta.icon,
+      duration: dur,
+      dateLabel: dateLabel
+    })
+  },
+
+  _todayStr() {
+    const d = new Date()
+    const p = n => (n < 10 ? '0' + n : '' + n)
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+  },
+
+  _shiftDateStr(dateStr, deltaDays) {
+    const parts = String(dateStr).split('-')
+    if (parts.length !== 3) return dateStr
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10))
+    d.setDate(d.getDate() + deltaDays)
+    const p = n => (n < 10 ? '0' + n : '' + n)
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+  },
+
+  // C-P8: 跳转记录详情
+  goRecordDetail(e) {
+    const id = e.currentTarget.dataset.id
+    if (!id) return
+    wx.navigateTo({ url: '/pages/record-detail/record-detail?id=' + id })
   },
 
   onShareAppMessage() {

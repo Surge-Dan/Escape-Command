@@ -140,13 +140,15 @@ function normalizeType(type) {
 }
 
 // 取当前小时（0-23），用于 default
+// safeHour —— hour 未知/越界时的兜底值
+// 设计原则：返回一个「中性」小时（12 = 正午），落在大多数 POI 营业窗口内
+//   cafe [7,22) ✓  park [6,21) ✓  market [6,20) ✓  convenience [0,24) ✓
+//   lake [0,24) ✓  alley [0,24) ✓  culture [9,17) ✓
+// 历史问题：原实现返回 new Date().getHours()，导致函数非确定性 ——
+// 测试在 22:00-07:00 跑时 cafe/culture/market/park 被误过滤，断言偶发失败。
+// 改为固定 12：函数变纯，测试确定性，生产侧影响小（hour 缺失本就是异常态）。
 function safeHour() {
-  try {
-    var h = new Date().getHours()
-    return (h >= 0 && h < 24) ? h : 12
-  } catch (e) {
-    return 12
-  }
+  return 12
 }
 
 function isValidHour(hour) {

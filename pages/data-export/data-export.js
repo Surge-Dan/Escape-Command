@@ -6,6 +6,7 @@ Page({
     statusBarHeight: 20,
     records: [],
     recent: [],
+    theme: 'default',
     stats: {
       total: 0,
       durationText: '0 分钟',
@@ -23,6 +24,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ theme: app.globalData.theme || 'default' })
     this.loadData()
   },
 
@@ -117,17 +119,18 @@ Page({
     const width = 600
     const records = this.data.records
     const stats = this.data.stats
-    // 高度按记录条数动态计算，留出标题与统计区
-    const headHeight = 360
-    const rowHeight = 90
-    const footerHeight = 120
     const listCount = Math.min(records.length, 5)
+    // 行高固定 130，预留 2 行换行空间
+    const headHeight = 360
+    const rowHeight = 130
+    const footerHeight = 120
     const height = headHeight + rowHeight * listCount + footerHeight + 40
 
     canvas.width = width * dpr
     canvas.height = height * dpr
     const ctx = canvas.getContext('2d')
     ctx.scale(dpr, dpr)
+    ctx.textBaseline = 'top'
 
     // 背景
     ctx.fillStyle = '#F5F3EF'
@@ -142,15 +145,17 @@ Page({
     ctx.fillStyle = '#FFFFFF'
     ctx.fill()
 
-    // 顶部品牌色条
-    this.roundRect(ctx, cardX, cardY, cardW, 16, { tl: 28, tr: 28, bl: 0, br: 0 })
-    ctx.fillStyle = '#5CBF9E'
-    ctx.fill()
+    // 顶部品牌色条：用 clip 保证圆角与卡片完美衔接
+    ctx.save()
+    this.roundRect(ctx, cardX, cardY, cardW, cardH, 28)
+    ctx.clip()
+    ctx.fillStyle = '#C8956E'
+    ctx.fillRect(cardX, cardY, cardW, 16)
+    ctx.restore()
 
     // 标题
     ctx.fillStyle = '#2E2F33'
     ctx.font = 'bold 40px sans-serif'
-    ctx.textBaseline = 'top'
     ctx.fillText('我的出逃记录', cardX + 36, cardY + 48)
 
     // 副标题
@@ -169,8 +174,14 @@ Page({
     const cellW = cardW / 4
     statCells.forEach((c, i) => {
       const cx = cardX + cellW * i + cellW / 2
+      // 长文本自动缩字号，避免溢出
+      let fontSize = 36
+      ctx.font = `bold ${fontSize}px sans-serif`
+      while (ctx.measureText(c.value).width > cellW - 16 && fontSize > 20) {
+        fontSize -= 2
+        ctx.font = `bold ${fontSize}px sans-serif`
+      }
       ctx.fillStyle = '#2E2F33'
-      ctx.font = 'bold 36px sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText(c.value, cx, statY)
       ctx.fillStyle = '#A8ADB5'
@@ -194,22 +205,31 @@ Page({
     ctx.fillText('最近 ' + listCount + ' 次出逃', cardX + 36, divY + 24)
 
     const listStartY = divY + 72
+    // 标题最大宽度：卡片宽 - 左 64 - 右 24
+    const titleMaxWidth = cardW - 64 - 24
+    ctx.font = '26px sans-serif'
+
     records.slice(0, listCount).forEach((r, i) => {
       const y = listStartY + i * rowHeight
       const meta = getTypeMeta(r.commandType)
       // 类型色块
       this.roundRect(ctx, cardX + 36, y + 8, 12, 40, 6)
-      ctx.fillStyle = meta.color || '#5CBF9E'
+      ctx.fillStyle = meta.color || '#C8956E'
       ctx.fill()
-      // 标题
+      // 标题：自动换行，最多 2 行
       ctx.fillStyle = '#2E2F33'
       ctx.font = '26px sans-serif'
-      const title = (r.commandTitle || r.commandContent || '出逃').slice(0, 18)
-      ctx.fillText('[' + meta.name + '] ' + title, cardX + 64, y + 10)
-      // 日期
+      const title = r.commandTitle || r.commandContent || '出逃'
+      const fullText = '[' + meta.name + '] ' + title
+      const lines = this.wrapText(ctx, fullText, titleMaxWidth, 2)
+      lines.forEach((line, idx) => {
+        ctx.fillText(line, cardX + 64, y + 10 + idx * 32)
+      })
+      // 日期：紧跟最后一行下方
+      const lastLineY = y + 10 + (lines.length - 1) * 32
       ctx.fillStyle = '#A8ADB5'
       ctx.font = '22px sans-serif'
-      ctx.fillText(r.date || '', cardX + 64, y + 44)
+      ctx.fillText(r.date || '', cardX + 64, lastLineY + 36)
     })
 
     // 页脚
@@ -228,6 +248,38 @@ Page({
         wx.showToast({ title: '图片生成失败', icon: 'none' })
       }
     })
+  },
+
+  // Canvas 文本换行：按字符拆分（兼容中英混排），超出 maxLines 行用省略号截断
+  wrapText(ctx, text, maxWidth, maxLines) {
+    if (!text) return ['']
+    const chars = text.split('')
+    const lines = []
+    let cur = ''
+    for (let i = 0; i < chars.length; i++) {
+      const test = cur + chars[i]
+      if (ctx.measureText(test).width > maxWidth && cur) {
+        lines.push(cur)
+        cur = chars[i]
+        if (lines.length >= maxLines) break
+      } else {
+        cur = test
+      }
+    }
+    if (cur && lines.length < maxLines) lines.push(cur)
+    // 超过最大行数：末行加省略号
+    if (lines.length >= maxLines && cur) {
+      let last = lines[maxLines - 1]
+      // 若原文本还有剩余，末行补省略号
+      const consumed = lines.join('').length
+      if (consumed < text.length) {
+        while (last && ctx.measureText(last + '…').width > maxWidth && last.length > 1) {
+          last = last.slice(0, -1)
+        }
+        lines[maxLines - 1] = last + '…'
+      }
+    }
+    return lines.length ? lines : ['']
   },
 
   saveToAlbum(filePath) {

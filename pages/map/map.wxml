@@ -1,4 +1,4 @@
-<view class="map-page paper-texture">
+<view class="map-page paper-texture theme-{{theme}}">
   <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
 
   <view class="nav-header" style="{{navHeaderStyle}}">
@@ -33,6 +33,7 @@
     enable-zoom
     enable-scroll
     bindmarkertap="onMarkerTap"
+    bindcallouttap="onMarkerTap"
     bindtap="closePopup"
     style="width: 100%; height: {{mapHeight}}px;"
   >
@@ -56,6 +57,30 @@
           class="time-chip {{activeTime === item.key ? 'active' : ''}}"
           data-key="{{item.key}}"
           bindtap="onTimeTap"
+        >
+          <cover-view class="time-chip-text">{{item.name}}</cover-view>
+        </cover-view>
+      </cover-view>
+      <!-- 类型筛选（微逃/破圈/同频）-->
+      <cover-view class="time-chips">
+        <cover-view
+          wx:for="{{typeFilters}}"
+          wx:key="key"
+          class="time-chip type-chip {{activeType === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onTypeTap"
+        >
+          <cover-view class="time-chip-text">{{item.name}}</cover-view>
+        </cover-view>
+      </cover-view>
+      <!-- 心情筛选 -->
+      <cover-view class="time-chips">
+        <cover-view
+          wx:for="{{moodFilters}}"
+          wx:key="key"
+          class="time-chip mood-chip {{activeMood === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onMoodTap"
         >
           <cover-view class="time-chip-text">{{item.name}}</cover-view>
         </cover-view>
@@ -108,12 +133,44 @@
       <cover-view class="empty-cta" catchtap="goEscape">去出逃</cover-view>
     </cover-view>
 
-    <!-- 标记弹窗 -->
+    <!-- 标记弹窗（C-12 富化：出逃模式 / 搭子 / 时长 / 心情 / 天气 / 缩略图） -->
     <cover-view wx:if="{{popupRecord}}" class="map-popup" catchtap="closePopup">
       <cover-view class="popup-inner">
-        <cover-view class="popup-type" style="color: {{popupRecord.typeColor}};">{{popupRecord.typeName}}</cover-view>
+        <!-- 顶部：类型 + 模式 pill -->
+        <cover-view class="popup-head">
+          <cover-view class="popup-type" style="color: {{popupRecord.typeColor}};">{{popupRecord.typeName}}</cover-view>
+          <cover-view class="popup-mode-pill" style="background: {{popupRecord.typeColor}}1A; color: {{popupRecord.typeColor}};">{{popupRecord.modeName}}</cover-view>
+        </cover-view>
         <cover-view class="popup-title">{{popupRecord.commandTitle}}</cover-view>
-        <cover-view class="popup-date">{{popupRecord.dateText}}</cover-view>
+        <cover-view wx:if="{{popupRecord.dateText}}" class="popup-date">{{popupRecord.dateText}}</cover-view>
+
+        <!-- 缩略图（同频聚合无图时不展示） -->
+        <cover-image wx:if="{{popupRecord.photoThumb}}" class="popup-thumb" src="{{popupRecord.photoThumb}}" mode="aspectFill"></cover-image>
+
+        <!-- 信息行：搭子 / 时长 / 心情 / 天气 -->
+        <cover-view class="popup-meta">
+          <cover-view wx:if="{{popupRecord.partnersText}}" class="popup-meta-row">
+            <cover-view class="popup-meta-label">搭子</cover-view>
+            <cover-view class="popup-meta-val">{{popupRecord.partnersText}}</cover-view>
+          </cover-view>
+          <cover-view wx:if="{{popupRecord.durationText}}" class="popup-meta-row">
+            <cover-view class="popup-meta-label">时长</cover-view>
+            <cover-view class="popup-meta-val">{{popupRecord.durationText}}</cover-view>
+          </cover-view>
+          <cover-view wx:if="{{popupRecord.moodName}}" class="popup-meta-row">
+            <cover-view class="popup-meta-label">心情</cover-view>
+            <cover-view class="popup-meta-val">{{popupRecord.moodName}}</cover-view>
+          </cover-view>
+          <cover-view wx:if="{{popupRecord.weatherText}}" class="popup-meta-row">
+            <cover-view class="popup-meta-label">天气</cover-view>
+            <cover-view class="popup-meta-val">{{popupRecord.weatherText}}</cover-view>
+          </cover-view>
+        </cover-view>
+
+        <!-- 查看完整记录按钮（同频聚合无单条记录，不展示） -->
+        <cover-view wx:if="{{!popupRecord.isGroupAgg}}" class="popup-cta" catchtap="goRecordDetailFromMap">
+          <cover-view class="popup-cta-text">查看完整记录 ›</cover-view>
+        </cover-view>
       </cover-view>
     </cover-view>
   </map>

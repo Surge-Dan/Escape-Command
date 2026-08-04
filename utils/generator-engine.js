@@ -125,7 +125,14 @@ function normalizeCtx(ctx) {
     targetDuration: Number.isFinite(c.targetDuration) ? c.targetDuration : 0,
     // B-14 变量替换：地点名/季节，均可选
     locationName: typeof c.locationName === 'string' ? c.locationName : '',
-    season: typeof c.season === 'string' ? c.season : ''
+    season: typeof c.season === 'string' ? c.season : '',
+    // B-15 夜间距离限制：用户位置（可选），用于夜间户外指令距离过滤
+    userLocation: c.userLocation && typeof c.userLocation === 'object' &&
+      typeof c.userLocation.latitude === 'number' && typeof c.userLocation.longitude === 'number'
+      ? { latitude: c.userLocation.latitude, longitude: c.userLocation.longitude }
+      : null,
+    // B-15 夜间最大允许距离（米），默认 1000
+    nightMaxDistance: Number.isFinite(c.nightMaxDistance) && c.nightMaxDistance > 0 ? c.nightMaxDistance : 1000
   }
 }
 
@@ -255,6 +262,18 @@ function filterBySafety(cmds, ctx) {
 
     // 深夜非 nightSafe 过滤
     if (isLateNight && cmd.nightSafe === false) return false
+
+    // B-15: 夜间户外指令距离限制
+    // 深夜 + 户外指令 + 有用户位置 + 指令有坐标 → 距离超过阈值则过滤
+    if (isLateNight && cmd.outdoor !== false && c.userLocation &&
+        cmd.location && typeof cmd.location.latitude === 'number' &&
+        typeof cmd.location.longitude === 'number') {
+      var dist = calcDistance(
+        c.userLocation.latitude, c.userLocation.longitude,
+        cmd.location.latitude, cmd.location.longitude
+      )
+      if (dist > c.nightMaxDistance) return false
+    }
 
     // 雨天户外非雨天过滤
     if (isRainy && cmd.rainy === false && cmd.outdoor !== false) return false
@@ -672,6 +691,19 @@ function applyModeFilter(cmds, mode) {
 function pickRandom(arr) {
   if (!Array.isArray(arr) || arr.length === 0) return ''
   return arr[Math.floor(Math.random() * arr.length)]
+}
+
+// B-15: Haversine 距离计算（米），用于夜间户外指令距离限制
+function calcDistance(lat1, lng1, lat2, lng2) {
+  var R = 6371000
+  var toRad = function (deg) { return deg * Math.PI / 180 }
+  var dLat = toRad(lat2 - lat1)
+  var dLng = toRad(lng2 - lng1)
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2)
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
 }
 
 // ===== 导出 =====

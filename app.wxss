@@ -195,6 +195,8 @@ button::after { border: 0; }
   -webkit-backdrop-filter: none;
   position: relative;
   z-index: 10;
+  /* 导航栏下方留白，避免分隔线与下方首个模块重叠 */
+  margin-bottom: 24rpx;
 }
 .nav-header-back {
   width: 56rpx;
@@ -225,11 +227,11 @@ button::after { border: 0; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* v10: 标题下方细横线分隔，整体下移 10rpx，避免贴胶囊按钮 */
+/* v10: 标题下方细横线分隔，贴导航栏底边（不溢出到内容区） */
 .nav-header-divider {
   position: absolute;
   left: 0;
-  bottom: -10rpx;
+  bottom: 0;
   width: 100%;
   height: 1rpx;
   background: rgba(122, 78, 43, 0.10);

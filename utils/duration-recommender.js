@@ -1,9 +1,9 @@
 // home-dice-entry-01: 微出逃时长推荐器
-// 根据历史 micro 模式记录推荐时长档位（5/10/15/20 分钟）
+// 根据历史 micro 模式记录推荐时长档位（10/20/30/60 分钟）
 // 入参 records 结构参考 app.js completeCommand 生成的 record（含 mode/duration/id 等字段）
 
-const TIERS = [5, 10, 15, 20]
-const DEFAULT_TIER = 15
+const TIERS = [10, 20, 30, 60]
+const DEFAULT_TIER = 15  // 兜底值（无历史时不展示推荐，但保留给调用方兜底用）
 const MIN_SAMPLES = 3
 const RECENT_LIMIT = 10
 
@@ -36,18 +36,18 @@ function median(values) {
 /**
  * 将中位数匹配到最近的档位
  * 采用「绝对差最小」原则，区间按 [a, b) 划分以消除边界歧义：
- *   median < 7.5        → 5
- *   7.5 ≤ median < 12.5 → 10
- *   12.5 ≤ median < 17.5 → 15
- *   median ≥ 17.5       → 20
+ *   median < 15        → 10
+ *   15 ≤ median < 25   → 20
+ *   25 ≤ median < 45   → 30
+ *   median ≥ 45        → 60
  * @param {number} m
  * @returns {number}
  */
 function matchTier(m) {
-  if (m < 7.5) return 5
-  if (m < 12.5) return 10
-  if (m < 17.5) return 15
-  return 20
+  if (m < 15) return 10
+  if (m < 25) return 20
+  if (m < 45) return 30
+  return 60
 }
 
 /**
@@ -55,7 +55,7 @@ function matchTier(m) {
  * 1. 过滤 mode==='micro' 的记录
  * 2. 按 record.id 倒序取最近 10 条
  * 3. 计算 duration 中位数
- * 4. 匹配到最近档位（5/10/15/20）
+ * 4. 匹配到最近档位（10/20/30/60）
  * 5. micro 记录 < 3 条 / records 为空 → 返回默认档位 15，isRecommended=false
  * @param {Array<{mode?:string, duration?:number, id?:string}>} records
  * @returns {{duration:number, isRecommended:boolean}}

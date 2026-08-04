@@ -36,7 +36,7 @@
     bindtap="closePopup"
     style="width: 100%; height: {{mapHeight}}px;"
   >
-    <!-- 顶部模式 tab + 时间筛选 -->
+    <!-- 顶部模式 tab + 时间筛选 + B4-B 类型/情绪筛选 -->
     <cover-view class="map-controls">
       <cover-view class="map-tabs">
         <cover-view
@@ -56,6 +56,37 @@
           class="time-chip {{activeTime === item.key ? 'active' : ''}}"
           data-key="{{item.key}}"
           bindtap="onTimeTap"
+        >
+          <cover-view class="time-chip-text">{{item.name}}</cover-view>
+        </cover-view>
+      </cover-view>
+      <!-- B4-B: 类型筛选 -->
+      <cover-view class="time-chips">
+        <cover-view
+          wx:for="{{typeFilters}}"
+          wx:key="key"
+          class="time-chip {{activeType === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onTypeTap"
+        >
+          <cover-view class="time-chip-text">{{item.name}}</cover-view>
+        </cover-view>
+      </cover-view>
+      <!-- B4-B: 情绪筛选（可折叠） -->
+      <cover-view wx:if="{{moodFilters.length > 1}}" class="time-chips">
+        <cover-view
+          class="time-chip mood-toggle {{showMoodRow ? 'active' : ''}}"
+          bindtap="onToggleMoodRow"
+        >
+          <cover-view class="time-chip-text">情绪</cover-view>
+        </cover-view>
+        <cover-view
+          wx:if="{{showMoodRow}}"
+          wx:for="{{moodFilters}}"
+          wx:key="key"
+          class="time-chip {{activeMood === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onMoodTap"
         >
           <cover-view class="time-chip-text">{{item.name}}</cover-view>
         </cover-view>
@@ -113,7 +144,28 @@
       <cover-view class="popup-inner">
         <cover-view class="popup-type" style="color: {{popupRecord.typeColor}};">{{popupRecord.typeName}}</cover-view>
         <cover-view class="popup-title">{{popupRecord.commandTitle}}</cover-view>
-        <cover-view class="popup-date">{{popupRecord.dateText}}</cover-view>
+        <cover-view class="popup-date">{{popupRecord.dateText}}{{popupRecord.moodText ? ' · ' + popupRecord.moodText : ''}}</cover-view>
+        <!-- B4-B: 重返此地按钮 -->
+        <cover-view wx:if="{{popupRecord.canRevisit}}" class="popup-revisit-btn" catchtap="onRevisitTap">
+          <cover-view class="popup-revisit-text">重返此地</cover-view>
+        </cover-view>
+      </cover-view>
+    </cover-view>
+
+    <!-- B4-B: 城市关系总结条（本月） -->
+    <cover-view wx:if="{{citySummary}}" class="map-summary-bar">
+      <cover-view class="summary-text">{{citySummary.summary}}</cover-view>
+    </cover-view>
+
+    <!-- B4-B: 重返此地确认弹窗 -->
+    <cover-view wx:if="{{revisitPopup}}" class="revisit-modal" catchtap="closeRevisitPopup">
+      <cover-view class="revisit-card" catchtap="noop">
+        <cover-view class="revisit-title">{{revisitPopup.title}}</cover-view>
+        <cover-view class="revisit-subtitle">{{revisitPopup.subtitle}}</cover-view>
+        <cover-view class="revisit-actions">
+          <cover-view class="revisit-cancel" bindtap="closeRevisitPopup">取消</cover-view>
+          <cover-view class="revisit-confirm" catchtap="confirmRevisit">{{revisitPopup.actionText}}</cover-view>
+        </cover-view>
       </cover-view>
     </cover-view>
   </map>

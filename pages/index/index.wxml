@@ -90,46 +90,14 @@
       </view>
     </view>
 
-    <!-- v9: 收藏入口——0 条时改为极简一行 -->
-    <view wx:if="{{!selectedCommand && collectedCount === 0}}" class="collect-entry-mini" bindtap="goCollection">
-      <image class="collect-mini-ico" src="/assets/icons/bookmark.svg" mode="aspectFit"></image>
-      <text class="collect-mini-text">还没有收藏，去看看</text>
-      <image class="collect-mini-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
-    </view>
-    <view wx:if="{{!selectedCommand && collectedCount > 0}}" class="collect-entry-card" bindtap="goCollection">
-      <view class="collect-entry-icon-wrap">
-        <image class="collect-entry-ico" src="/assets/icons/bookmark-brand.svg" mode="aspectFit"></image>
-      </view>
-      <view class="collect-entry-text">
-        <text class="collect-entry-title">我的收藏</text>
-        <text class="collect-entry-sub">{{collectedCount}} 条指令</text>
-      </view>
-      <image class="collect-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
-    </view>
-
-    <!-- 每日推荐（v9：进入首屏） -->
-    <view wx:if="{{!selectedCommand && dailyRecommend.length}}" class="daily-section">
-      <view class="section-header">
-        <text class="section-title">今日推荐</text>
-        <text class="section-sub">基于天气和时间</text>
-      </view>
-      <scroll-view scroll-x class="daily-scroll" enhanced show-scrollbar="{{false}}">
-        <view wx:for="{{dailyRecommend}}" wx:key="id" class="daily-card" data-id="{{item.id}}" bindtap="goCommandDetail">
-          <view class="daily-type" style="background: {{item.typeColor}}14; color: {{item.typeColor}};">
-            <text>{{item.typeName}}</text>
-          </view>
-          <text class="daily-title">{{item.title}}</text>
-          <text class="daily-meta">约 {{item.duration}} 分钟</text>
-        </view>
-      </scroll-view>
-    </view>
+    <!-- v9: 首页简化——删除每日推荐和收藏入口，聚焦骰子 -->
 
     <!-- 指令详情卡 -->
     <view wx:if="{{selectedCommand}}" class="command-sheet">
       <view class="cmd-card">
         <!-- v12: 关闭按钮左上角，收藏按钮右上角，分别绝对定位 -->
         <view class="cmd-close" catchtap="closeCommand">
-          <image src="/assets/icons/x-ink-faint.svg" mode="aspectFit"></image>
+          <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
         </view>
         <view class="favorite-toggle {{collected ? 'active' : ''}}" catchtap="collectCmd">
           <image src="{{collected ? '/assets/icons/bookmark-brand.svg' : '/assets/icons/bookmark.svg'}}" mode="aspectFit"></image>
@@ -145,6 +113,9 @@
         <!-- 标题 -->
         <view wx:if="{{invitedByFriend}}" class="invite-tag">
           <text>来自朋友的邀请</text>
+        </view>
+        <view wx:if="{{friendRollHint}}" class="invite-tag friend-roll-tag">
+          <text>🎲 朋友替你摇的</text>
         </view>
         <text class="cmd-title">{{selectedCommand.title}}</text>
 
@@ -185,11 +156,15 @@
         </view>
       </view>
 
-      <!-- 操作区：邀请朋友 + 重摇 + 接受指令 -->
+      <!-- 操作区：邀请朋友 + 替朋友摇 + 重摇 + 接受指令 -->
       <view class="cmd-actions">
         <button wx:if="{{selectedCommand.double || selectedCommand.social}}" class="invite-btn" open-type="share">
           <image src="/assets/icons/users-white.svg" mode="aspectFit"></image>
           <text>邀请朋友</text>
+        </button>
+        <button class="action-btn friend-roll-btn" open-type="share" data-share-type="friend">
+          <image src="/assets/icons/dice-5-brand-strong.svg" mode="aspectFit"></image>
+          <text>替朋友摇</text>
         </button>
         <view class="action-btn secondary" catchtap="reroll">
           <image src="/assets/icons/refresh-cw-ink-soft.svg" mode="aspectFit"></image>
@@ -208,11 +183,11 @@
 
   <!-- home-dice-entry-01: 微逃时长细分弹窗 -->
   <view wx:if="{{showMicroSheet}}" class="micro-sheet-mask" bindtap="onMicroCancel">
-    <view class="micro-sheet" catchtap="">
+    <view class="micro-sheet" catchtap="noop">
       <view class="micro-sheet-handle"></view>
       <text class="micro-sheet-title">选择出逃时长</text>
       <view class="micro-options">
-        <view wx:for="{{[5, 10, 15, 20]}}" wx:key="*this"
+        <view wx:for="{{[10, 20, 30, 60]}}" wx:key="*this"
               class="micro-option {{selectedDuration === item ? 'active' : ''}} {{isRecommended && recommendedDuration === item ? 'recommended' : ''}}"
               data-duration="{{item}}"
               bindtap="onMicroOptionTap">
@@ -230,7 +205,7 @@
 
   <!-- sync-dice-sheet: 同频骰子入口选择弹层 -->
   <view wx:if="{{showDiceSheet}}" class="dice-sheet-mask" bindtap="onDiceSheetMaskTap">
-    <view class="dice-sheet-panel" catchtap="">
+    <view class="dice-sheet-panel" catchtap="noop">
       <view class="dice-sheet-handle"></view>
       <view class="dice-sheet-header">
         <text class="dice-sheet-title">选择出逃方式</text>
@@ -249,6 +224,14 @@
         <view class="dice-option-info">
           <text class="dice-option-label">进入任务大厅找搭子</text>
           <text class="dice-option-desc">找到官方或用户创建的出逃任务，人齐就出发</text>
+        </view>
+        <text class="dice-option-arrow">›</text>
+      </view>
+      <view class="dice-sheet-option dice-sheet-option-highlight" bindtap="onQuickMatchTap">
+        <text class="dice-option-icon">✨</text>
+        <view class="dice-option-info">
+          <text class="dice-option-label">AI 快速匹配</text>
+          <text class="dice-option-desc">基于你的偏好，秒级匹配任务 + 搭子 + 主题</text>
         </view>
         <text class="dice-option-arrow">›</text>
       </view>

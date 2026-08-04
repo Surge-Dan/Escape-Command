@@ -1,4 +1,4 @@
-﻿const app = getApp()
+const app = getApp()
 const roomStore = require('../../../utils/group-room-store.js')
 const hallStore = require('../../../utils/task-hall-store.js')
 const chatStore = require('../../../utils/chat-store.js')
@@ -71,6 +71,9 @@ Page({
     reportSelectedReason: '',
     reportSubmitting: false
   },
+
+  // 空方法：供 catchtap="noop" 拦截冒泡
+  noop() {},
 
   onLoad(options) {
     this.applyNavMetrics()

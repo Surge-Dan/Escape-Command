@@ -1,4 +1,4 @@
-﻿// tests/gherkin/runner.js
+﻿﻿﻿﻿// tests/gherkin/runner.js
 // Gherkin BDD 通用执行器：自动发现 *.feature，按 scenario 重置上下文
 // 运行: node tests/gherkin/runner.js
 //       node tests/gherkin/runner.js group-flow.feature   # 单文件
@@ -3763,6 +3763,795 @@ function on(matcher, handler) {
     // 确保证书页取到的是破圈记录，而非普通出逃
     return ctx.certCmd && ctx.certCmd.commandType === 'breakthrough' && ctx.certCmd.commandType !== 'walk'
   })
+})()
+
+// ============================================================
+// ===== Safety-Compliance 步骤处理器（B1 安全合规）=====
+// 覆盖：夜间安全过滤 / 内容安全检查 / 紧急联系信息 / 隐私说明
+// ============================================================
+;(function registerSafetyCompliance() {
+  const safetyHelper = require('../../utils/safety-helper.js')
+
+  // Given 当前时间是 N 点
+  on(/^当前时间是\s*(\d+)\s*点$/, (ctx, m) => {
+    ctx.hour = parseInt(m[1])
+    return true
+  })
+  // Given 指令池含一条户外非 nightSafe 指令 "..."
+  on(/^指令池含一条户外非\s*nightSafe\s*指令\s*"([^"]*)"$/, (ctx, m) => {
+    ctx.commands = [{ id: m[1], nightSafe: false, outdoor: true }]
+    return true
+  })
+  // Given 指令池含一条 nightSafe 户外指令 "..."
+  on(/^指令池含一条\s*nightSafe\s*户外指令\s*"([^"]*)"$/, (ctx, m) => {
+    ctx.commands = [{ id: m[1], nightSafe: true, outdoor: true }]
+    return true
+  })
+  // Given 指令池含一条室内非 nightSafe 指令 "..."
+  on(/^指令池含一条室内非\s*nightSafe\s*指令\s*"([^"]*)"$/, (ctx, m) => {
+    ctx.commands = [{ id: m[1], nightSafe: false, outdoor: false }]
+    return true
+  })
+  // Given 用户位置为纬度 X 经度 Y
+  on(/^用户位置为纬度\s*([\d.]+)\s*经度\s*([\d.]+)$/, (ctx, m) => {
+    ctx.userLocation = { latitude: parseFloat(m[1]), longitude: parseFloat(m[2]) }
+    return true
+  })
+  // Given 指令池含一条户外指令 "..." 位于纬度 X 经度 Y
+  on(/^指令池含一条户外指令\s*"([^"]*)"\s*位于纬度\s*([\d.]+)\s*经度\s*([\d.]+)$/, (ctx, m) => {
+    ctx.commands = [{ id: m[1], nightSafe: false, outdoor: true, location: { latitude: parseFloat(m[2]), longitude: parseFloat(m[3]) } }]
+    return true
+  })
+  // When 执行夜间安全过滤
+  on(/^执行夜间安全过滤$/, (ctx) => {
+    ctx.filterResult = safetyHelper.filterNightSafety(ctx.commands || [], ctx.hour || 12, 1000, ctx.userLocation || null)
+    return true
+  })
+  // When 执行夜间安全过滤 最大距离 N 米
+  on(/^执行夜间安全过滤\s*最大距离\s*(\d+)\s*米$/, (ctx, m) => {
+    ctx.filterResult = safetyHelper.filterNightSafety(ctx.commands || [], ctx.hour || 12, parseInt(m[1]), ctx.userLocation || null)
+    return true
+  })
+  // Then 过滤结果为空
+  on(/^过滤结果为空$/, (ctx) => Array.isArray(ctx.filterResult) && ctx.filterResult.length === 0)
+  // Then 过滤结果含 N 条指令
+  on(/^过滤结果含\s*(\d+)\s*条指令$/, (ctx, m) => Array.isArray(ctx.filterResult) && ctx.filterResult.length === parseInt(m[1]))
+
+  // Given 一段文本 "..."
+  on(/^一段文本\s*"([^"]*)"$/, (ctx, m) => {
+    ctx.textContent = m[1]
+    return true
+  })
+  // When 执行内容安全检查
+  on(/^执行内容安全检查$/, (ctx) => {
+    ctx.safetyResult = safetyHelper.checkContentSafety(ctx.textContent || '')
+    return true
+  })
+  // Then 检查结果为安全
+  on(/^检查结果为安全$/, (ctx) => ctx.safetyResult && ctx.safetyResult.safe === true)
+  // Then 检查结果为不安全
+  on(/^检查结果为不安全$/, (ctx) => ctx.safetyResult && ctx.safetyResult.safe === false)
+  // Then 匹配敏感词数量大于等于 N
+  on(/^匹配敏感词数量大于等于\s*(\d+)$/, (ctx, m) => ctx.safetyResult && ctx.safetyResult.matched.length >= parseInt(m[1]))
+
+  // When 获取紧急联系信息
+  on(/^获取紧急联系信息$/, (ctx) => {
+    ctx.contacts = safetyHelper.getEmergencyContacts()
+    return true
+  })
+  // Then 包含报警电话 110
+  on(/^包含报警电话\s*(\d+)$/, (ctx, m) => ctx.contacts && ctx.contacts.police && ctx.contacts.police.number === m[1])
+  // Then 包含急救电话 120
+  on(/^包含急救电话\s*(\d+)$/, (ctx, m) => ctx.contacts && ctx.contacts.medical && ctx.contacts.medical.number === m[1])
+  // Then 包含消防电话 119
+  on(/^包含消防电话\s*(\d+)$/, (ctx, m) => ctx.contacts && ctx.contacts.fire && ctx.contacts.fire.number === m[1])
+  // Then 包含交通事故电话 122
+  on(/^包含交通事故电话\s*(\d+)$/, (ctx, m) => ctx.contacts && ctx.contacts.traffic && ctx.contacts.traffic.number === m[1])
+
+  // When 生成隐私说明
+  on(/^生成隐私说明$/, (ctx) => {
+    ctx.privacySummary = safetyHelper.buildPrivacySummary()
+    return true
+  })
+  // Then 说明包含定位用途
+  on(/^说明包含定位用途$/, (ctx) => {
+    return ctx.privacySummary && ctx.privacySummary.sections &&
+      ctx.privacySummary.sections.some(function (s) { return s.title.indexOf('定位') >= 0 })
+  })
+  // Then 说明包含数据存储
+  on(/^说明包含数据存储$/, (ctx) => {
+    return ctx.privacySummary && ctx.privacySummary.sections &&
+      ctx.privacySummary.sections.some(function (s) { return s.title.indexOf('数据') >= 0 || s.title.indexOf('存储') >= 0 })
+  })
+  // Then 说明包含用户权利
+  on(/^说明包含用户权利$/, (ctx) => {
+    return ctx.privacySummary && ctx.privacySummary.sections &&
+      ctx.privacySummary.sections.some(function (s) { return s.title.indexOf('权利') >= 0 || s.title.indexOf('用户') >= 0 })
+  })
+})()
+
+// ============================================================
+// ===== Arrival-Flow 步骤处理器（B2 到达确认与阶段感设计）=====
+// 覆盖：到达判定 / 阶段切换 / 隐藏任务解锁 / 按钮显示条件 / 不变量
+// ============================================================
+;(function registerArrivalFlow() {
+  const arrivalHelper = require('../../utils/arrival-helper.js')
+
+  // Given 用户位置为纬度 X 经度 Y
+  on(/^用户位置为纬度\s*([\d.]+)\s*经度\s*([\d.]+)$/, (ctx, m) => {
+    ctx.userLocation = { latitude: parseFloat(m[1]), longitude: parseFloat(m[2]) }
+    return true
+  })
+  // Given 用户位置缺失
+  on(/^用户位置缺失$/, (ctx) => {
+    ctx.userLocation = null
+    return true
+  })
+  // Given 目标位置为纬度 X 经度 Y
+  on(/^目标位置为纬度\s*([\d.]+)\s*经度\s*([\d.]+)$/, (ctx, m) => {
+    ctx.targetLocation = { latitude: parseFloat(m[1]), longitude: parseFloat(m[2]) }
+    return true
+  })
+  // Given 目标位置缺失
+  on(/^目标位置缺失$/, (ctx) => {
+    ctx.targetLocation = null
+    return true
+  })
+  // Given 步骤列表含 N 步其中第 X Y 步为隐藏
+  on(/^步骤列表含\s*(\d+)\s*步其中第\s*([\d\s]+)\s*步为隐藏$/, (ctx, m) => {
+    const total = parseInt(m[1])
+    const hiddenIdx = m[2].trim().split(/\s+/).map(function (n) { return parseInt(n) })
+    const steps = []
+    for (var i = 1; i <= total; i++) {
+      steps.push({ id: i, text: '步骤 ' + i, hidden: hiddenIdx.indexOf(i) >= 0 })
+    }
+    ctx.steps = steps
+    return true
+  })
+  // Given 步骤列表含 N 步无隐藏
+  on(/^步骤列表含\s*(\d+)\s*步无隐藏$/, (ctx, m) => {
+    const total = parseInt(m[1])
+    const steps = []
+    for (var i = 1; i <= total; i++) {
+      steps.push({ id: i, text: '步骤 ' + i, hidden: false })
+    }
+    ctx.steps = steps
+    return true
+  })
+  // Given 步骤列表含 N 步全部隐藏
+  on(/^步骤列表含\s*(\d+)\s*步全部隐藏$/, (ctx, m) => {
+    const total = parseInt(m[1])
+    const steps = []
+    for (var i = 1; i <= total; i++) {
+      steps.push({ id: i, text: '步骤 ' + i, hidden: true })
+    }
+    ctx.steps = steps
+    return true
+  })
+  // Given 步骤列表为空
+  on(/^步骤列表为空$/, (ctx) => {
+    ctx.steps = []
+    return true
+  })
+
+  // When 调用 isArrived 阈值 N 米
+  on(/^调用\s*isArrived\s*阈值\s*(-?\d+)\s*米$/, (ctx, m) => {
+    ctx.arrivedResult = arrivalHelper.isArrived(ctx.userLocation, ctx.targetLocation, parseInt(m[1]))
+    return true
+  })
+  // When 构建阶段视图 arrived 为 false/true
+  on(/^构建阶段视图\s*arrived\s*为\s*(true|false)$/, (ctx, m) => {
+    const arrived = m[1] === 'true'
+    ctx.phaseView = arrivalHelper.buildPhaseView(ctx.steps || [], arrived)
+    ctx.lastArrived = arrived
+    return true
+  })
+  // When 调用 shouldShowArriveBtn arrived 为 false/true
+  on(/^调用\s*shouldShowArriveBtn\s*arrived\s*为\s*(true|false)$/, (ctx, m) => {
+    const arrived = m[1] === 'true'
+    ctx.showBtnResult = arrivalHelper.shouldShowArriveBtn(ctx.steps || [], arrived)
+    return true
+  })
+  // When 调用 splitSteps 分组
+  on(/^调用\s*splitSteps\s*分组$/, (ctx) => {
+    ctx.splitResult = arrivalHelper.splitSteps(ctx.steps || [])
+    return true
+  })
+
+  // Then 到达结果为 true/false
+  on(/^到达结果为\s*(true|false)$/, (ctx, m) => {
+    return ctx.arrivedResult && ctx.arrivedResult.arrived === (m[1] === 'true')
+  })
+  // Then 到达距离小于等于 N 米
+  on(/^到达距离小于等于\s*(\d+)\s*米$/, (ctx, m) => {
+    return ctx.arrivedResult && ctx.arrivedResult.distance >= 0 && ctx.arrivedResult.distance <= parseInt(m[1])
+  })
+  // Then 到达距离大于 N 米
+  on(/^到达距离大于\s*(\d+)\s*米$/, (ctx, m) => {
+    return ctx.arrivedResult && ctx.arrivedResult.distance > parseInt(m[1])
+  })
+  // Then 到达距离为 N 米
+  on(/^到达距离为\s*(-?\d+)\s*米$/, (ctx, m) => {
+    return ctx.arrivedResult && ctx.arrivedResult.distance === parseInt(m[1])
+  })
+  // Then 阶段为 before/after
+  on(/^阶段为\s*(before|after)$/, (ctx, m) => {
+    return ctx.phaseView && ctx.phaseView.phase === m[1]
+  })
+  // Then 展示步骤数为 N
+  on(/^展示步骤数为\s*(\d+)$/, (ctx, m) => {
+    return ctx.phaseView && ctx.phaseView.steps.length === parseInt(m[1])
+  })
+  // Then 展示步骤数不少于 N
+  on(/^展示步骤数不少于\s*(\d+)$/, (ctx, m) => {
+    return ctx.phaseView && ctx.phaseView.steps.length >= parseInt(m[1])
+  })
+  // Then 隐藏步骤数为 N
+  on(/^隐藏步骤数为\s*(\d+)$/, (ctx, m) => {
+    return ctx.phaseView && ctx.phaseView.hiddenCount === parseInt(m[1])
+  })
+  // Then 按钮显示为 true/false
+  on(/^按钮显示为\s*(true|false)$/, (ctx, m) => {
+    return ctx.showBtnResult === (m[1] === 'true')
+  })
+  // Then 出发前步骤数为 N
+  on(/^出发前步骤数为\s*(\d+)$/, (ctx, m) => {
+    return ctx.splitResult && ctx.splitResult.beforeArrival.length === parseInt(m[1])
+  })
+  // Then 到达后步骤数为 N（splitSteps 语义）
+  on(/^到达后步骤数为\s*(\d+)$/, (ctx, m) => {
+    // 在 splitSteps 上下文中：afterArrival 是 hidden 步骤数
+    if (ctx.splitResult) return ctx.splitResult.afterArrival.length === parseInt(m[1])
+    // 在 phaseView 上下文中
+    if (ctx.phaseView) return ctx.phaseView.afterCount === parseInt(m[1])
+    return false
+  })
+  // Then 分组总数为 N
+  on(/^分组总数为\s*(\d+)$/, (ctx, m) => {
+    if (!ctx.splitResult) return false
+    const total = ctx.splitResult.beforeArrival.length + ctx.splitResult.afterArrival.length
+    return total === parseInt(m[1])
+  })
+})()
+
+// ============================================================
+// ===== Quick-Match-Flow 步骤处理器（B3 AI 快速匹配）=====
+// 覆盖：主题推断 / 搭子数推断 / 兴趣推断 / 快速匹配主流程 / 不变量
+// ============================================================
+;(function registerQuickMatchFlow() {
+  const qm = require('../../packageSync/utils/quick-match-engine.js')
+
+  function mockPool() {
+    return [
+      { id: 'cmd_1', type: 'walk', title: '漫步', content: '走一走', duration: 60, nightSafe: true, outdoor: true },
+      { id: 'cmd_2', type: 'color', title: '找色', content: '找一抹色', duration: 20, nightSafe: true, outdoor: true },
+      { id: 'cmd_3', type: 'food', title: '尝店', content: '尝一家店', duration: 45, nightSafe: true, outdoor: true },
+      { id: 'cmd_4', type: 'sense', title: '听声', content: '听三种声', duration: 30, nightSafe: true, outdoor: false },
+      { id: 'cmd_5', type: 'collect', title: '收集', content: '捡落叶', duration: 25, nightSafe: true, outdoor: true }
+    ]
+  }
+
+  function parsePrefs(text) {
+    // "walk=5 color=2" → { walk: 5, color: 2 }
+    const prefs = {}
+    const parts = text.trim().split(/\s+/)
+    for (let i = 0; i < parts.length; i++) {
+      const m = parts[i].match(/^([a-z_]+)=(\d+)$/i)
+      if (m) prefs[m[1]] = parseInt(m[2])
+    }
+    return prefs
+  }
+
+  // Given 用户偏好类型计数为 "walk=5 color=2"
+  on(/^用户偏好类型计数为\s*(.+)$/, (ctx, m) => {
+    ctx.userPrefs = { type: parsePrefs(m[1]) }
+    return true
+  })
+  // Given 用户偏好为空
+  on(/^用户偏好为空$/, (ctx) => {
+    ctx.userPrefs = { type: {} }
+    return true
+  })
+  // Given 指令池含 N 条任务
+  on(/^指令池含\s*(\d+)\s*条任务$/, (ctx, m) => {
+    const n = parseInt(m[1])
+    ctx.commandPool = mockPool().slice(0, n)
+    return true
+  })
+  // Given 指令池为空
+  on(/^指令池为空$/, (ctx) => {
+    ctx.commandPool = []
+    return true
+  })
+
+  // When 调用 inferThemeFromPrefs
+  on(/^调用\s*inferThemeFromPrefs$/, (ctx) => {
+    ctx.themeResult = qm.inferThemeFromPrefs(ctx.userPrefs || {})
+    return true
+  })
+  // When 调用 pickPartnerCount 时长 N 分钟
+  on(/^调用\s*pickPartnerCount\s*时长\s*(-?\d+)\s*分钟$/, (ctx, m) => {
+    ctx.partnerCountResult = qm.pickPartnerCount(parseInt(m[1]))
+    return true
+  })
+  // When 调用 inferInterestsFromPrefs
+  on(/^调用\s*inferInterestsFromPrefs$/, (ctx) => {
+    ctx.interestsResult = qm.inferInterestsFromPrefs(ctx.userPrefs || {})
+    return true
+  })
+  // When 调用 executeQuickMatch 时长 N 分钟
+  on(/^调用\s*executeQuickMatch\s*时长\s*(\d+)\s*分钟$/, (ctx, m) => {
+    const duration = parseInt(m[1])
+    ctx.quickMatchPromise = qm.executeQuickMatch({
+      userPrefs: ctx.userPrefs || { type: {} },
+      commandPool: ctx.commandPool || [],
+      completedIds: [],
+      duration: duration,
+      hour: 14
+    }, null, null)
+    return true
+  })
+  // When 调用 50 次随机 executeQuickMatch
+  on(/^调用\s*50\s*次随机\s*executeQuickMatch$/, (ctx) => {
+    const types = ['walk', 'color', 'sense', 'food', 'collect', 'culture', 'custom', 'breakthrough', 'unknown']
+    const promises = []
+    for (let i = 0; i < 50; i++) {
+      const prefs = {}
+      const t = types[i % types.length]
+      prefs[t] = Math.floor(Math.random() * 10)
+      promises.push(qm.executeQuickMatch({
+        userPrefs: { type: prefs },
+        commandPool: mockPool(),
+        completedIds: [],
+        duration: Math.floor(Math.random() * 200),
+        hour: Math.floor(Math.random() * 24)
+      }, null, null))
+    }
+    ctx.fiftyPromises = Promise.all(promises)
+    return true
+  })
+
+  // Then 主题为 relax/adventure/social
+  // 优先 ctx.themeResult（inferThemeFromPrefs），其次 ctx.quickMatchResult.theme.id（executeQuickMatch）
+  on(/^主题为\s*(relax|adventure|social)$/, (ctx, m) => {
+    if (ctx.themeResult) return ctx.themeResult === m[1]
+    if (ctx.quickMatchResult && ctx.quickMatchResult.theme) return ctx.quickMatchResult.theme.id === m[1]
+    return false
+  })
+  // Then 主题为有效值
+  on(/^主题为有效值$/, (ctx) => {
+    let theme = ctx.themeResult
+    if (!theme && ctx.quickMatchResult && ctx.quickMatchResult.theme) theme = ctx.quickMatchResult.theme.id
+    return theme && ['relax', 'adventure', 'social'].indexOf(theme) >= 0
+  })
+  // Then 搭子数为 N
+  on(/^搭子数为\s*(\d+)$/, (ctx, m) => ctx.partnerCountResult === parseInt(m[1]))
+  // Then 兴趣数量为 N
+  on(/^兴趣数量为\s*(\d+)$/, (ctx, m) => Array.isArray(ctx.interestsResult) && ctx.interestsResult.length === parseInt(m[1]))
+  // Then 兴趣列表包含 X
+  on(/^兴趣列表包含\s*(\w+)$/, (ctx, m) => Array.isArray(ctx.interestsResult) && ctx.interestsResult.indexOf(m[1]) >= 0)
+
+  // 异步 Then：匹配结果为成功
+  on(/^匹配结果为成功$/, (ctx) => {
+    return ctx.quickMatchPromise.then(function (r) {
+      ctx.quickMatchResult = r
+      return r && r.ok === true
+    })
+  })
+  // Then 匹配结果有任务
+  on(/^匹配结果有任务$/, (ctx) => {
+    return !!(ctx.quickMatchResult && ctx.quickMatchResult.command)
+  })
+  // Then 搭子数量为 N
+  on(/^搭子数量为\s*(\d+)$/, (ctx, m) => {
+    if (!ctx.quickMatchResult) return false
+    return ctx.quickMatchResult.partnerCount === parseInt(m[1])
+  })
+  // Then 期望搭子数为 N
+  on(/^期望搭子数为\s*(\d+)$/, (ctx, m) => {
+    if (!ctx.quickMatchResult) return false
+    return ctx.quickMatchResult.expectedPartnerCount === parseInt(m[1])
+  })
+  // Then 搭子数量等于搭子数组长度
+  on(/^搭子数量等于搭子数组长度$/, (ctx) => {
+    if (!ctx.quickMatchResult) return false
+    return ctx.quickMatchResult.partnerCount === ctx.quickMatchResult.partners.length
+  })
+  // Then 全部返回有效结果
+  on(/^全部返回有效结果$/, (ctx) => {
+    return ctx.fiftyPromises.then(function (results) {
+      if (!Array.isArray(results) || results.length !== 50) return false
+      return results.every(function (r) { return r && typeof r.ok === 'boolean' })
+    })
+  })
+})()
+
+// ============================================================
+// ===== B4 Badge-Growth 步骤处理器（徽章成长体系）=====
+// ============================================================
+;(function registerBadgeGrowth() {
+  const badgeEngine = require('../../utils/badge-engine.js')
+  const BADGES = require('../../data/badges.js')
+
+  function makeRecord(over) {
+    return Object.assign({
+      id: 'r' + Math.random().toString(36).slice(2, 8),
+      commandType: 'walk',
+      commandTitle: '出逃',
+      date: '2026-08-04',
+      time: '10:00',
+      duration: 20,
+      location: { latitude: 31.23, longitude: 121.47 },
+      mood: 'happy'
+    }, over || {})
+  }
+
+  // Given 已有 N 条出逃记录且无已解锁徽章
+  on(/^已有\s*(\d+)\s*条出逃记录且无已解锁徽章$/, (ctx, m) => {
+    const n = parseInt(m[1])
+    ctx.records = []
+    for (let i = 0; i < n; i++) ctx.records.push(makeRecord({ id: 'r' + i }))
+    ctx.unlockedIds = []
+    return true
+  })
+  // Given 已有 N 条出逃记录且已解锁 first_escape
+  on(/^已有\s*(\d+)\s*条出逃记录且已解锁\s*(first_escape)$/, (ctx, m) => {
+    const n = parseInt(m[1])
+    ctx.records = []
+    for (let i = 0; i < n; i++) ctx.records.push(makeRecord({ id: 'r' + i }))
+    ctx.unlockedIds = ['first_escape']
+    return true
+  })
+  // Given 已有 N 条出逃记录且已解锁 first_escape 和 stage_explorer
+  on(/^已有\s*(\d+)\s*条出逃记录且已解锁\s*(first_escape)\s*和\s*(stage_explorer)$/, (ctx, m) => {
+    const n = parseInt(m[1])
+    ctx.records = []
+    for (let i = 0; i < n; i++) ctx.records.push(makeRecord({ id: 'r' + i }))
+    ctx.unlockedIds = ['first_escape', 'stage_explorer']
+    return true
+  })
+  // Given 已有 N 条出逃记录且已解锁 first_escape 和 stage_explorer 和 stage_familiar
+  on(/^已有\s*(\d+)\s*条出逃记录且已解锁\s*(first_escape)\s*和\s*(stage_explorer)\s*和\s*(stage_familiar)$/, (ctx, m) => {
+    const n = parseInt(m[1])
+    ctx.records = []
+    for (let i = 0; i < n; i++) ctx.records.push(makeRecord({ id: 'r' + i }))
+    ctx.unlockedIds = ['first_escape', 'stage_explorer', 'stage_familiar']
+    return true
+  })
+  // Given 已有 N 条出逃记录且已解锁 first_escape 和 stage_explorer 和 stage_familiar 和 stage_detective
+  on(/^已有\s*(\d+)\s*条出逃记录且已解锁\s*(first_escape)\s*和\s*(stage_explorer)\s*和\s*(stage_familiar)\s*和\s*(stage_detective)$/, (ctx, m) => {
+    const n = parseInt(m[1])
+    ctx.records = []
+    for (let i = 0; i < n; i++) ctx.records.push(makeRecord({ id: 'r' + i }))
+    ctx.unlockedIds = ['first_escape', 'stage_explorer', 'stage_familiar', 'stage_detective']
+    return true
+  })
+  // Given 已有 N 条出逃记录且已解锁 first_escape 和 stage_explorer 和 stage_familiar 和 stage_detective 和 stage_expert
+  on(/^已有\s*(\d+)\s*条出逃记录且已解锁\s*(first_escape)\s*和\s*(stage_explorer)\s*和\s*(stage_familiar)\s*和\s*(stage_detective)\s*和\s*(stage_expert)$/, (ctx, m) => {
+    const n = parseInt(m[1])
+    ctx.records = []
+    for (let i = 0; i < n; i++) ctx.records.push(makeRecord({ id: 'r' + i }))
+    ctx.unlockedIds = ['first_escape', 'stage_explorer', 'stage_familiar', 'stage_detective', 'stage_expert']
+    return true
+  })
+  // Given 已有 N 条出逃记录
+  on(/^已有\s*(\d+)\s*条出逃记录$/, (ctx, m) => {
+    const n = parseInt(m[1])
+    ctx.records = []
+    for (let i = 0; i < n; i++) ctx.records.push(makeRecord({ id: 'r' + i }))
+    return true
+  })
+
+  // 城市方向记录构造：南侧锚点拉低质心 + 目标方向 N 条
+  function buildDirectionRecords(dir, count, tampered) {
+    // 每个方向使用对应的锚点拉偏质心，使目标方向成为主轴
+    const anchorMap = {
+      north: { latitude: 30.90, longitude: 121.0 },   // 南侧锚点拉低 lat
+      south: { latitude: 31.10, longitude: 121.0 },   // 北侧锚点拉高 lat
+      east:  { latitude: 31.0, longitude: 120.90 },   // 西侧锚点拉低 lng
+      west:  { latitude: 31.0, longitude: 121.10 },   // 东侧锚点拉高 lng
+      central: null                                    // 无需锚点
+    }
+    const targetLoc = {
+      north: { latitude: 31.10, longitude: 121.0 },
+      south: { latitude: 30.80, longitude: 121.0 },
+      east: { latitude: 31.0, longitude: 121.10 },
+      west: { latitude: 31.0, longitude: 120.90 },
+      central: { latitude: 31.001, longitude: 121.001 }
+    }
+    const recs = []
+    // central 不需要锚点；其他方向加 2 条锚点拉偏质心
+    if (dir !== 'central' && anchorMap[dir]) {
+      recs.push(makeRecord({ id: 'anchor1', location: Object.assign({}, anchorMap[dir]) }))
+      recs.push(makeRecord({ id: 'anchor2', location: Object.assign({}, anchorMap[dir]) }))
+    }
+    for (let i = 0; i < count; i++) {
+      const loc = Object.assign({}, targetLoc[dir])
+      // 篡改最后一条为非法坐标（字符串 latitude，hasLoc 会过滤）
+      if (tampered && i === count - 1) {
+        recs.push(makeRecord({ id: dir + '_bad_' + i, location: { latitude: 'invalid', longitude: 121 } }))
+      } else {
+        recs.push(makeRecord({ id: dir + '_' + i, location: loc }))
+      }
+    }
+    return recs
+  }
+
+  // Given 城市北侧有 3 条出逃记录
+  on(/^城市北侧有\s*(\d+)\s*条出逃记录$/, (ctx, m) => {
+    ctx.records = buildDirectionRecords('north', parseInt(m[1]), false)
+    ctx.unlockedIds = ['first_escape']
+    return true
+  })
+  on(/^城市东侧有\s*(\d+)\s*条出逃记录$/, (ctx, m) => {
+    ctx.records = buildDirectionRecords('east', parseInt(m[1]), false)
+    ctx.unlockedIds = ['first_escape']
+    return true
+  })
+  on(/^城市南侧有\s*(\d+)\s*条出逃记录$/, (ctx, m) => {
+    ctx.records = buildDirectionRecords('south', parseInt(m[1]), false)
+    ctx.unlockedIds = ['first_escape']
+    return true
+  })
+  // Given 城市北侧有 3 条出逃记录但其中 1 条坐标被篡改为非法值
+  on(/^城市北侧有\s*(\d+)\s*条出逃记录但其中\s*1\s*条坐标被篡改为非法值$/, (ctx, m) => {
+    ctx.records = buildDirectionRecords('north', parseInt(m[1]), true)
+    ctx.unlockedIds = ['first_escape']
+    return true
+  })
+  // Given 城市北侧有 3 条出逃记录且已解锁 direction_north
+  on(/^城市北侧有\s*(\d+)\s*条出逃记录且已解锁\s*(direction_north)$/, (ctx, m) => {
+    ctx.records = buildDirectionRecords('north', parseInt(m[1]), false)
+    ctx.unlockedIds = ['first_escape', 'direction_north']
+    return true
+  })
+
+  // When 调用徽章解锁检测
+  on(/^调用徽章解锁检测$/, (ctx) => {
+    ctx.badgeResult = badgeEngine.detectUnlocks(ctx.records || [], {
+      unlockedIds: ctx.unlockedIds || [],
+      continuousDays: 0,
+      partnerRecords: [],
+      collectedCommands: [],
+      challengeCount: 0
+    }, BADGES)
+    return true
+  })
+  // When 调用阶段进度计算
+  on(/^调用阶段进度计算$/, (ctx) => {
+    ctx.stageProgress = badgeEngine.nextStageProgress(ctx.records || [])
+    return true
+  })
+  // When 调用方向进度计算
+  on(/^调用方向进度计算$/, (ctx) => {
+    ctx.directionProgress = badgeEngine.directionProgress(ctx.records || [], ctx.unlockedIds || [])
+    return true
+  })
+
+  // Then 新解锁徽章包含 X
+  on(/^新解锁徽章包含\s*(\w+)$/, (ctx, m) => {
+    return ctx.badgeResult && ctx.badgeResult.added.indexOf(m[1]) >= 0
+  })
+  // Then 新解锁徽章不包含 X
+  on(/^新解锁徽章不包含\s*(\w+)$/, (ctx, m) => {
+    return ctx.badgeResult && ctx.badgeResult.added.indexOf(m[1]) < 0
+  })
+  // Then 新解锁徽章数量为 N
+  on(/^新解锁徽章数量为\s*(\d+)$/, (ctx, m) => {
+    return ctx.badgeResult && ctx.badgeResult.added.length === parseInt(m[1])
+  })
+  // Then 下一阶段徽章为 X
+  on(/^下一阶段徽章为\s*(\w+)$/, (ctx, m) => {
+    return ctx.stageProgress && ctx.stageProgress.nextBadgeId === m[1]
+  })
+  // Then 下一阶段目标为 N 次
+  on(/^下一阶段目标为\s*(\d+)\s*次$/, (ctx, m) => {
+    return ctx.stageProgress && ctx.stageProgress.targetCount === parseInt(m[1])
+  })
+  // Then 距离解锁还需 N 次
+  on(/^距离解锁还需\s*(\d+)\s*次$/, (ctx, m) => {
+    return ctx.stageProgress && ctx.stageProgress.remaining === parseInt(m[1])
+  })
+  // Then 无下一阶段徽章
+  on(/^无下一阶段徽章$/, (ctx) => {
+    return ctx.stageProgress === null
+  })
+  // Then 已解锁方向包含 X
+  on(/^已解锁方向包含\s*(\w+)$/, (ctx, m) => {
+    return ctx.directionProgress && ctx.directionProgress.unlockedDirs.indexOf(m[1]) >= 0
+  })
+  // Then 待解锁方向列表非空
+  on(/^待解锁方向列表非空$/, (ctx) => {
+    return ctx.directionProgress && Array.isArray(ctx.directionProgress.nextDirs) && ctx.directionProgress.nextDirs.length > 0
+  })
+})()
+
+// ============================================================
+// ===== B4-B Map-Enhancement 步骤处理器（地图深化）=====
+// ============================================================
+;(function registerMapEnhancement() {
+  const markerBuilder = require('../../utils/map-marker-builder.js')
+  const revisitHelper = require('../../utils/revisit-helper.js')
+  const summaryBuilder = require('../../utils/summary-builder.js')
+
+  function makeRec(over) {
+    return Object.assign({
+      id: 'r' + Math.random().toString(36).slice(2, 8),
+      commandType: 'walk',
+      commandTitle: '出逃',
+      date: '2026-08-04',
+      location: { latitude: 31.23, longitude: 121.47 }
+    }, over || {})
+  }
+
+  // Given 地图记录池含微逃 2 条 破圈 1 条 同频 1 条
+  on(/^地图记录池含微逃\s*(\d+)\s*条\s*破圈\s*(\d+)\s*条\s*同频\s*(\d+)\s*条$/, (ctx, m) => {
+    const recs = []
+    for (let i = 0; i < parseInt(m[1]); i++) recs.push(makeRec({ id: 'micro_' + i, mode: 'micro', duration: 10 }))
+    for (let i = 0; i < parseInt(m[2]); i++) recs.push(makeRec({ id: 'bt_' + i, commandType: 'breakthrough', isBreakthrough: true }))
+    for (let i = 0; i < parseInt(m[3]); i++) recs.push(makeRec({ id: 'sync_' + i, isGroup: true, groupId: 'g' + i }))
+    ctx.mapRecords = recs
+    return true
+  })
+  // Given 地图记录池含开心 3 条 平静 2 条
+  on(/^地图记录池含开心\s*(\d+)\s*条\s*平静\s*(\d+)\s*条$/, (ctx, m) => {
+    const recs = []
+    for (let i = 0; i < parseInt(m[1]); i++) recs.push(makeRec({ id: 'h_' + i, mood: 'happy' }))
+    for (let i = 0; i < parseInt(m[2]); i++) recs.push(makeRec({ id: 'c_' + i, mood: 'calm' }))
+    ctx.mapRecords = recs
+    return true
+  })
+  // Given 地图记录池含微逃开心 2 条 微逃平静 1 条 破圈开心 1 条
+  on(/^地图记录池含微逃开心\s*(\d+)\s*条\s*微逃平静\s*(\d+)\s*条\s*破圈开心\s*(\d+)\s*条$/, (ctx, m) => {
+    const recs = []
+    for (let i = 0; i < parseInt(m[1]); i++) recs.push(makeRec({ id: 'mh_' + i, mode: 'micro', duration: 10, mood: 'happy' }))
+    for (let i = 0; i < parseInt(m[2]); i++) recs.push(makeRec({ id: 'mc_' + i, mode: 'micro', duration: 10, mood: 'calm' }))
+    for (let i = 0; i < parseInt(m[3]); i++) recs.push(makeRec({ id: 'bh_' + i, commandType: 'breakthrough', isBreakthrough: true, mood: 'happy' }))
+    ctx.mapRecords = recs
+    return true
+  })
+  // Given 地图记录池含开心 3 条 平静 2 条 惊喜 1 条
+  on(/^地图记录池含开心\s*(\d+)\s*条\s*平静\s*(\d+)\s*条\s*惊喜\s*(\d+)\s*条$/, (ctx, m) => {
+    const recs = []
+    for (let i = 0; i < parseInt(m[1]); i++) recs.push(makeRec({ id: 'h_' + i, mood: 'happy' }))
+    for (let i = 0; i < parseInt(m[2]); i++) recs.push(makeRec({ id: 'c_' + i, mood: 'calm' }))
+    for (let i = 0; i < parseInt(m[3]); i++) recs.push(makeRec({ id: 's_' + i, mood: 'surprise' }))
+    ctx.mapRecords = recs
+    return true
+  })
+  // Given 地图记录池无情绪字段
+  on(/^地图记录池无情绪字段$/, (ctx) => {
+    ctx.mapRecords = [makeRec({}), makeRec({})]
+    return true
+  })
+  // Given 地图记录池为空
+  on(/^地图记录池为空$/, (ctx) => { ctx.mapRecords = []; return true })
+  // Given 地图记录池为 null
+  on(/^地图记录池为 null$/, (ctx) => { ctx.mapRecords = null; return true })
+
+  // 重返旧地点
+  on(/^一条有坐标的旧出逃记录$/, (ctx) => {
+    ctx.oldRecord = makeRec({
+      id: 'old1',
+      commandType: 'walk',
+      commandTitle: '漫步徐汇',
+      date: '2026-07-01',
+      location: { latitude: 31.23, longitude: 121.47, name: '徐汇' },
+      locationName: '上海·徐汇'
+    })
+    return true
+  })
+  on(/^一条有坐标且日期为\s*([\d-]+)\s*的旧出逃记录$/, (ctx, m) => {
+    ctx.oldRecord = makeRec({
+      id: 'old1',
+      commandType: 'walk',
+      commandTitle: '漫步',
+      date: m[1],
+      location: { latitude: 31.23, longitude: 121.47, name: '某地' },
+      locationName: '某地'
+    })
+    return true
+  })
+  on(/^一条无坐标的旧出逃记录$/, (ctx) => {
+    ctx.oldRecord = makeRec({ id: 'old1', location: null })
+    return true
+  })
+
+  // 月度总结
+  on(/^本月有\s*(\d+)\s*条出逃记录$/, (ctx, m) => {
+    const n = parseInt(m[1])
+    const now = new Date()
+    const y = now.getFullYear()
+    const mo = now.getMonth() + 1
+    ctx.monthlyRecords = []
+    for (let i = 0; i < n; i++) {
+      ctx.monthlyRecords.push(makeRec({
+        id: 'm_' + i,
+        date: y + '-' + String(mo).padStart(2, '0') + '-' + String(Math.min(28, i + 1)).padStart(2, '0')
+      }))
+    }
+    return true
+  })
+
+  // When 筛选类型为 X
+  on(/^筛选类型为\s*(\w+)$/, (ctx, m) => {
+    ctx.filteredRecords = markerBuilder.filterByType(ctx.mapRecords, m[1])
+    return true
+  })
+  // When 筛选情绪为 X（支持组合筛选：在已有类型筛选结果上继续筛选）
+  on(/^筛选情绪为\s*(\w+)$/, (ctx, m) => {
+    const source = Array.isArray(ctx.filteredRecords) ? ctx.filteredRecords : ctx.mapRecords
+    ctx.filteredRecords = markerBuilder.filterByMood(source, m[1])
+    return true
+  })
+  // When 调用构建情绪选项
+  on(/^调用构建情绪选项$/, (ctx) => {
+    ctx.moodOptions = markerBuilder.buildMoodOptions(ctx.mapRecords, { happy: '开心', calm: '平静', surprise: '惊喜' })
+    return true
+  })
+  // When 调用重返判定
+  on(/^调用重返判定$/, (ctx) => {
+    ctx.canRevisit = revisitHelper.canRevisit(ctx.oldRecord)
+    return true
+  })
+  // When 调用构建重返指令
+  on(/^调用构建重返指令$/, (ctx) => {
+    ctx.revisitCmd = revisitHelper.buildRevisitCommand(ctx.oldRecord, { nowTs: 1700000000000 })
+    return true
+  })
+  // When 调用构建重返总结
+  on(/^调用构建重返总结$/, (ctx) => {
+    ctx.revisitSummary = revisitHelper.buildRevisitSummary(ctx.oldRecord)
+    return true
+  })
+  // When 调用构建月度总结
+  on(/^调用构建月度总结$/, (ctx) => {
+    const now = new Date()
+    const s = summaryBuilder.buildMonthlySummary(ctx.monthlyRecords || [], now.getFullYear(), now.getMonth() + 1)
+    ctx.monthlySummary = (s && s.recordCount > 0) ? s : null
+    return true
+  })
+
+  // Then 筛选结果为 N 条
+  on(/^筛选结果为\s*(\d+)\s*条$/, (ctx, m) => {
+    return Array.isArray(ctx.filteredRecords) && ctx.filteredRecords.length === parseInt(m[1])
+  })
+  // Then 情绪选项数量为 N
+  on(/^情绪选项数量为\s*(\d+)$/, (ctx, m) => {
+    return Array.isArray(ctx.moodOptions) && ctx.moodOptions.length === parseInt(m[1])
+  })
+  // Then 情绪选项首项为全部
+  on(/^情绪选项首项为全部$/, (ctx) => {
+    return ctx.moodOptions && ctx.moodOptions[0] && ctx.moodOptions[0].key === 'all'
+  })
+  // Then 可重返为 true
+  on(/^可重返为\s*true$/, (ctx) => ctx.canRevisit === true)
+  // Then 可重返为 false
+  on(/^可重返为\s*false$/, (ctx) => ctx.canRevisit === false)
+  // Then 重返指令地点与旧记录一致
+  on(/^重返指令地点与旧记录一致$/, (ctx) => {
+    if (!ctx.revisitCmd || !ctx.oldRecord) return false
+    return ctx.revisitCmd.location.latitude === ctx.oldRecord.location.latitude &&
+      ctx.revisitCmd.location.longitude === ctx.oldRecord.location.longitude
+  })
+  // Then 重返指令标记 revisit 为 true
+  on(/^重返指令标记 revisit 为 true$/, (ctx) => {
+    return ctx.revisitCmd && ctx.revisitCmd.revisit === true
+  })
+  // Then 总结标题含 X
+  on(/^总结标题含\s*(.+)$/, (ctx, m) => {
+    return ctx.revisitSummary && ctx.revisitSummary.title.indexOf(m[1]) >= 0
+  })
+  // Then 总结记录数为 N
+  on(/^总结记录数为\s*(\d+)$/, (ctx, m) => {
+    return ctx.monthlySummary && ctx.monthlySummary.recordCount === parseInt(m[1])
+  })
+  // Then 总结文案非空
+  on(/^总结文案非空$/, (ctx) => {
+    return ctx.monthlySummary && typeof ctx.monthlySummary.summary === 'string' && ctx.monthlySummary.summary.length > 0
+  })
+  // Then 总结为空
+  on(/^总结为空$/, (ctx) => ctx.monthlySummary === null)
 })()
 
 // ============================================================

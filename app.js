@@ -10,6 +10,10 @@ const aiImage = require('./utils/ai-image.js')
 const generatorEngine = require('./utils/generator-engine.js')
 // 出逃记录构造器（普通 + 同频统一入口，纯函数零 wx 依赖）
 const recordBuilder = require('./utils/record-builder.js')
+// B4 激励体系：徽章解锁纯函数引擎（城市方向 + 阶段记录 + 全量规则）
+const badgeEngine = require('./utils/badge-engine.js')
+// B4 记忆回收：30 天前记录回访提醒（纯函数零 wx 依赖）
+const memoryRevisit = require('./utils/memory-revisit.js')
 // POI 指令构建器（真实周边商铺/打卡点 → 带具体地点的指令）—— 改为按需加载，避免启动时进主包
 // const poiCommandBuilder = require('./utils/poi-command-builder.js')  // 见 lazyRequirePoiBuilder()
 
@@ -56,7 +60,9 @@ App({
     // Henry: 破圈骰子状态（画像/每日次数/指令池）
     breakthroughProfile: null,
     breakthroughReRollCount: 5,
-    breakthroughPool: []
+    breakthroughPool: [],
+    // B4 记忆回收：30 天前记录回访提醒（null 表示无提醒）
+    memoryRevisit: null
   },
 
   onLaunch() {
@@ -847,41 +853,75 @@ App({
   },
 
   checkBadges() {
-    const unlocked = this.globalData.badges
-    const records = this.globalData.records
-    const addBadge = (id) => {
-      if (unlocked.find(b => b.id === id)) return false
-      const meta = BADGES.find(b => b.id === id)
-      if (!meta) return false
-      unlocked.push(Object.assign({}, meta, { date: this.getTodayStr() }))
-      return true
+    // B4: 委托给 badge-engine 纯函数引擎（规则表 + 增量检测）
+    // 原 21 条散落判定 + B4 新增 9 条（阶段记录 4 + 城市方向 5）统一收敛到 RULES 表
+    const records = this.globalData.records || []
+    const ctx = {
+      continuousDays: this.globalData.continuousDays || 0,
+      partnerRecords: this.globalData.partnerRecords || [],
+      collectedCommands: this.globalData.collectedCommands || [],
+      challengeCount: wx.getStorageSync('challengeCompletedCount') || 0,
+      unlockedIds: (this.globalData.badges || []).map(b => b.id),
+      today: this.getTodayStr()
     }
-    const added = []
-    // existing 9 badges
-    if (records.length >= 1 && addBadge('first_escape')) added.push('初次出逃')
-    if (this.globalData.continuousDays >= 7 && addBadge('seven_streak')) added.push('七连胜')
-    if (this.globalData.continuousDays >= 30 && addBadge('thirty_streak')) added.push('月度漫游家')
-    if (records.filter(r => r.commandType === 'color').length >= 10 && addBadge('color_hunter')) added.push('蓝色猎人')
-    if (records.filter(r => { const h = parseInt((r.time || '00:00').split(':')[0]); return h >= 22 || h < 6 }).length >= 5 && addBadge('night_walker')) added.push('夜行者')
-    if (records.filter(r => r.weather && r.weather.condition === 'rainy').length >= 3 && addBadge('rainy_walker')) added.push('雨天漫步者')
-    if (records.filter(r => r.commandType === 'food').length >= 5 && addBadge('market_regular')) added.push('菜市场熟客')
-    const uniqueLocations = new Set(records.filter(r => r.location).map(r => `${Math.round(r.location.latitude * 100) / 100},${Math.round(r.location.longitude * 100) / 100}`))
-    if (uniqueLocations.size >= 50 && addBadge('city_detective')) added.push('城市侦探')
-    // 10 new badges
-    if (records.filter(r => r.mode === 'micro' || r.duration < 15).length >= 10 && addBadge('micro_master')) added.push('微出逃达人')
-    if (records.filter(r => r.mode === 'walk' || (r.duration >= 30 && r.outdoor !== false)).length >= 10 && addBadge('walk_master')) added.push('漫游达人')
-    if (records.filter(r => r.mode === 'double' || r.double).length >= 5 && addBadge('double_master')) added.push('双人冒险家')
-    if (records.filter(r => r.mode === 'night').length >= 10 && addBadge('night_master')) added.push('深夜诗人')
-    if (records.filter(r => r.mode === 'rainy').length >= 10 && addBadge('rainy_master')) added.push('雨天诗人')
-    if ((this.globalData.partnerRecords || []).length >= 3 && addBadge('social_master')) added.push('社交达人')
-    if ((this.globalData.collectedCommands || []).length >= 20 && addBadge('collector')) added.push('收藏家')
-    const typesCovered = new Set(records.map(r => r.commandType))
-    if (typesCovered.size >= 6 && addBadge('explorer')) added.push('探索家')
-    if ((wx.getStorageSync('challengeCompletedCount') || 0) >= 7 && addBadge('challenge_king')) added.push('挑战王')
-    if (records.filter(r => r.commandType === 'culture').length >= 5 && addBadge('culture_lover')) added.push('文化漫游者')
-    if (added.length) {
-      this.globalData.pendingBadges = added
+    const result = badgeEngine.detectUnlocks(records, ctx, BADGES)
+    if (result.metas.length > 0) {
+      const unlocked = this.globalData.badges
+      result.metas.forEach(meta => unlocked.push(meta))
+      this.globalData.pendingBadges = result.metas.map(m => m.name)
       this.playSound('unlock')
+      // B4 数据埋点：徽章解锁事件
+      try {
+        const tracker = require('./utils/tracker.js')
+        tracker.track('badge_unlock', { ids: result.added.join(','), count: result.added.length })
+      } catch (e) { /* tracker 加载失败不阻塞 */ }
     }
+  },
+
+  // B4 记忆回收：检查 30 天前的记录，生成回访提醒
+  // onLaunch 时调用一次，当天已忽略则不重复提醒
+  checkMemoryRevisit() {
+    try {
+      const dismissedKey = memoryRevisit.todayDismissedKey(Date.now())
+      const dismissedIds = wx.getStorageSync(dismissedKey) || []
+      if (Array.isArray(dismissedIds) && dismissedIds.length > 0 && dismissedIds[0] === '__all__') {
+        // 当天已全局忽略
+        return null
+      }
+      const result = memoryRevisit.findRevisitMemory(this.globalData.records || [], {
+        nowTs: Date.now(),
+        daysAgo: 30,
+        windowDays: 1,
+        dismissedIds: dismissedIds
+      })
+      if (result.hasRevisit) {
+        this.globalData.memoryRevisit = result
+      }
+      return result
+    } catch (e) {
+      console.warn('[app] 记忆回访检查失败：', e)
+      return null
+    }
+  },
+
+  // B4 记忆回收：忽略指定记录 id（当天不再提醒该记录）
+  dismissMemoryRevisit(recordId) {
+    try {
+      const key = memoryRevisit.todayDismissedKey(Date.now())
+      const list = wx.getStorageSync(key) || []
+      if (!list.includes(recordId)) {
+        list.push(recordId)
+        wx.setStorageSync(key, list)
+      }
+    } catch (e) { /* ignore */ }
+  },
+
+  // B4 记忆回收：当天全部忽略（用户点击「不再提醒」）
+  dismissAllMemoryRevisit() {
+    try {
+      const key = memoryRevisit.todayDismissedKey(Date.now())
+      wx.setStorageSync(key, ['__all__'])
+      this.globalData.memoryRevisit = null
+    } catch (e) { /* ignore */ }
   }
 })

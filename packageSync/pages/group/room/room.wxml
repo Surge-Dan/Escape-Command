@@ -356,7 +356,7 @@
 
   <!-- v11: 邀请朋友弹窗（个人小程序无 open-type=share 权限，降级为复制 + 提示） -->
   <view wx:if="{{showInvitePopup}}" class="invite-mask" bindtap="onInvitePopupClose">
-    <view class="invite-popup" catchtap="">
+    <view class="invite-popup" catchtap="noop">
       <view class="invite-popup-title">邀请朋友加入</view>
       <view class="invite-popup-desc">把下方房间号发给朋友，他们打开小程序后会自动进入</view>
 

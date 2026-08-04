@@ -1,4 +1,4 @@
-﻿// pages/group/hall/hall.js
+// pages/group/hall/hall.js
 // C-P3 任务大厅主页
 //
 // 职责：
@@ -64,6 +64,9 @@ Page({
     matchPartnerTrustMap: {},
     scheduledTimeLabels: SCHEDULED_TIME_LABELS
   },
+
+  // 空方法：供 catchtap="noop" 拦截冒泡
+  noop() {},
 
   onLoad() {
     this.applyNavMetrics()

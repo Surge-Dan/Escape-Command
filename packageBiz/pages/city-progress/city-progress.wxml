@@ -90,6 +90,73 @@
           </view>
         </view>
 
+        <!-- B4-D: 城市方向雷达 -->
+        <view wx:if="{{directionRadar}}" class="chart-card solid-card">
+          <view class="card-head">
+            <view class="card-head-left">
+              <text class="card-title">城市方向雷达</text>
+              <text class="card-sub">东 · 南 · 西 · 北 · 中</text>
+            </view>
+            <button class="share-btn" open-type="share">
+              <image src="/assets/icons/share-2-ink-soft.svg" mode="aspectFit"></image>
+              <text>分享</text>
+            </button>
+          </view>
+          <view class="radar-list">
+            <view class="radar-row">
+              <text class="radar-label">东</text>
+              <view class="radar-track"><view class="radar-fill east" style="width: {{directionRadar.percents.east}}%;"></view></view>
+              <text class="radar-num">{{directionRadar.east}}</text>
+            </view>
+            <view class="radar-row">
+              <text class="radar-label">南</text>
+              <view class="radar-track"><view class="radar-fill south" style="width: {{directionRadar.percents.south}}%;"></view></view>
+              <text class="radar-num">{{directionRadar.south}}</text>
+            </view>
+            <view class="radar-row">
+              <text class="radar-label">西</text>
+              <view class="radar-track"><view class="radar-fill west" style="width: {{directionRadar.percents.west}}%;"></view></view>
+              <text class="radar-num">{{directionRadar.west}}</text>
+            </view>
+            <view class="radar-row">
+              <text class="radar-label">北</text>
+              <view class="radar-track"><view class="radar-fill north" style="width: {{directionRadar.percents.north}}%;"></view></view>
+              <text class="radar-num">{{directionRadar.north}}</text>
+            </view>
+            <view class="radar-row">
+              <text class="radar-label">中</text>
+              <view class="radar-track"><view class="radar-fill central" style="width: {{directionRadar.percents.central}}%;"></view></view>
+              <text class="radar-num">{{directionRadar.central}}</text>
+            </view>
+          </view>
+          <view class="radar-foot">
+            <text class="foot-text">共 {{directionRadar.total}} 次可定位出逃</text>
+          </view>
+        </view>
+
+        <!-- B4-D: 月度城市关系总结 -->
+        <view wx:if="{{monthlySummary}}" class="chart-card solid-card">
+          <view class="card-head">
+            <view class="card-head-left">
+              <text class="card-title">{{monthlySummary.periodLabel}}总结</text>
+              <text class="card-sub">城市关系回顾</text>
+            </view>
+          </view>
+          <view class="summary-box">
+            <text class="summary-text">{{monthlySummary.summary}}</text>
+          </view>
+          <view class="summary-stats">
+            <view class="summary-stat">
+              <text class="summary-stat-num font-mono">{{monthlySummary.recordCount}}</text>
+              <text class="summary-stat-label">次出逃</text>
+            </view>
+            <view class="summary-stat">
+              <text class="summary-stat-num font-mono">{{monthlySummary.uniquePlaces}}</text>
+              <text class="summary-stat-label">个角落</text>
+            </view>
+          </view>
+        </view>
+
         <!-- 角落收集进度 -->
         <view class="chart-card solid-card">
           <view class="card-head">

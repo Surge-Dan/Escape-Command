@@ -20,7 +20,8 @@
         "pages/group/escape-record/escape-record",
         "pages/group/hall/hall",
         "pages/group/hall/detail/detail",
-        "pages/group/hall/create-task/create-task"
+        "pages/group/hall/create-task/create-task",
+        "pages/quick-match/quick-match"
       ]
     },
     {

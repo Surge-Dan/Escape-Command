@@ -1,5 +1,7 @@
 const app = getApp()
 const { TYPE_META } = require('../../../utils/constants.js')
+const badgeEngine = require('../../../utils/badge-engine.js')
+const summaryBuilder = require('../../../utils/summary-builder.js')
 
 const TYPE_NAME_CN = { color: '颜色探索', walk: '漫步发现', sense: '感官体验', collect: '收藏拼贴', food: '美食探索', culture: '如实文化' }
 const GRID_ROWS = 6
@@ -18,7 +20,11 @@ Page({
     isEmpty: false,
     cityLabel: '你的城市',
     totalRecords: 0,
-    hotAreas: [] // 高频角落 top3
+    hotAreas: [], // 高频角落 top3
+    // B4-D: 城市方向雷达
+    directionRadar: null,
+    // B4-D: 城市关系总结（本月）
+    monthlySummary: null
   },
 
   onLoad() {
@@ -52,6 +58,11 @@ Page({
     const areaList = this.buildAreaList(buckets, records)
     const hotAreas = areaList.slice(0, 3)
 
+    // B4-D: 城市方向雷达（东/南/西/北/中 分布）
+    const directionRadar = this.buildDirectionRadar(records)
+    // B4-D: 月度总结
+    const monthlySummary = this.buildMonthlySummary(records)
+
     this.setData({
       heatmap,
       exploredCount,
@@ -60,8 +71,56 @@ Page({
       hotAreas,
       isEmpty: records.length === 0,
       cityLabel,
-      totalRecords: records.length
+      totalRecords: records.length,
+      directionRadar,
+      monthlySummary
     })
+  },
+
+  // B4-D: 构建城市方向雷达数据
+  buildDirectionRadar(records) {
+    try {
+      const stats = badgeEngine.buildDirectionStats(records)
+      if (!stats || stats.total === 0) return null
+      const max = Math.max(1, stats.east, stats.south, stats.west, stats.north, stats.central)
+      return {
+        east: stats.east,
+        south: stats.south,
+        west: stats.west,
+        north: stats.north,
+        central: stats.central,
+        total: stats.total,
+        // 雷达图百分比（用于渲染条形）
+        percents: {
+          east: Math.round((stats.east / max) * 100),
+          south: Math.round((stats.south / max) * 100),
+          west: Math.round((stats.west / max) * 100),
+          north: Math.round((stats.north / max) * 100),
+          central: Math.round((stats.central / max) * 100)
+        }
+      }
+    } catch (e) {
+      return null
+    }
+  },
+
+  // B4-D: 构建月度总结
+  buildMonthlySummary(records) {
+    try {
+      const now = new Date()
+      const s = summaryBuilder.buildMonthlySummary(records, now.getFullYear(), now.getMonth() + 1)
+      if (!s || s.recordCount === 0) return null
+      return {
+        periodLabel: s.periodLabel,
+        recordCount: s.recordCount,
+        uniquePlaces: s.uniquePlaces,
+        topCity: s.topCity,
+        topMood: s.topMood,
+        summary: s.summary
+      }
+    } catch (e) {
+      return null
+    }
   },
 
   deriveCityLabel(records) {
@@ -268,5 +327,22 @@ Page({
 
   goBack() {
     wx.navigateBack({ delta: 1 })
+  },
+
+  // B4-D: 城市关系图分享
+  onShareAppMessage() {
+    const r = this.data.directionRadar
+    const s = this.data.monthlySummary
+    let title = '我的城市出逃地图'
+    if (s && s.recordCount > 0) {
+      title = s.summary || ('这个月我出逃了 ' + s.recordCount + ' 次')
+    } else if (this.data.totalRecords > 0) {
+      title = '我已经出逃了 ' + this.data.totalRecords + ' 次，走过 ' + this.data.exploredCount + ' 个角落'
+    }
+    return {
+      title: title,
+      path: '/packageBiz/pages/city-progress/city-progress',
+      imageUrl: ''
+    }
   }
 })

@@ -35,6 +35,9 @@ Page({
     sortOptions: SORT_OPTIONS
   },
 
+  // 空方法：供 catchtap="noop" 拦截冒泡
+  noop() {},
+
   onLoad() {
     this.applyNavMetrics()
     this.loadCollections()

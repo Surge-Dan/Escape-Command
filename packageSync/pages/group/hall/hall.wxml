@@ -115,7 +115,7 @@
 
   <!-- 骰子动画弹窗 -->
   <view wx:if="{{showDice}}" class="dice-mask" bindtap="onDiceMaskTap">
-    <view class="dice-panel" catchtap="">
+    <view class="dice-panel" catchtap="noop">
       <view class="dice {{diceAnimating ? 'rolling' : ''}}">🎲</view>
       <text class="dice-text">{{diceAnimating ? '匹配中...' : '已匹配'}}</text>
     </view>
@@ -123,7 +123,7 @@
 
   <!-- 匹配结果弹窗 -->
   <view wx:if="{{matchResult}}" class="match-mask" bindtap="onMatchClose">
-    <view class="match-panel" catchtap="">
+    <view class="match-panel" catchtap="noop">
       <text class="match-eyebrow">匹配成功</text>
       <text class="match-topic">{{matchResult.topic}}</text>
       <text class="match-poi">📍 {{matchResult.poiName}} · {{matchResult.district}}</text>

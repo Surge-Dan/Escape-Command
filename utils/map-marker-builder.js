@@ -112,9 +112,157 @@ function mergeMarkers(solo, group) {
   return { markers: markers, soloCount: soloCount, groupCount: group.length }
 }
 
+// ===== B4-04: 时间筛选（本周 / 本月 / 全部）=====
+// range: 'week' | 'month' | 'all'
+// now: 时间戳（便于测试可复现）
+function filterByTimeRange(records, range, now) {
+  if (!Array.isArray(records)) return []
+  if (range === 'all' || !range) return records.slice()
+  var ts = (typeof now === 'number' && isFinite(now) && now > 0) ? now : Date.now()
+  var ref = new Date(ts)
+  if (isNaN(ref.getTime())) ref = new Date()
+  // 计算 range 起始时间戳
+  var startTs
+  if (range === 'week') {
+    // 本周：从周一开始（中国习惯）
+    var dayOfWeek = ref.getDay() || 7  // 周日=0 → 7
+    var monday = new Date(ref)
+    monday.setDate(ref.getDate() - dayOfWeek + 1)
+    monday.setHours(0, 0, 0, 0)
+    startTs = monday.getTime()
+  } else if (range === 'month') {
+    // 本月：从 1 号开始
+    var firstDay = new Date(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0)
+    startTs = firstDay.getTime()
+  } else {
+    // 未知 range，兜底返回全部
+    return records.slice()
+  }
+
+  return records.filter(function (r) {
+    if (!r || typeof r !== 'object') return false
+    // 优先用 startTime 时间戳；否则尝试从 date 字符串解析
+    var rTs = null
+    if (typeof r.startTime === 'number' && isFinite(r.startTime)) {
+      rTs = r.startTime
+    } else if (typeof r.date === 'string' && r.date) {
+      var d = new Date(r.date + 'T00:00:00')
+      if (!isNaN(d.getTime())) rTs = d.getTime()
+    }
+    if (rTs === null) return false
+    return rTs >= startTs && rTs <= ts + 86400000  // 含今天全天
+  })
+}
+
+// ===== B4-05: 城市筛选 =====
+function filterByCity(records, city) {
+  if (!Array.isArray(records)) return []
+  if (!city || typeof city !== 'string') return records.slice()
+  return records.filter(function (r) {
+    if (!r || typeof r !== 'object') return false
+    if (typeof r.city === 'string' && r.city === city) return true
+    if (typeof r.locationName === 'string' && r.locationName.indexOf(city) === 0) return true
+    if (r.location && typeof r.location === 'object' && r.location.city === city) return true
+    return false
+  })
+}
+
+// ===== B4-B: 类型筛选 =====
+// typeKey: 'all' | 'micro' | 'breakthrough' | 'sync'
+//   micro: 碎片时间出逃（mode==='micro' 或 duration<15）
+//   breakthrough: 破圈行动（commandType==='breakthrough' 或 isBreakthrough===true）
+//   sync: 同频组局（isGroup===true）
+function filterByType(records, typeKey) {
+  if (!Array.isArray(records)) return []
+  if (!typeKey || typeKey === 'all') return records.slice()
+  return records.filter(function (r) {
+    if (!r || typeof r !== 'object') return false
+    if (typeKey === 'micro') {
+      return r.mode === 'micro' || (typeof r.duration === 'number' && r.duration < 15)
+    }
+    if (typeKey === 'breakthrough') {
+      return r.commandType === 'breakthrough' || r.isBreakthrough === true
+    }
+    if (typeKey === 'sync') {
+      return r.isGroup === true
+    }
+    return true
+  })
+}
+
+// ===== B4-B: 情绪筛选 =====
+// moodKey: 'all' | mood id（如 'happy' / 'calm'）
+// 兼容 mood 字段（字符串）与 moods 字段（数组）两种存储形式
+function filterByMood(records, moodKey) {
+  if (!Array.isArray(records)) return []
+  if (!moodKey || moodKey === 'all') return records.slice()
+  return records.filter(function (r) {
+    if (!r || typeof r !== 'object') return false
+    if (typeof r.mood === 'string' && r.mood === moodKey) return true
+    if (Array.isArray(r.moods) && r.moods.indexOf(moodKey) >= 0) return true
+    return false
+  })
+}
+
+// ===== B4-B: 从记录动态提取可用情绪选项 =====
+// 返回 [{ key: 'all', name: '全部' }, { key: 'happy', name: '开心' }, ...]
+// moodMeta：可选的 { id → name } 映射，用于把 id 翻译为中文名（来自 constants.MOODS）
+function buildMoodOptions(records, moodMeta) {
+  var meta = moodMeta || {}
+  var counts = {}
+  if (Array.isArray(records)) {
+    for (var i = 0; i < records.length; i++) {
+      var r = records[i]
+      if (!r || typeof r !== 'object') continue
+      if (typeof r.mood === 'string' && r.mood) {
+        counts[r.mood] = (counts[r.mood] || 0) + 1
+      }
+      if (Array.isArray(r.moods)) {
+        for (var j = 0; j < r.moods.length; j++) {
+          var m = r.moods[j]
+          if (typeof m === 'string' && m) counts[m] = (counts[m] || 0) + 1
+        }
+      }
+    }
+  }
+  var options = [{ key: 'all', name: '全部' }]
+  var keys = Object.keys(counts).sort()
+  for (var k = 0; k < keys.length; k++) {
+    var key = keys[k]
+    options.push({ key: key, name: meta[key] || key, count: counts[key] })
+  }
+  return options
+}
+
+// ===== B4-06: 组合筛选（时间 + 城市 + 类型 + 情绪）=====
+function filterRecords(records, options) {
+  var opts = options || {}
+  var filtered = records
+  if (opts.timeRange) {
+    filtered = filterByTimeRange(filtered, opts.timeRange, opts.now)
+  }
+  if (opts.city) {
+    filtered = filterByCity(filtered, opts.city)
+  }
+  if (opts.type) {
+    filtered = filterByType(filtered, opts.type)
+  }
+  if (opts.mood) {
+    filtered = filterByMood(filtered, opts.mood)
+  }
+  return filtered
+}
+
 module.exports = {
   buildGroupMarkers: buildGroupMarkers,
   buildSoloMarkers: buildSoloMarkers,
   mergeMarkers: mergeMarkers,
+  // B4 新增
+  filterByTimeRange: filterByTimeRange,
+  filterByCity: filterByCity,
+  filterByType: filterByType,
+  filterByMood: filterByMood,
+  buildMoodOptions: buildMoodOptions,
+  filterRecords: filterRecords,
   _internal: { hasLoc: hasLoc, locKey: locKey }
 }

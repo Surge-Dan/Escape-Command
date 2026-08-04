@@ -275,3 +275,62 @@
   color: var(--white);
   letter-spacing: 2rpx;
 }
+
+/* ===== Screen 4: 隐私与安全说明 ===== */
+.onb-privacy-screen {
+  padding: 0 16rpx;
+}
+
+.onb-privacy-scroll {
+  width: 100%;
+  max-height: 720rpx;
+  margin-top: 32rpx;
+}
+
+.onb-privacy-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 24rpx;
+  padding: 28rpx 24rpx;
+  margin-bottom: 20rpx;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: var(--border);
+  box-shadow: var(--shadow-float);
+}
+
+.onb-privacy-icon {
+  flex-shrink: 0;
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-tint);
+  border-radius: var(--radius-md);
+}
+
+.onb-privacy-icon image {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.onb-privacy-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.onb-privacy-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 1rpx;
+}
+
+.onb-privacy-desc {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}

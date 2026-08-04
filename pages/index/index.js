@@ -31,13 +31,12 @@ Page({
     showBadgeEarned: false,
     earnedBadges: [],
     invitedByFriend: false,
+    friendRollHint: false,  // B4-D: 朋友替你摇的指令提示
     // v3 Hero 区：随选中模式切换
     heroColor: '#5CBF9E',
     heroScene: '/assets/images/color-scene.webp',
     heroDesc: '算法懂你，随机推荐',
     nightHint: false,
-    // v3 每日推荐
-    dailyRecommend: [],
     // home-dice-entry-01: 3 骰子 Cover Flow 状态机
     diceList: HOME_DICE_LIST,
     currentDiceIndex: 0,
@@ -48,7 +47,7 @@ Page({
     // home-dice-entry-01: 微逃细分弹窗
     showMicroSheet: false,
     selectedDuration: 0,
-    recommendedDuration: 15,
+    recommendedDuration: 0,
     isRecommended: false,
     // sync-dice-sheet: 同频骰子入口选择弹层
     showDiceSheet: false,
@@ -57,7 +56,7 @@ Page({
     breakthroughRemainCount: 5,
     isBreakthroughRolling: false,
     // v18: Hero 副标题（随选中骰子切换）
-    heroSubText: '用 15 分钟，给城市一个随机出口'
+    heroSubText: '选个时长，给城市一个随机出口'
   },
 
   onLoad(options) {
@@ -77,7 +76,6 @@ Page({
             // 跳转失败时恢复状态，避免 onShow 永远被跳过
             this._redirecting = false
             this.refreshState()
-            this.loadDailyRecommend()
           }
         })
       }, 0)
@@ -90,7 +88,6 @@ Page({
     this._redirecting = false
     this.checkNightMode()
     this.refreshState()
-    this.loadDailyRecommend()
     this.loadFontFace()
     // home-dice-entry-01: 恢复上次选中的骰子位置
     this.restoreLastDiceIndex()
@@ -98,6 +95,37 @@ Page({
     // 不阻塞启动主流程
     if (app.preloadBreakthroughPool) app.preloadBreakthroughPool()
     if (options && options.mode === 'double' && options.cmd) this.applyInvitation(options.cmd)
+    // B4-D: 替朋友摇一次 —— 从分享链接进入，直接展示朋友摇的指令
+    if (options && options.rollForFriend === '1' && options.cmd) {
+      this.applyFriendRoll(options.cmd)
+    }
+  },
+
+  // B4-D: 应用朋友替你摇的指令
+  applyFriendRoll(cmdId) {
+    const decodedId = decodeURIComponent(cmdId)
+    const pool = app.globalData.commandPool || []
+    const cmd = pool.find(c => c.id === decodedId)
+    if (!cmd) {
+      // 指令池未加载或指令已失效，提示并兜底
+      wx.showToast({ title: '朋友摇的指令已失效，自己摇一个吧', icon: 'none', duration: 2500 })
+      return
+    }
+    const meta = getTypeMeta(cmd.type)
+    this.setData({
+      selectedCommand: Object.assign({}, cmd, {
+        typeName: meta.name,
+        typeColor: cmd.typeColor || meta.color,
+        typeIcon: meta.icon,
+        illustration: cmd.illustration || meta.scene
+      }),
+      friendRollHint: true  // 显示「朋友替你摇的」标签
+    })
+    // 数据埋点：替朋友摇一次 - 接收方
+    try {
+      const tracker = require('../../utils/tracker.js')
+      tracker.track('friend_roll_receive', { cmdId: decodedId })
+    } catch (e) {}
   },
 
   // home-dice-entry-01: 读取持久化的骰子 index，兼容旧值与越界
@@ -149,7 +177,6 @@ Page({
     if (this._redirecting) return
     this.applyNavMetrics()
     this.refreshState()
-    this.loadDailyRecommend()
     if (typeof this.getTabBar === 'function' && this.getTabBar()) this.getTabBar().setData({ selected: 0 })
     // 从完成页返回时清除已过期的指令显示
     if (this.data.selectedCommand && !app.globalData.currentCommand) {
@@ -226,6 +253,10 @@ Page({
     this.setData({ nightHint: isNight })
   },
 
+  // 空方法：供 catchtap="noop" 拦截冒泡（catchtap="" 空字符串不会真正捕获事件，
+  // 会导致点击弹窗内部元素时冒泡到遮罩触发关闭）
+  noop() {},
+
   // ===== home-dice-entry-01: Cover Flow 滑动状态机 =====
   onTouchStart(e) {
     if (!e.touches || !e.touches.length) return
@@ -284,7 +315,7 @@ Page({
   // 实际路由逻辑（转动动画结束后调用）
   routeDice(dice) {
     if (dice.id === 'micro') {
-      // 微逃：弹细分窗，并按历史推荐时长
+      // 微逃：弹细分窗，推荐时长仅作参考（用户必须自己选）
       let records = []
       try { records = wx.getStorageSync('records') || [] } catch (e) {}
       const rec = recommendDuration(records)
@@ -292,7 +323,8 @@ Page({
         showMicroSheet: true,
         recommendedDuration: rec.duration,
         isRecommended: rec.isRecommended,
-        selectedDuration: rec.duration
+        // 关键：不再自动选中任何时长，用户必须自己选
+        selectedDuration: 0
       })
     } else if (dice.id === 'sync') {
       // sync-dice-sheet: 不再直达创建页，先弹底部 Sheet 让用户选择出逃方式
@@ -317,6 +349,12 @@ Page({
   onEnterHallTap() {
     this.setData({ showDiceSheet: false })
     wx.navigateTo({ url: '/packageSync/pages/group/hall/hall' })
+  },
+
+  // ===== B3: AI 快速匹配入口 =====
+  onQuickMatchTap() {
+    this.setData({ showDiceSheet: false })
+    wx.navigateTo({ url: '/packageSync/pages/quick-match/quick-match' })
   },
 
   // ===== home-dice-entry-01: 微逃细分弹窗 =====
@@ -488,87 +526,33 @@ Page({
     wx.navigateTo({ url: '/packageBiz/pages/collection/collection' })
   },
 
-  // v4: 每日推荐 —— 每次进入随机且与上次不同
-  loadDailyRecommend() {
-    const pool = app.globalData.commandPool || []
-    if (!pool.length) {
-      this.setData({ dailyRecommend: [] })
-      return
-    }
-    const weather = (app.globalData.weather && app.globalData.weather.condition) || 'sunny'
-    const hour = app.getCurrentHour ? app.getCurrentHour() : new Date().getHours()
-    // 优先不需 POI 的轻量指令
-    let candidates = pool.filter(c => !c.requirePOI)
-    if (!candidates.length) candidates = pool.slice()
-    // 雨天优先推荐适配雨天的指令
-    if (weather === 'rainy') {
-      const rainy = candidates.filter(c => c.rainy)
-      candidates = rainy.concat(candidates)
-    }
-    // 深夜优先推荐 nightSafe 指令
-    if (hour >= 21 || hour < 6) {
-      const nightSafe = candidates.filter(c => c.nightSafe)
-      candidates = nightSafe.concat(candidates)
-    }
-
-    // v4: 随机种子洗牌 + 与上次对比防重
-    const seed = Date.now()
-    let shuffled = this.shuffleWithSeed(candidates, seed)
-    let picked = shuffled.slice(0, 3)
-
-    // 与上次推荐对比，>=2 条重叠则重洗
-    const lastIds = (() => {
-      try { return wx.getStorageSync('lastDailyIds') || [] } catch (e) { return [] }
-    })()
-    const overlap = picked.filter(c => lastIds.includes(c.id)).length
-    if (overlap >= 2) {
-      const shuffled2 = this.shuffleWithSeed(candidates, seed + 1)
-      picked = shuffled2.slice(0, 3)
-    }
-
-    // 不足 3 条时从总池补充
-    if (picked.length < 3) {
-      const seen = new Set(picked.map(c => c.id))
-      while (picked.length < 3 && pool.length > seen.size) {
-        const c = pool[Math.floor(Math.random() * pool.length)]
-        if (c && !seen.has(c.id)) { seen.add(c.id); picked.push(c) }
-      }
-    }
-
-    // 写存储，供下次对比
-    try { wx.setStorageSync('lastDailyIds', picked.slice(0, 3).map(c => c.id)) } catch (e) {}
-
-    // 附加展示用元数据
-    const withMeta = picked.slice(0, 3).map(c => {
-      const meta = getTypeMeta(c.type)
-      return Object.assign({}, c, {
-        typeName: meta.name,
-        typeColor: c.typeColor || meta.color
-      })
-    })
-    this.setData({ dailyRecommend: withMeta })
-  },
-
-  // 简易 LCG 随机数（按时间种子，保证每次不同）
-  shuffleWithSeed(arr, seed) {
-    let s = (seed % 2147483647) || 1
-    if (s <= 0) s += 2147483646
-    const rand = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646 }
-    const a = arr.slice()
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(rand() * (i + 1))
-      const tmp = a[i]; a[i] = a[j]; a[j] = tmp
-    }
-    return a
-  },
-
   // v3 快速入口导航
   goCommandDetail(e) {
     const id = e.currentTarget.dataset.id
     wx.navigateTo({ url: '/packageBiz/pages/command-detail/command-detail?id=' + id })
   },
 
-  onShareAppMessage() {
+  onShareAppMessage(e) {
+    // B4-D: 替朋友摇一次 —— 点击「替朋友摇」按钮触发
+    const shareType = e && e.target && e.target.dataset && e.target.dataset.shareType
+    if (shareType === 'friend') {
+      // 摇一条新指令给朋友（同步摇取，避免 share 回调异步问题）
+      const mode = this.data.selectedMode || 'smart'
+      const cmd = app.rollCommand ? app.rollCommand(mode) : null
+      if (cmd && cmd.id) {
+        // 数据埋点：替朋友摇一次 - 发起方
+        try {
+          const tracker = require('../../utils/tracker.js')
+          tracker.track('friend_roll_send', { cmdId: cmd.id, mode: mode })
+        } catch (e) {}
+        return {
+          title: '我替你摇了一次出逃指令：' + (cmd.title || cmd.content || '去看看'),
+          path: '/pages/index/index?rollForFriend=1&cmd=' + encodeURIComponent(cmd.id)
+        }
+      }
+      // 摇取失败，走默认分享
+    }
+
     const cmd = this.data.selectedCommand
     const isDuo = cmd && (cmd.double || cmd.social)
     return {

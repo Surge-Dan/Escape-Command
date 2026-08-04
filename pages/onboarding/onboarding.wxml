@@ -69,8 +69,56 @@
             <text class="onb-mock-sub">生成你的出逃指令</text>
           </view>
         </view>
-        <view class="onb-cta primary" bindtap="startEscape">
-          <text>立即体验</text>
+        <view class="onb-cta" bindtap="goNext">
+          <text>下一步</text>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- Screen 4: 隐私与安全说明 -->
+    <swiper-item class="onb-screen">
+      <view class="onb-screen-content onb-privacy-screen">
+        <text class="onb-screen-title">隐私与安全</text>
+        <scroll-view scroll-y class="onb-privacy-scroll">
+          <view class="onb-privacy-item">
+            <view class="onb-privacy-icon">
+              <image src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+            </view>
+            <view class="onb-privacy-text">
+              <text class="onb-privacy-title">定位用途</text>
+              <text class="onb-privacy-desc">使用你的位置生成附近的出逃任务，记录城市足迹。位置仅存储在本地，不上传服务器。</text>
+            </view>
+          </view>
+          <view class="onb-privacy-item">
+            <view class="onb-privacy-icon">
+              <image src="/assets/icons/award-brand-strong.svg" mode="aspectFit"></image>
+            </view>
+            <view class="onb-privacy-text">
+              <text class="onb-privacy-title">数据存储</text>
+              <text class="onb-privacy-desc">出逃记录、徽章、设置存储在本地缓存。清除缓存将删除所有数据且无法恢复。</text>
+            </view>
+          </view>
+          <view class="onb-privacy-item">
+            <view class="onb-privacy-icon">
+              <image src="/assets/icons/compass.svg" mode="aspectFit"></image>
+            </view>
+            <view class="onb-privacy-text">
+              <text class="onb-privacy-title">你的权利</text>
+              <text class="onb-privacy-desc">可随时在设置中关闭定位、清除数据。关闭定位后将不再生成基于位置的任务推荐。</text>
+            </view>
+          </view>
+          <view class="onb-privacy-item">
+            <view class="onb-privacy-icon">
+              <image src="/assets/icons/heart-lavender.svg" mode="aspectFit"></image>
+            </view>
+            <view class="onb-privacy-text">
+              <text class="onb-privacy-title">安全保护</text>
+              <text class="onb-privacy-desc">夜间任务有距离限制，执行中可一键紧急退出，紧急情况下可拨打110。</text>
+            </view>
+          </view>
+        </scroll-view>
+        <view class="onb-cta primary" bindtap="onAgreePrivacy">
+          <text>同意并开始</text>
         </view>
       </view>
     </swiper-item>

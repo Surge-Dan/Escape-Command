@@ -1,6 +1,6 @@
 const app = getApp()
-const community = require('../../../data/community.js')
-const { normalizeType, getTypeMeta } = require('../../../utils/constants.js')
+const community = require('../../data/community.js')
+const { normalizeType, getTypeMeta } = require('../../../utils/constants.js')  // 保留在主包 utils 中
 
 Page({
   data: {

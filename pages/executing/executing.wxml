@@ -59,7 +59,11 @@
 
     <!-- ============ 步骤卡 ============ -->
     <view class="step-card">
-      <text class="step-card-title">{{isBreakthrough ? '闯关步骤' : '出逃步骤'}}</text>
+      <view class="step-card-header">
+        <text class="step-card-title">{{isBreakthrough ? '闯关步骤' : '出逃步骤'}}</text>
+        <text wx:if="{{hiddenCount > 0}}" class="step-card-phase-tag">{{hiddenCount}} 个隐藏任务待解锁</text>
+        <text wx:elif="{{arrived && !isBreakthrough}}" class="step-card-phase-tag arrived">已解锁全部任务</text>
+      </view>
       <view wx:for="{{steps}}" wx:key="id" class="step-row {{item.done ? 'finished' : ''}} {{!item.done && index === currentStep ? 'current' : ''}} {{isBreakthrough ? 'bt-step-row' : ''}}">
         <!-- 破圈模式：竖向布局（标签 + 文案 + 全宽按钮） -->
         <block wx:if="{{isBreakthrough}}">
@@ -104,6 +108,12 @@
       </view>
     </view>
 
+    <!-- B2: 到达确认按钮（仅微逃模式 + 有隐藏任务 + 未到达时显示） -->
+    <view wx:if="{{showArriveBtn && !isBreakthrough}}" class="arrive-confirm-btn" catchtap="onArriveConfirm">
+      <image src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+      <text>我到了，解锁隐藏任务</text>
+    </view>
+
     <!-- 拍照记录 -->
     <view class="photo-card">
       <view class="photo-head">
@@ -129,14 +139,30 @@
       </view>
       <text class="tip-text">{{command.tip || (isBreakthrough ? '深呼吸，迈出那一步就好' : '慢慢走，留意街边的细节。')}}</text>
     </view>
+
+    <!-- 安全工具栏：位置分享 + 紧急联系 + 紧急退出 -->
+    <view class="safety-toolbar">
+      <view class="safety-btn" catchtap="onShareLocation">
+        <image src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+        <text>分享位置</text>
+      </view>
+      <view class="safety-btn" catchtap="onShowEmergencyContacts">
+        <image src="/assets/icons/heart-lavender.svg" mode="aspectFit"></image>
+        <text>紧急联系</text>
+      </view>
+      <view class="safety-btn safety-exit-btn" catchtap="onEmergencyExit">
+        <image src="/assets/icons/x-ink-faint.svg" mode="aspectFit"></image>
+        <text>紧急退出</text>
+      </view>
+    </view>
     <view class="bottom-spacer"></view>
   </scroll-view>
 
   <!-- 完成按钮 -->
   <view class="ex-actions">
-    <view class="finish-btn {{allDone ? '' : 'disabled'}} {{isBreakthrough ? 'bt-purple' : ''}}" bindtap="finishCommand">
+    <view class="finish-btn {{allDone ? '' : 'disabled'}} {{isBreakthrough ? 'bt-purple' : ''}} {{showCompleteAnim ? 'celebrate' : ''}}" bindtap="finishCommand">
       <image src="/assets/icons/check-white.svg" mode="aspectFit"></image>
-      <text>{{allDone ? (isBreakthrough ? '🎉 我破圈了！' : '完成出逃') : '还有 ' + (steps.length - doneCount) + ' 步待完成'}}</text>
+      <text>{{allDone ? (isBreakthrough ? '🎉 我破圈了！' : '🎉 完成出逃，留下印记') : '还有 ' + (steps.length - doneCount) + ' 步待完成'}}</text>
     </view>
   </view>
 </view>

@@ -32,7 +32,7 @@
   </view>
 
   <!-- 排序下拉 -->
-  <view wx:if="{{sortMenuOpen}}" class="sort-menu" catchtap="">
+  <view wx:if="{{sortMenuOpen}}" class="sort-menu" catchtap="noop">
     <view
       wx:for="{{sortOptions}}"
       wx:key="key"

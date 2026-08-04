@@ -631,3 +631,114 @@
 .empty-btn:active {
   transform: scale(0.97);
 }
+
+/* ===== B4-D: 城市方向雷达 ===== */
+.share-btn {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 8rpx 20rpx;
+  background: var(--brand-tint);
+  color: var(--brand);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 22rpx;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.share-btn::after { border: none; }
+
+.share-btn image { width: 28rpx; height: 28rpx; }
+
+.radar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  padding: 24rpx 0;
+}
+
+.radar-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.radar-label {
+  flex: 0 0 40rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+}
+
+.radar-track {
+  flex: 1;
+  height: 16rpx;
+  background: var(--canvas);
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.radar-fill {
+  height: 100%;
+  border-radius: 8rpx;
+  transition: width 300ms var(--ease-standard);
+}
+
+.radar-fill.east { background: #D4A017; }
+.radar-fill.south { background: #3A8AB5; }
+.radar-fill.west { background: #A8603A; }
+.radar-fill.north { background: #6B4F8A; }
+.radar-fill.central { background: #3A8C6F; }
+
+.radar-num {
+  flex: 0 0 48rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.radar-foot {
+  padding-top: 8rpx;
+}
+
+/* ===== B4-D: 月度总结 ===== */
+.summary-box {
+  padding: 24rpx;
+  background: var(--brand-tint);
+  border-radius: var(--radius-md);
+  margin: 16rpx 0;
+}
+
+.summary-text {
+  font-size: 28rpx;
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+.summary-stats {
+  display: flex;
+  gap: 48rpx;
+  padding: 16rpx 0 8rpx;
+}
+
+.summary-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.summary-stat-num {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: var(--brand);
+  line-height: 1;
+}
+
+.summary-stat-label {
+  font-size: 22rpx;
+  color: var(--ink-soft);
+}

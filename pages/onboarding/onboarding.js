@@ -28,7 +28,7 @@ Page({
 
   // v3: 进入下一屏
   goNext() {
-    const next = Math.min(2, this.data.current + 1)
+    const next = Math.min(3, this.data.current + 1)
     this.setData({ current: next })
   },
 
@@ -41,9 +41,36 @@ Page({
   finishOnboarding() {
     try {
       app.saveToLocal('onboarded', true)
+      app.saveToLocal('privacyAgreed', true)
       app.globalData.onboarded = true
+      app.globalData.privacyAgreed = true
     } catch (e) { console.warn('[onboarding] saveToLocal failed', e) }
     wx.reLaunch({ url: '/pages/index/index' })
+  },
+
+  // 隐私授权同意 —— 触发定位授权后完成引导
+  onAgreePrivacy() {
+    // 先尝试获取定位授权（用户可拒绝，不阻塞引导完成）
+    wx.getLocation({
+      type: 'gcj02',
+      success: (res) => {
+        try {
+          app.saveToLocal('userLocation', {
+            latitude: res.latitude,
+            longitude: res.longitude
+          })
+          app.globalData.location = {
+            latitude: res.latitude,
+            longitude: res.longitude
+          }
+        } catch (e) {}
+        this.finishOnboarding()
+      },
+      fail: () => {
+        // 用户拒绝定位授权，仍然完成引导（定位非必须）
+        this.finishOnboarding()
+      }
+    })
   },
 
   // v3: 完成引导，进入首页

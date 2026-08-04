@@ -1,0 +1,121 @@
+<!--packageSync/pages/quick-match/quick-match.wxml-->
+<!--B3 同频骰子 AI 快速匹配结果页-->
+
+<view class="qm-page">
+
+  <!-- 自定义导航栏 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" catchtap="onBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">AI 快速匹配</text>
+    <view class="nav-header-divider"></view>
+  </view>
+
+  <!-- 主体内容 -->
+  <scroll-view scroll-y class="qm-scroll">
+
+    <!-- ===== 加载中 ===== -->
+    <view wx:if="{{status === 'loading'}}" class="qm-loading">
+      <view class="loading-dice-wrap">
+        <view class="loading-dice">
+          <image src="/assets/icons/dice-5-brand-strong.svg" mode="aspectFit" class="loading-dice-ico"></image>
+        </view>
+        <view class="loading-pulse-ring"></view>
+        <view class="loading-pulse-ring loading-pulse-ring-delay"></view>
+      </view>
+      <view class="loading-text">{{loadingText}}</view>
+      <view class="loading-sub">基于你的出逃历史 · 偏好 · 当前位置</view>
+    </view>
+
+    <!-- ===== 错误 ===== -->
+    <view wx:elif="{{status === 'error'}}" class="qm-error">
+      <view class="error-emoji">😵</view>
+      <view class="error-title">匹配暂时不可用</view>
+      <view class="error-desc">{{errMsg}}</view>
+      <view class="error-actions">
+        <view class="error-retry-btn" catchtap="onRetry">再试一次</view>
+        <view class="error-back-btn" catchtap="onBack">返回首页</view>
+      </view>
+    </view>
+
+    <!-- ===== 成功 ===== -->
+    <block wx:elif="{{status === 'success'}}">
+      <!-- 主题标签 -->
+      <view class="qm-theme-bar">
+        <view class="qm-theme-pill" style="background: {{typeColor}}1A;">
+          <text class="qm-theme-icon">{{theme.icon}}</text>
+          <text class="qm-theme-name" style="color: {{typeColor}};">{{theme.name}}主题</text>
+        </view>
+        <view class="qm-meta-row">
+          <text class="qm-meta-text">· {{duration}}分钟 · {{partnerCount}}位搭子</text>
+        </view>
+      </view>
+
+      <!-- 任务卡 -->
+      <view class="qm-task-card" style="border-color: {{typeColor}}33;">
+        <view class="qm-task-header">
+          <view class="qm-task-type-tag" style="background: {{typeColor}}1A; color: {{typeColor}};">
+            <image src="{{typeIcon}}" mode="aspectFit" class="qm-task-type-ico"></image>
+            <text>{{typeName}}</text>
+          </view>
+          <view class="qm-task-match-badge">
+            <text>{{matchDurationLabel}}</text>
+          </view>
+        </view>
+
+        <view class="qm-task-title">{{command.title || command.content || '一场随机出逃'}}</view>
+        <view wx:if="{{command.distance}}" class="qm-task-distance">{{command.distance}}</view>
+
+        <view class="qm-task-steps" wx:if="{{command.steps && command.steps.length}}">
+          <view class="qm-step" wx:for="{{command.steps}}" wx:key="*this" wx:for-item="step" wx:for-index="i">
+            <view class="qm-step-num" style="background: {{typeColor}}1A; color: {{typeColor}};">{{i + 1}}</view>
+            <text class="qm-step-text">{{step.text || step}}</text>
+          </view>
+        </view>
+
+        <view class="qm-task-actions">
+          <view class="qm-regenerate-btn {{isRegenerating ? 'is-disabled' : ''}}" catchtap="onRegenerate">
+            <image src="/assets/icons/refresh.svg" mode="aspectFit" class="qm-regenerate-ico"></image>
+            <text>{{isRegenerating ? '换中…' : '换一换'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 搭子卡 -->
+      <view class="qm-partners-card">
+        <view class="qm-section-title">
+          <text>同频搭子</text>
+          <text class="qm-section-sub">{{partnerCount}}/{{expectedPartnerCount}}人已就位</text>
+        </view>
+
+        <view wx:if="{{partnersDisplay.length === 0}}" class="qm-partners-empty">
+          <view class="qm-partners-empty-emoji">🤝</view>
+          <view class="qm-partners-empty-text">这次先一个人出逃，下次再给你匹配搭子</view>
+        </view>
+
+        <view wx:else class="qm-partners-grid">
+          <view class="qm-partner-item" wx:for="{{partnersDisplay}}" wx:key="openId" wx:for-item="p" data-index="{{index}}" catchtap="onPartnerTap">
+            <view class="qm-partner-avatar-wrap">
+              <image src="{{p.avatar}}" mode="aspectFill" class="qm-partner-avatar"></image>
+              <view wx:if="{{p.isReal}}" class="qm-partner-real-badge">真</view>
+            </view>
+            <view class="qm-partner-name">{{p.nickname}}</view>
+            <view wx:if="{{p.bio}}" class="qm-partner-bio">{{p.bio}}</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 开始出逃按钮 -->
+      <view class="qm-start-btn {{isStarting ? 'is-disabled' : ''}}" style="background: linear-gradient(135deg, {{typeColor}}, {{typeColor}}DD);" catchtap="onStartEscape">
+        <text>{{isStarting ? '准备出发…' : '开始出逃'}}</text>
+      </view>
+
+      <view class="qm-disclaimer">
+        <text>· 任务由 AI 根据你的偏好生成 ·</text>
+      </view>
+    </block>
+
+  </scroll-view>
+</view>

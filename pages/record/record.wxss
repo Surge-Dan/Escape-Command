@@ -67,6 +67,17 @@
   z-index: 5;
   filter: drop-shadow(0 2rpx 6rpx rgba(0, 0, 0, 0.25));
   transition: transform 150ms var(--ease-standard);
+  /* 让触摸拖拽跟手：取消默认 touch 高亮 + 阻止长按菜单 */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
+/* 拖拽中：放大 1.2 倍 + 取消过渡让跟手即时 */
+.photo-emoji-sticker.dragging {
+  transform: translate(-50%, -50%) scale(1.25);
+  transition: none;
+  z-index: 8;
+  filter: drop-shadow(0 4rpx 12rpx rgba(0, 0, 0, 0.35));
 }
 
 .photo-emoji-sticker:active { transform: translate(-50%, -50%) scale(0.85); }
@@ -136,7 +147,7 @@
 .photo-strip-list {
   display: flex;
   gap: 12rpx;
-  padding: 4rpx 0;
+  padding: 4rpx 6rpx;
 }
 
 .photo-strip-thumb {
@@ -202,7 +213,7 @@
 .filter-row-list {
   display: flex;
   gap: 16rpx;
-  padding: 4rpx 0;
+  padding: 4rpx 6rpx;
 }
 
 .filter-thumb {
@@ -248,7 +259,7 @@
 .sticker-list {
   display: flex;
   gap: 16rpx;
-  padding: 4rpx 0;
+  padding: 4rpx 6rpx;
 }
 
 .sticker-item {

@@ -127,7 +127,7 @@
 .dice-stage {
   position: relative;
   margin-top: 16rpx;
-  padding: 32rpx 24rpx 24rpx;
+  padding: 40rpx 24rpx 32rpx;
   background: var(--white);
   border: var(--border);
   border-radius: var(--radius-xl);
@@ -136,9 +136,10 @@
 }
 
 /* 3 个骰子叠在同一中心，靠 transform 控制位置 */
+/* B1: 骰子视觉占比从 40% 提升到 55%，高度 480→560 */
 .dice-stage-inner {
   position: relative;
-  height: 480rpx;
+  height: 560rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -702,6 +703,36 @@
 
 .invite-tag + .cmd-title { margin-top: 12rpx; }
 
+/* B4-D: 朋友替你摇的 标签 */
+.invite-tag.friend-roll-tag {
+  background: #E5F5EF;
+  color: #3A8C6F;
+}
+
+/* B4-D: 替朋友摇 按钮（share 按钮，复用 action-btn 布局） */
+.friend-roll-btn {
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 4rpx;
+  padding: 0 20rpx;
+  background: var(--canvas);
+  color: var(--brand);
+  border: var(--border);
+  font-size: 22rpx;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.friend-roll-btn::after { border: none; }
+
+.friend-roll-btn image { width: 36rpx; height: 36rpx; }
+
+.friend-roll-btn:active {
+  transform: scale(0.95);
+  background: var(--brand-tint);
+  border-color: var(--brand);
+}
+
 /* 邀请朋友按钮（仅双人指令） */
 .invite-btn {
   flex: 1;
@@ -1125,6 +1156,19 @@
 
 .dice-sheet-option:active {
   background: var(--canvas);
+}
+
+/* B3: AI 快速匹配入口高亮 */
+.dice-sheet-option-highlight {
+  position: relative;
+  background: linear-gradient(135deg, rgba(92, 191, 158, 0.06), rgba(155, 123, 184, 0.04));
+  border-radius: var(--radius-lg, 24rpx);
+  margin: 8rpx 0;
+  border: 1rpx solid rgba(92, 191, 158, 0.15);
+}
+
+.dice-sheet-option-highlight:active {
+  background: linear-gradient(135deg, rgba(92, 191, 158, 0.12), rgba(155, 123, 184, 0.08));
 }
 
 .dice-option-icon {

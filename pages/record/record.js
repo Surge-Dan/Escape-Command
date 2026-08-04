@@ -359,7 +359,7 @@ Page({
 
   goNext() {
     if (this.data.isBreakthrough) {
-      wx.redirectTo({ url: '/packageBreakthrough/pages/bt-certificate/bt-certificate' })
+      wx.redirectTo({ url: '/pages/bt-certificate/bt-certificate' })
     } else {
       wx.switchTab({ url: '/pages/map/map' })
     }

@@ -1,0 +1,156 @@
+/* ===== 模式介绍页 ===== */
+.page-scroll { width: 100%; }
+.intro-body { padding: 32rpx 40rpx 0; }
+
+/* 模式主视觉区 */
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 72rpx 40rpx 56rpx;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.hero-icon-wrap {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28rpx;
+}
+
+.hero-icon { width: 88rpx; height: 88rpx; }
+
+.hero-name {
+  color: var(--white);
+  font-size: 48rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  text-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.hero-desc {
+  margin-top: 12rpx;
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.5;
+}
+
+/* 区块 */
+.section { margin-top: 48rpx; }
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+.section-title {
+  display: block;
+  margin-bottom: 20rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.section-head .section-title { margin-bottom: 0; }
+.section-sub { color: var(--ink-faint); }
+
+/* 性格卡 */
+.personality-card { padding: 32rpx 28rpx; }
+.personality-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  padding: 16rpx 0;
+}
+.personality-row + .personality-row { border-top: 1rpx solid var(--line); }
+.personality-dot {
+  flex-shrink: 0;
+  width: 16rpx;
+  height: 16rpx;
+  margin-top: 12rpx;
+  border-radius: 50%;
+}
+.personality-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+/* 空状态 */
+.empty-card { padding: 40rpx 28rpx; text-align: center; }
+.empty-text {
+  font-size: 28rpx;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+/* 指令示例卡 */
+.sample-card {
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+.sample-card:active { transform: scale(0.98); }
+.sample-card:last-child { margin-bottom: 0; }
+
+.sample-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 18rpx;
+  border-radius: var(--radius-pill);
+  font-size: 22rpx;
+  font-weight: 600;
+}
+.sample-type-ico { width: 28rpx; height: 28rpx; }
+
+.sample-title {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.sample-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  margin-top: 16rpx;
+}
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 22rpx;
+  color: var(--ink-soft);
+}
+.meta-item image { width: 24rpx; height: 24rpx; }
+
+.bottom-spacer { height: 160rpx; }
+
+/* 底部主按钮 */
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20rpx 40rpx calc(40rpx + env(safe-area-inset-bottom));
+  background: var(--canvas);
+  border-top: 1rpx solid var(--line);
+}
+.try-btn {
+  width: 100%;
+  min-height: 88rpx;
+  font-size: 30rpx;
+  border-radius: var(--radius-pill);
+}
+.try-btn:active { transform: scale(0.97); filter: brightness(0.95); }

@@ -1,4 +1,4 @@
-const app = getApp()
+﻿const app = getApp()
 const { MODE_LIST, SHEET_MODES, HOME_DICE_LIST, getTypeMeta } = require('../../utils/constants.js')
 
 Page({
@@ -353,18 +353,18 @@ heroSubText: '选个时长，给城市一个随机出口',
 
   onInviteFriendsTap() {
     this.setData({ showDiceSheet: false })
-    wx.navigateTo({ url: '/packageSync/pages/group/create/create' })
+    wx.navigateTo({ url: '/pages/group/create/create' })
   },
 
   onEnterHallTap() {
     this.setData({ showDiceSheet: false })
-    wx.navigateTo({ url: '/packageSync/pages/group/hall/hall' })
+    wx.navigateTo({ url: '/pages/group/hall/hall' })
   },
 
   // ===== B3: AI 快速匹配入口 =====
   onQuickMatchTap() {
     this.setData({ showDiceSheet: false })
-    wx.navigateTo({ url: '/packageSync/pages/quick-match/quick-match' })
+    wx.navigateTo({ url: '/pages/quick-match/quick-match' })
   },
 
   // 微逃细分弹窗已移除：改用 dice-micro-7d 7维条件选择页（见 routeDice micro 分支）
@@ -519,13 +519,13 @@ heroSubText: '选个时长，给城市一个随机出口',
   },
 
   goCollection() {
-    wx.navigateTo({ url: '/packageBiz/pages/collection/collection' })
+    wx.navigateTo({ url: '/pages/collection/collection' })
   },
 
   // v3 快速入口导航
   goCommandDetail(e) {
     const id = e.currentTarget.dataset.id
-    wx.navigateTo({ url: '/packageBiz/pages/command-detail/command-detail?id=' + id })
+    wx.navigateTo({ url: '/pages/command-detail/command-detail?id=' + id })
   },
 
 // C-P8: 加载出逃记录（上次 + 最近）—— 从 globalData.records 按时间倒序取

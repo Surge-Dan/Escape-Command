@@ -249,7 +249,7 @@ App({
   },
 
   // 异步加载破圈指令池（事件总线模式 + require.async 分包异步化）
-  // 数据文件已移至 packageBreakthrough/data/（124KB），主包不持有，启动时不加载。
+  // 数据文件位于 data/ 目录（124KB），启动时不加载。
   // 多个调用方可并发注册回调，加载完成后统一触发；加载过程幂等（_btLoading 去重）。
   // 调用方：rollBreakthroughCommand / preloadBreakthroughPool / breakthrough-profile / bt-certificate
   ensureBreakthroughPool(cb) {
@@ -267,7 +267,7 @@ App({
     try {
       if (typeof require.async === 'function') {
         // 官方分包异步化方案（基础库 2.27.1+，当前 libVersion 2.33.0 支持）
-        require.async('packageBreakthrough/data/breakthrough-commands.js').then((data) => {
+        require.async('data/breakthrough-commands.js').then((data) => {
           this._applyBreakthroughData(data)
         }).catch((e) => {
           console.error('[app] 异步加载破圈指令池失败', e)

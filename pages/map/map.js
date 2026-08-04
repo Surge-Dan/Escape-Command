@@ -1,4 +1,4 @@
-const app = getApp()
+﻿const app = getApp()
 const { getTypeMeta, MOODS } = require('../../utils/constants.js')
 const markerBuilder = require('../../utils/map-marker-builder.js')
 const revisitHelper = require('../../utils/revisit-helper.js')
@@ -761,7 +761,7 @@ Page({
 
   goCitySelect() {
     wx.navigateTo({
-      url: '/packageBiz/pages/city-select/city-select',
+      url: '/pages/city-select/city-select',
       fail: () => {
         wx.showToast({ title: '城市选择页未就绪', icon: 'none' })
       }

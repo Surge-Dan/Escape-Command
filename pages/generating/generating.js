@@ -192,6 +192,16 @@ Page({
       const finalCmd = app.normalizeCommand ? app.normalizeCommand(poolCmd || cmd) : cmd
       if (app.rememberLastType) app.rememberLastType(finalCmd.type)
 
+      // 关键：补 startTime（executing 页 tickTimer 依赖 cmd.startTime 计算 elapsed）
+      // 漏设会导致 Date.now() - undefined = NaN → elapsedMinutes 渲染成 "null 分钟"
+      // 同步用户选择的时长：微逃模式用 requestDuration 覆盖，保证计时与选择一致
+      if (this.data.requestMode === 'micro' && this.data.requestDuration > 0) {
+        finalCmd.duration = this.data.requestDuration
+        finalCmd.distance = finalCmd.distance || (this.data.requestDuration <= 10 ? '300m' : '500m')
+      }
+      finalCmd.startTime = Date.now()
+      finalCmd.photos = finalCmd.photos || []
+
       app.globalData.currentCommand = finalCmd
       app.globalData.commandStatus = 'executing'
       app.saveCurrentCommand()
@@ -207,6 +217,12 @@ Page({
       // 引擎未生成 → 兜底走 app.rollCommand
       const fallbackCmd = app.rollCommand ? app.rollCommand(this.data.requestMode) : null
       if (fallbackCmd) {
+        // 兜底同样补 startTime + 微逃时长覆盖
+        if (this.data.requestMode === 'micro' && this.data.requestDuration > 0) {
+          fallbackCmd.duration = this.data.requestDuration
+        }
+        fallbackCmd.startTime = Date.now()
+        fallbackCmd.photos = fallbackCmd.photos || []
         app.globalData.currentCommand = fallbackCmd
         app.globalData.commandStatus = 'executing'
         app.saveCurrentCommand()

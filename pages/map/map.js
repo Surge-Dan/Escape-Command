@@ -1,6 +1,8 @@
 const app = getApp()
 const { getTypeMeta, MOODS } = require('../../utils/constants.js')
 const markerBuilder = require('../../utils/map-marker-builder.js')
+const revisitHelper = require('../../utils/revisit-helper.js')
+const summaryBuilder = require('../../utils/summary-builder.js')
 
 // v4: 顶部模式 tab —— 三类：普通地图 / 卫星地图 / 路线模式
 const MAP_TABS = [
@@ -17,7 +19,7 @@ const TIME_FILTERS = [
   { key: 'all', name: '全部' }
 ]
 
-// 类型筛选（出逃模式：微逃 / 破圈 / 同频）
+// B4-B: 类型筛选（全部/微逃/破圈/同频）
 const TYPE_FILTERS = [
   { key: 'all', name: '全部' },
   { key: 'micro', name: '微逃' },
@@ -67,6 +69,15 @@ function getPartnersText(record) {
   return '独行'
 }
 
+// B4-B: mood id → 中文名映射（来自 constants.MOODS）
+function buildMoodMeta() {
+  var meta = {}
+  for (var i = 0; i < MOODS.length; i++) {
+    meta[MOODS[i].id] = MOODS[i].name
+  }
+  return meta
+}
+
 Page({
   data: {
     statusBarHeight: 20,
@@ -77,8 +88,9 @@ Page({
     moodFilters: MOOD_FILTERS,
     activeTab: 'standard',
     activeTime: 'all',
-    activeType: 'all',
-    activeMood: 'all',
+    activeType: 'all',      // B4-B: 类型筛选
+    activeMood: 'all',      // B4-B: 情绪筛选
+    showMoodRow: false,     // B4-B: 情绪筛选行折叠状态
     currentCity: '',
     // 原生地图状态
     mapCenter: { latitude: 35, longitude: 105 },
@@ -87,11 +99,8 @@ Page({
     mapHeight: 400,
     mapMarkers: [],
     mapPolyline: [],
-    // 路线模式固定出发点（家）
     homePoint: null,
-    // 过滤后含坐标的记录
     filteredRecords: [],
-    // 标记弹窗
     popupRecord: null,
     // 统计
     totalCount: 0,
@@ -99,8 +108,15 @@ Page({
     uniquePlaces: 0,
     totalDistance: 0,
     cityCount: 0,
-    theme: 'default'
+    theme: 'default',
+    // B4-B: 城市关系总结（本月）
+    citySummary: null,
+    // B4-B: 重返此地弹窗
+    revisitPopup: null
   },
+
+  // 空方法：供 catchtap="noop" 拦截冒泡
+  noop() {},
 
   onLoad() {
     const sys = app.globalData.systemInfo || wx.getSystemInfoSync()
@@ -169,12 +185,22 @@ Page({
       markers = this.buildMarkers(located)
       polyline = this.buildPolyline(located)
     }
+// fallback 链：真实定位 > 家 > 中性兜底
     const NEUTRAL_CENTER = { latitude: 35, longitude: 105 }
     const fallback = app.globalData.location || this.data.homePoint || NEUTRAL_CENTER
     const center = located[0] ? located[0].location : fallback
     const hasLocation = !!(app.globalData.location && app.globalData.location.latitude)
     // B4 修复：totalCount 用 located.length（有坐标记录数）作空状态判断；
     // 无坐标记录单独统计 unlocatedCount，避免「有计数无点位也无空状态」的灰色地带。
+
+    // B4-B: 动态构建情绪选项（基于全部记录，不受时间/类型筛选影响，保证选项稳定）
+    const moodMeta = buildMoodMeta()
+    const allRecords = app.globalData.records || []
+    const moodFilters = markerBuilder.buildMoodOptions(allRecords, moodMeta)
+
+    // B4-B: 城市关系总结（本月）
+    const citySummary = this.buildCitySummary(allRecords)
+
     this.setData({
       filteredRecords: located,
       mapMarkers: markers,
@@ -185,17 +211,48 @@ Page({
       unlocatedCount: Math.max(0, allFiltered.length - located.length),
       uniquePlaces: this.countUniquePlaces(located),
       totalDistance: this.computeTotalDistance(located),
-      cityCount: this.countCities(located)
+      cityCount: this.countCities(located),
+      moodFilters: moodFilters,
+      citySummary: citySummary
     })
   },
 
   // 组合筛选：时间 + 类型 + 心情
   filterRecords() {
     const records = app.globalData.records || []
-    let result = this.filterByTime(records, this.data.activeTime)
-    result = this.filterByType(result, this.data.activeType)
-    result = this.filterByMood(result, this.data.activeMood)
-    return result
+    // B4-B: 组合筛选 = 时间 + 类型 + 情绪（纯函数链）
+    return markerBuilder.filterRecords(records, {
+      timeRange: this._mapTimeKey(this.data.activeTime),
+      type: this.data.activeType,
+      mood: this.data.activeMood
+    })
+  },
+
+  // 把首页时间筛选 key 映射为 markerBuilder 支持的 range
+  // today → 兜底为 all（markerBuilder 仅支持 week/month/all，today 暂归 all 避免空集）
+  _mapTimeKey(key) {
+    if (key === 'today') return 'all'
+    return key  // week / month / all
+  },
+
+  // B4-B: 城市关系总结（本月）
+  buildCitySummary(records) {
+    try {
+      const now = new Date()
+      const s = summaryBuilder.buildMonthlySummary(records, now.getFullYear(), now.getMonth() + 1)
+      if (!s || s.recordCount === 0) return null
+      return {
+        periodLabel: s.periodLabel,
+        recordCount: s.recordCount,
+        uniquePlaces: s.uniquePlaces,
+        topCity: s.topCity,
+        topMood: s.topMood,
+        highlightDays: s.highlightDays,
+        summary: s.summary
+      }
+    } catch (e) {
+      return null
+    }
   },
 
   // ===== 时间筛选 =====
@@ -437,6 +494,8 @@ Page({
     const duration = record.duration
     const durationText = duration ? (duration >= 60 ? (Math.round(duration / 60 * 10) / 10) + ' 小时' : duration + ' 分钟') : ''
     const photoThumb = (record.photos && record.photos.length) ? record.photos[0] : ''
+    // B4-B: 判断是否可重返（有坐标即可）
+    const canRevisit = !!(record.location && record.location.latitude && record.location.longitude)
     return {
       id: record.id,
       typeColor: meta.color,
@@ -450,8 +509,70 @@ Page({
       weatherText,
       photoThumb,
       isBreakthrough: record.commandType === 'breakthrough',
-      isGroup: record.isGroup === true
+      isGroup: record.isGroup === true,
+      canRevisit,
+      moodText: this._moodLabel(record.mood)
     }
+  },
+
+  // B4-B: mood id → 中文名
+  _moodLabel(mood) {
+    if (!mood || typeof mood !== 'string') return ''
+    for (let i = 0; i < MOODS.length; i++) {
+      if (MOODS[i].id === mood) return MOODS[i].name
+    }
+    return mood
+  },
+
+  // B4-B: 重返此地 —— 弹出确认卡片
+  onRevisitTap() {
+    const popup = this.data.popupRecord
+    if (!popup || !popup.canRevisit) return
+    // 从 markerRecords 反查完整 record
+    const record = (this.markerRecords || []).find(r => r && r.id === popup.id)
+    if (!record) {
+      wx.showToast({ title: '记录已失效', icon: 'none' })
+      return
+    }
+    if (!revisitHelper.canRevisit(record)) {
+      wx.showToast({ title: '该记录无坐标，无法重返', icon: 'none' })
+      return
+    }
+    const summary = revisitHelper.buildRevisitSummary(record)
+    this.setData({ revisitPopup: summary })
+  },
+
+  closeRevisitPopup() {
+    if (this.data.revisitPopup) {
+      this.setData({ revisitPopup: null })
+    }
+  },
+
+  // B4-B: 确认重返 → 生成新指令种子并跳转执行页
+  confirmRevisit() {
+    const popup = this.data.popupRecord
+    if (!popup) return
+    const record = (this.markerRecords || []).find(r => r && r.id === popup.id)
+    if (!record || !revisitHelper.canRevisit(record)) {
+      this.setData({ revisitPopup: null })
+      wx.showToast({ title: '无法生成重返任务', icon: 'none' })
+      return
+    }
+    const cmd = revisitHelper.buildRevisitCommand(record, { nowTs: Date.now() })
+    if (!cmd) {
+      this.setData({ revisitPopup: null })
+      wx.showToast({ title: '生成失败，请重试', icon: 'none' })
+      return
+    }
+    // 写入 globalData 供执行页消费
+    app.globalData.currentCommand = cmd
+    // 数据埋点：重返此地
+    try {
+      const tracker = require('../../utils/tracker.js')
+      tracker.track('revisit_place', { fromRecordId: record.id, type: cmd.type })
+    } catch (e) { /* tracker 加载失败不阻塞 */ }
+    this.setData({ revisitPopup: null, popupRecord: null })
+    wx.navigateTo({ url: '/pages/executing/executing?revisit=1' })
   },
 
   // ===== 交互 =====
@@ -474,6 +595,7 @@ Page({
     this.refresh()
   },
 
+// B4-B: 类型筛选
   onTypeTap(e) {
     const key = e.currentTarget.dataset.key
     if (key === this.data.activeType) return
@@ -481,11 +603,17 @@ Page({
     this.refresh()
   },
 
+  // B4-B: 情绪筛选
   onMoodTap(e) {
     const key = e.currentTarget.dataset.key
     if (key === this.data.activeMood) return
     this.setData({ activeMood: key, popupRecord: null })
     this.refresh()
+  },
+
+  // B4-B: 展开/收起情绪筛选行
+  onToggleMoodRow() {
+    this.setData({ showMoodRow: !this.data.showMoodRow })
   },
 
   onMarkerTap(e) {
@@ -633,7 +761,7 @@ Page({
 
   goCitySelect() {
     wx.navigateTo({
-      url: '/pages/city-select/city-select',
+      url: '/packageBiz/pages/city-select/city-select',
       fail: () => {
         wx.showToast({ title: '城市选择页未就绪', icon: 'none' })
       }
@@ -649,6 +777,16 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: '我的城市记忆地图', path: '/pages/map/map' }
+    // B4-D: 分享携带城市关系总结
+    const s = this.data.citySummary
+    let title = '我的城市记忆地图'
+    if (s && s.recordCount > 0) {
+      title = '这个月我出逃了 ' + s.recordCount + ' 次，走过 ' + s.uniquePlaces + ' 个角落'
+    }
+    return {
+      title: title,
+      path: '/pages/map/map',
+      imageUrl: ''  // 走默认截图
+    }
   }
 })

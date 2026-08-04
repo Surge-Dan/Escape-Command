@@ -1,16 +1,21 @@
-const { normalizeType, getTypeMeta, MOODS, DEFAULT_STEPS, TYPE_STEPS } = require('./utils/constants.js')
+const app = getApp()
+const { normalizeType, getTypeMeta, getBreakthroughScene, MOODS, DEFAULT_STEPS, TYPE_STEPS } = require('./utils/constants.js')
 const BADGES = require('./data/badges.js')
 const challenges = require('./data/challenges.js')
 const themes = require('./data/themes.js')
-const breakthroughCommandsData = require('./data/breakthrough-commands.js')
+// 破圈指令池（124KB）改为按需加载：仅在用户进入破圈骰子/画像/证书时引入，避免启动时进主包
 // v4: AI 场景插画 —— 启动时清理过期缓存
 const aiImage = require('./utils/ai-image.js')
 // B-02~B-06: 生成引擎（纯函数，零 wx 依赖）
 const generatorEngine = require('./utils/generator-engine.js')
 // 出逃记录构造器（普通 + 同频统一入口，纯函数零 wx 依赖）
 const recordBuilder = require('./utils/record-builder.js')
-// POI 指令构建器（真实周边商铺/打卡点 → 带具体地点的指令，纯函数零 wx 依赖）
-const poiCommandBuilder = require('./utils/poi-command-builder.js')
+// B4 激励体系：徽章解锁纯函数引擎（城市方向 + 阶段记录 + 全量规则）
+const badgeEngine = require('./utils/badge-engine.js')
+// B4 记忆回收：30 天前记录回访提醒（纯函数零 wx 依赖）
+const memoryRevisit = require('./utils/memory-revisit.js')
+// POI 指令构建器（真实周边商铺/打卡点 → 带具体地点的指令）—— 改为按需加载，避免启动时进主包
+// const poiCommandBuilder = require('./utils/poi-command-builder.js')  // 见 lazyRequirePoiBuilder()
 
 App({
   globalData: {
@@ -55,7 +60,9 @@ App({
     // Henry: 破圈骰子状态（画像/每日次数/指令池）
     breakthroughProfile: null,
     breakthroughReRollCount: 5,
-    breakthroughPool: []
+    breakthroughPool: [],
+    // B4 记忆回收：30 天前记录回访提醒（null 表示无提醒）
+    memoryRevisit: null
   },
 
   onLaunch() {
@@ -231,13 +238,75 @@ App({
       this.globalData.commandPool = this.getFallbackCommands()
     }
     this.globalData.offlineCommands = this.globalData.commandPool.filter(c => !c.requirePOI).slice(0, 100)
-    // 初始化破圈指令池
-    this.initBreakthroughPool()
+    // 破圈指令池不在启动时加载（124KB），见 initBreakthroughPool() 按需懒加载
   },
 
+  // 兼容旧调用：触发异步加载（不阻塞）。实际加载走 ensureBreakthroughPool。
+  // 保留方法名避免外部调用方报错；内部不再同步 require，避免主包引用分包资源。
   initBreakthroughPool() {
-    const raw = (breakthroughCommandsData && breakthroughCommandsData.BREAKTHROUGH_COMMANDS) || []
+    if (this._breakthroughPoolLoaded) return
+    this.ensureBreakthroughPool(null)
+  },
+
+  // 异步加载破圈指令池（事件总线模式 + require.async 分包异步化）
+  // 数据文件已移至 packageBreakthrough/data/（124KB），主包不持有，启动时不加载。
+  // 多个调用方可并发注册回调，加载完成后统一触发；加载过程幂等（_btLoading 去重）。
+  // 调用方：rollBreakthroughCommand / preloadBreakthroughPool / breakthrough-profile / bt-certificate
+  ensureBreakthroughPool(cb) {
+    // 已加载：直接回调
+    if (this._breakthroughPoolLoaded) {
+      if (typeof cb === 'function') cb(this.globalData.breakthroughPool)
+      return
+    }
+    // 合并并发回调（事件总线）
+    this._btCbs = this._btCbs || []
+    if (typeof cb === 'function') this._btCbs.push(cb)
+    // 加载中：只注册回调，不重复触发
+    if (this._btLoading) return
+    this._btLoading = true
+    try {
+      if (typeof require.async === 'function') {
+        // 官方分包异步化方案（基础库 2.27.1+，当前 libVersion 2.33.0 支持）
+        require.async('packageBreakthrough/data/breakthrough-commands.js').then((data) => {
+          this._applyBreakthroughData(data)
+        }).catch((e) => {
+          console.error('[app] 异步加载破圈指令池失败', e)
+          this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] })
+        })
+      } else {
+        // 降级：低版本基础库不支持 require.async，空池兜底（破圈骰子会提示"今天先休息一下"）
+        console.warn('[app] 当前基础库不支持 require.async，破圈指令池为空')
+        this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] })
+      }
+    } catch (e) {
+      console.error('[app] 加载破圈指令池异常', e)
+      this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] })
+    }
+  },
+
+  // 内部：把原始数据归一化后写入 globalData，并触发所有挂起回调
+  _applyBreakthroughData(data) {
+    const raw = (data && data.BREAKTHROUGH_COMMANDS) || []
     this.globalData.breakthroughPool = raw.map(cmd => this.normalizeCommand(cmd))
+    this._breakthroughPoolLoaded = true
+    this._btLoading = false
+    const cbs = this._btCbs || []
+    this._btCbs = []
+    cbs.forEach(fn => {
+      try { fn(this.globalData.breakthroughPool) } catch (e) { console.warn('[app] 破圈回调异常', e) }
+    })
+  },
+
+  // 异步加载 POI 指令构建器：仅在云函数 poiSearch 回调时按需引入
+  lazyRequirePoiBuilder() {
+    if (this._poiBuilderCached) return this._poiBuilderCached
+    try {
+      this._poiBuilderCached = require('./utils/poi-command-builder.js')
+    } catch (e) {
+      console.error('加载 POI 构建器失败', e)
+      this._poiBuilderCached = null
+    }
+    return this._poiBuilderCached
   },
 
   normalizeCommand(cmd) {
@@ -251,7 +320,7 @@ App({
       typeColor: cmd.typeColor || meta.color,
       typeName: meta.name,
       typeIcon: meta.icon,
-      illustration: meta.scene,
+      illustration: type === 'breakthrough' ? getBreakthroughScene(cmd.id) : (cmd.illustration || meta.scene),
       distance: cmd.distance || (cmd.duration <= 15 ? '300m' : '1km'),
       people: cmd.people || (cmd.social || cmd.double ? '一人或朋友' : '一个人'),
       difficulty: cmd.difficulty || 1,
@@ -339,6 +408,11 @@ App({
   // POI 指令自带 location，完成后记录自动带坐标 → 地图标记闭环
   injectPOICommands(pois) {
     if (!Array.isArray(pois) || pois.length === 0) return
+    const poiCommandBuilder = this.lazyRequirePoiBuilder()
+    if (!poiCommandBuilder || typeof poiCommandBuilder.buildCommands !== 'function') {
+      console.warn('[app] POI 构建器未加载，跳过 POI 指令注入')
+      return
+    }
     const ctx = {
       city: this.globalData.currentCity || '',
       hour: this.getCurrentHour(),
@@ -616,19 +690,30 @@ App({
   },
 
   // Henry: 破圈骰子独立摇取逻辑（100条专属指令池 + 画像推荐，不走 generator-engine）
+  // v2: 改为异步（cb 回调），因破圈指令池通过 require.async 分包异步加载
   // 修复：原 Henry 版 candidates 为空时调 this.getFallbackCommands() 会返回微逃指令，
   // 破圈骰子可能摇出微逃任务，改为回退到破圈全池 pool
-  rollBreakthroughCommand() {
-    const pool = this.globalData.breakthroughPool || []
-    const completed = this.globalData.completedCommandIds
+  rollBreakthroughCommand(cb) {
+    this.ensureBreakthroughPool((pool) => {
+      const selected = this._pickBreakthrough(pool)
+      if (selected) this.rememberLastType(selected.type)
+      if (typeof cb === 'function') cb(selected)
+    })
+  },
+
+  // 纯函数：从破圈池中按「完成去重 + 深夜安全 + 反推荐过滤 + 画像优先」挑选一条
+  // 抽出便于单元测试（零 wx 依赖，可直接在 Node 环境验证过滤链）
+  _pickBreakthrough(pool) {
+    pool = Array.isArray(pool) ? pool : []
+    const completed = this.globalData.completedCommandIds || []
     const profile = this.globalData.breakthroughProfile
     const hour = this.getCurrentHour()
     const isLateNight = hour >= 22 || hour < 6
-
     // 将画像扁平化为 ["sport:often", "social:mid", ...] 方便匹配
     const profileTags = profile ? this.flattenProfile(profile) : []
 
     let candidates = pool.filter(cmd => {
+      if (!cmd) return false
       if (completed.includes(cmd.id)) return false
       if (isLateNight && !cmd.nightSafe) return false
       // 反推荐：跳过用户日常已经做的事
@@ -643,9 +728,19 @@ App({
     }
     if (!candidates.length) candidates = pool // 双重兜底：破圈池非空时一定有候选
     if (!candidates.length) return null // 三重兜底：pool 也为空（数据加载失败）时返回 null，避免 undefined.type 崩溃
-    const selected = candidates[Math.floor(Math.random() * candidates.length)]
-    this.rememberLastType(selected.type)
-    return selected
+    return candidates[Math.floor(Math.random() * candidates.length)]
+  },
+
+  // 后台预加载破圈指令池：进入首页 1.5s 后异步加载，避免首次点破圈骰子卡顿
+  // 不阻塞启动主流程；v2 改用 ensureBreakthroughPool（require.async 分包异步化）
+  preloadBreakthroughPool() {
+    if (this._breakthroughPoolLoaded) return
+    // 延迟 1500ms 让首页先渲染完，避免抢占启动资源
+    setTimeout(() => {
+      try {
+        this.ensureBreakthroughPool(null)
+      } catch (e) {}
+    }, 1500)
   },
 
   // 将用户画像扁平化为 ["sport:often", "social:mid", ...] 标签数组
@@ -758,41 +853,75 @@ App({
   },
 
   checkBadges() {
-    const unlocked = this.globalData.badges
-    const records = this.globalData.records
-    const addBadge = (id) => {
-      if (unlocked.find(b => b.id === id)) return false
-      const meta = BADGES.find(b => b.id === id)
-      if (!meta) return false
-      unlocked.push(Object.assign({}, meta, { date: this.getTodayStr() }))
-      return true
+    // B4: 委托给 badge-engine 纯函数引擎（规则表 + 增量检测）
+    // 原 21 条散落判定 + B4 新增 9 条（阶段记录 4 + 城市方向 5）统一收敛到 RULES 表
+    const records = this.globalData.records || []
+    const ctx = {
+      continuousDays: this.globalData.continuousDays || 0,
+      partnerRecords: this.globalData.partnerRecords || [],
+      collectedCommands: this.globalData.collectedCommands || [],
+      challengeCount: wx.getStorageSync('challengeCompletedCount') || 0,
+      unlockedIds: (this.globalData.badges || []).map(b => b.id),
+      today: this.getTodayStr()
     }
-    const added = []
-    // existing 9 badges
-    if (records.length >= 1 && addBadge('first_escape')) added.push('初次出逃')
-    if (this.globalData.continuousDays >= 7 && addBadge('seven_streak')) added.push('七连胜')
-    if (this.globalData.continuousDays >= 30 && addBadge('thirty_streak')) added.push('月度漫游家')
-    if (records.filter(r => r.commandType === 'color').length >= 10 && addBadge('color_hunter')) added.push('蓝色猎人')
-    if (records.filter(r => { const h = parseInt((r.time || '00:00').split(':')[0]); return h >= 22 || h < 6 }).length >= 5 && addBadge('night_walker')) added.push('夜行者')
-    if (records.filter(r => r.weather && r.weather.condition === 'rainy').length >= 3 && addBadge('rainy_walker')) added.push('雨天漫步者')
-    if (records.filter(r => r.commandType === 'food').length >= 5 && addBadge('market_regular')) added.push('菜市场熟客')
-    const uniqueLocations = new Set(records.filter(r => r.location).map(r => `${Math.round(r.location.latitude * 100) / 100},${Math.round(r.location.longitude * 100) / 100}`))
-    if (uniqueLocations.size >= 50 && addBadge('city_detective')) added.push('城市侦探')
-    // 10 new badges
-    if (records.filter(r => r.mode === 'micro' || r.duration < 15).length >= 10 && addBadge('micro_master')) added.push('微出逃达人')
-    if (records.filter(r => r.mode === 'walk' || (r.duration >= 30 && r.outdoor !== false)).length >= 10 && addBadge('walk_master')) added.push('漫游达人')
-    if (records.filter(r => r.mode === 'double' || r.double).length >= 5 && addBadge('double_master')) added.push('双人冒险家')
-    if (records.filter(r => r.mode === 'night').length >= 10 && addBadge('night_master')) added.push('深夜诗人')
-    if (records.filter(r => r.mode === 'rainy').length >= 10 && addBadge('rainy_master')) added.push('雨天诗人')
-    if ((this.globalData.partnerRecords || []).length >= 3 && addBadge('social_master')) added.push('社交达人')
-    if ((this.globalData.collectedCommands || []).length >= 20 && addBadge('collector')) added.push('收藏家')
-    const typesCovered = new Set(records.map(r => r.commandType))
-    if (typesCovered.size >= 6 && addBadge('explorer')) added.push('探索家')
-    if ((wx.getStorageSync('challengeCompletedCount') || 0) >= 7 && addBadge('challenge_king')) added.push('挑战王')
-    if (records.filter(r => r.commandType === 'culture').length >= 5 && addBadge('culture_lover')) added.push('文化漫游者')
-    if (added.length) {
-      this.globalData.pendingBadges = added
+    const result = badgeEngine.detectUnlocks(records, ctx, BADGES)
+    if (result.metas.length > 0) {
+      const unlocked = this.globalData.badges
+      result.metas.forEach(meta => unlocked.push(meta))
+      this.globalData.pendingBadges = result.metas.map(m => m.name)
       this.playSound('unlock')
+      // B4 数据埋点：徽章解锁事件
+      try {
+        const tracker = require('./utils/tracker.js')
+        tracker.track('badge_unlock', { ids: result.added.join(','), count: result.added.length })
+      } catch (e) { /* tracker 加载失败不阻塞 */ }
     }
+  },
+
+  // B4 记忆回收：检查 30 天前的记录，生成回访提醒
+  // onLaunch 时调用一次，当天已忽略则不重复提醒
+  checkMemoryRevisit() {
+    try {
+      const dismissedKey = memoryRevisit.todayDismissedKey(Date.now())
+      const dismissedIds = wx.getStorageSync(dismissedKey) || []
+      if (Array.isArray(dismissedIds) && dismissedIds.length > 0 && dismissedIds[0] === '__all__') {
+        // 当天已全局忽略
+        return null
+      }
+      const result = memoryRevisit.findRevisitMemory(this.globalData.records || [], {
+        nowTs: Date.now(),
+        daysAgo: 30,
+        windowDays: 1,
+        dismissedIds: dismissedIds
+      })
+      if (result.hasRevisit) {
+        this.globalData.memoryRevisit = result
+      }
+      return result
+    } catch (e) {
+      console.warn('[app] 记忆回访检查失败：', e)
+      return null
+    }
+  },
+
+  // B4 记忆回收：忽略指定记录 id（当天不再提醒该记录）
+  dismissMemoryRevisit(recordId) {
+    try {
+      const key = memoryRevisit.todayDismissedKey(Date.now())
+      const list = wx.getStorageSync(key) || []
+      if (!list.includes(recordId)) {
+        list.push(recordId)
+        wx.setStorageSync(key, list)
+      }
+    } catch (e) { /* ignore */ }
+  },
+
+  // B4 记忆回收：当天全部忽略（用户点击「不再提醒」）
+  dismissAllMemoryRevisit() {
+    try {
+      const key = memoryRevisit.todayDismissedKey(Date.now())
+      wx.setStorageSync(key, ['__all__'])
+      this.globalData.memoryRevisit = null
+    } catch (e) { /* ignore */ }
   }
 })

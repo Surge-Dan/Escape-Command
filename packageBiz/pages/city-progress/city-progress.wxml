@@ -1,0 +1,276 @@
+<view class="page-container paper-texture">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">城市探索</text>
+    <view class="nav-header-divider"></view>
+  </view>
+
+  <scroll-view
+    scroll-y
+    class="page-scroll"
+    style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);"
+    enhanced
+    show-scrollbar="{{false}}"
+  >
+    <!-- 空状态 -->
+    <view wx:if="{{isEmpty}}" class="empty-state">
+      <view class="empty-illust-wrap">
+        <view class="empty-grid">
+          <view class="empty-cell" wx:for="{{[1,2,3,4,5,6,7,8]}}" wx:key="*this"></view>
+        </view>
+      </view>
+      <text class="empty-title">还没有出逃足迹</text>
+      <text class="empty-desc">出门走走，把每个角落点亮</text>
+      <view class="empty-btn" bindtap="goHome">去首页开始出逃</view>
+    </view>
+
+    <block wx:if="{{!isEmpty}}">
+      <view class="city-body">
+        <!-- 城市 hero -->
+        <view class="city-hero">
+          <view class="hero-row">
+            <text class="hero-label">出逃之城</text>
+            <text class="hero-city">{{cityLabel}}</text>
+          </view>
+          <view class="hero-stats">
+            <view class="hero-stat-cell">
+              <text class="hero-stat-num font-mono">{{totalRecords}}</text>
+              <text class="hero-stat-label">总出逃</text>
+            </view>
+            <view class="hero-stat-divider"></view>
+            <view class="hero-stat-cell">
+              <text class="hero-stat-num font-mono">{{exploredCount}}</text>
+              <text class="hero-stat-label">已探索角落</text>
+            </view>
+            <view class="hero-stat-divider"></view>
+            <view class="hero-stat-cell">
+              <text class="hero-stat-num font-mono">{{targetCount}}</text>
+              <text class="hero-stat-label">总目标</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 城市热力图 -->
+        <view class="chart-card solid-card">
+          <view class="card-head">
+            <view class="card-head-left">
+              <text class="card-title">城市热力图</text>
+              <text class="card-sub">越亮，越常去</text>
+            </view>
+            <view class="heat-legend">
+              <text class="legend-label">少</text>
+              <view class="legend-dot" style="background: rgba(92,191,158,0.25);"></view>
+              <view class="legend-dot" style="background: rgba(92,191,158,0.55);"></view>
+              <view class="legend-dot" style="background: rgba(92,191,158,0.85);"></view>
+              <text class="legend-label">多</text>
+            </view>
+          </view>
+
+          <!-- 6x8 热力网格 -->
+          <view class="heatmap-grid">
+            <view
+              wx:for="{{heatmap}}"
+              wx:key="*this"
+              class="heat-cell level-{{item.level}} {{item.isHot ? 'hot' : ''}}"
+              style="opacity: {{item.opacity}};"
+              bindtap="onCellTap"
+              data-row="{{item.row}}"
+              data-col="{{item.col}}"
+            >
+              <text wx:if="{{item.count > 0}}" class="cell-count">{{item.count}}</text>
+            </view>
+          </view>
+
+          <view class="heatmap-foot">
+            <text class="foot-text">点击格子查看次数 · 共 {{exploredCount}} 个角落已点亮</text>
+          </view>
+        </view>
+
+        <!-- B4-D: 城市方向雷达 -->
+        <view wx:if="{{directionRadar}}" class="chart-card solid-card">
+          <view class="card-head">
+            <view class="card-head-left">
+              <text class="card-title">城市方向雷达</text>
+              <text class="card-sub">东 · 南 · 西 · 北 · 中</text>
+            </view>
+            <button class="share-btn" open-type="share">
+              <image src="/assets/icons/share-2-ink-soft.svg" mode="aspectFit"></image>
+              <text>分享</text>
+            </button>
+          </view>
+          <view class="radar-list">
+            <view class="radar-row">
+              <text class="radar-label">东</text>
+              <view class="radar-track"><view class="radar-fill east" style="width: {{directionRadar.percents.east}}%;"></view></view>
+              <text class="radar-num">{{directionRadar.east}}</text>
+            </view>
+            <view class="radar-row">
+              <text class="radar-label">南</text>
+              <view class="radar-track"><view class="radar-fill south" style="width: {{directionRadar.percents.south}}%;"></view></view>
+              <text class="radar-num">{{directionRadar.south}}</text>
+            </view>
+            <view class="radar-row">
+              <text class="radar-label">西</text>
+              <view class="radar-track"><view class="radar-fill west" style="width: {{directionRadar.percents.west}}%;"></view></view>
+              <text class="radar-num">{{directionRadar.west}}</text>
+            </view>
+            <view class="radar-row">
+              <text class="radar-label">北</text>
+              <view class="radar-track"><view class="radar-fill north" style="width: {{directionRadar.percents.north}}%;"></view></view>
+              <text class="radar-num">{{directionRadar.north}}</text>
+            </view>
+            <view class="radar-row">
+              <text class="radar-label">中</text>
+              <view class="radar-track"><view class="radar-fill central" style="width: {{directionRadar.percents.central}}%;"></view></view>
+              <text class="radar-num">{{directionRadar.central}}</text>
+            </view>
+          </view>
+          <view class="radar-foot">
+            <text class="foot-text">共 {{directionRadar.total}} 次可定位出逃</text>
+          </view>
+        </view>
+
+        <!-- B4-D: 月度城市关系总结 -->
+        <view wx:if="{{monthlySummary}}" class="chart-card solid-card">
+          <view class="card-head">
+            <view class="card-head-left">
+              <text class="card-title">{{monthlySummary.periodLabel}}总结</text>
+              <text class="card-sub">城市关系回顾</text>
+            </view>
+          </view>
+          <view class="summary-box">
+            <text class="summary-text">{{monthlySummary.summary}}</text>
+          </view>
+          <view class="summary-stats">
+            <view class="summary-stat">
+              <text class="summary-stat-num font-mono">{{monthlySummary.recordCount}}</text>
+              <text class="summary-stat-label">次出逃</text>
+            </view>
+            <view class="summary-stat">
+              <text class="summary-stat-num font-mono">{{monthlySummary.uniquePlaces}}</text>
+              <text class="summary-stat-label">个角落</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 角落收集进度 -->
+        <view class="chart-card solid-card">
+          <view class="card-head">
+            <view class="card-head-left">
+              <text class="card-title">角落收集进度</text>
+              <text class="card-sub">把整座城慢慢走遍</text>
+            </view>
+          </view>
+
+          <view class="progress-hero">
+            <view class="progress-num-row">
+              <text class="progress-current font-mono">{{exploredCount}}</text>
+              <text class="progress-sep">/</text>
+              <text class="progress-target font-mono">{{targetCount}}</text>
+            </view>
+            <text class="progress-label">已探索角落</text>
+          </view>
+
+          <view class="progress-track">
+            <view class="progress-fill" style="width: {{progressPercent}}%;"></view>
+            <view class="progress-marker" style="left: {{progressPercent}}%;">
+              <text class="progress-percent">{{progressPercent}}%</text>
+            </view>
+          </view>
+
+          <view class="progress-tiers">
+            <view class="tier {{progressPercent >= 20 ? 'active' : ''}}">
+              <text class="tier-name">初探</text>
+              <text class="tier-num">10</text>
+            </view>
+            <view class="tier {{progressPercent >= 40 ? 'active' : ''}}">
+              <text class="tier-name">熟路</text>
+              <text class="tier-num">20</text>
+            </view>
+            <view class="tier {{progressPercent >= 60 ? 'active' : ''}}">
+              <text class="tier-name">本地</text>
+              <text class="tier-num">30</text>
+            </view>
+            <view class="tier {{progressPercent >= 100 ? 'active' : ''}}">
+              <text class="tier-name">侦探</text>
+              <text class="tier-num">50</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 高频角落 Top3 -->
+        <view wx:if="{{hotAreas.length > 0}}" class="chart-card solid-card">
+          <view class="card-head">
+            <view class="card-head-left">
+              <text class="card-title">高频角落</text>
+              <text class="card-sub">最常去的 Top 3</text>
+            </view>
+          </view>
+          <view class="hot-list">
+            <view
+              wx:for="{{hotAreas}}"
+              wx:key="id"
+              class="hot-row"
+              bindtap="onAreaTap"
+              data-id="{{item.id}}"
+            >
+              <view class="hot-rank rank-{{index + 1}}">
+                <text>{{index + 1}}</text>
+              </view>
+              <view class="hot-info">
+                <text class="hot-name">{{item.name}}</text>
+                <text class="hot-meta">{{item.count}} 次出逃 · 最近 {{item.lastDate || '暂无'}}</text>
+              </view>
+              <view class="hot-heat">
+                <view class="heat-bar-mini" wx:for="{{[1,2,3,4,5]}}" wx:for-item="b" wx:for-index="bidx" wx:key="*this" style="background: {{bidx < item.count ? '#5CBF9E' : 'rgba(92,191,158,0.2)'}};"></view>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 区域列表 -->
+        <view wx:if="{{areaList.length > 0}}" class="chart-card solid-card">
+          <view class="card-head">
+            <view class="card-head-left">
+              <text class="card-title">区域列表</text>
+              <text class="card-sub">{{areaList.length}} 个已探索角落</text>
+            </view>
+          </view>
+          <view class="area-list">
+            <view
+              wx:for="{{areaList}}"
+              wx:key="id"
+              class="area-row"
+              bindtap="onAreaTap"
+              data-id="{{item.id}}"
+            >
+              <view class="area-pin level-{{item.heatLevel}}">
+                <image src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+              </view>
+              <view class="area-info">
+                <view class="area-name-row">
+                  <text class="area-name">{{item.name}}</text>
+                  <text wx:if="{{item.simulated}}" class="area-tag">模拟</text>
+                </view>
+                <view class="area-meta-row">
+                  <text class="area-count">{{item.count}} 次</text>
+                  <view class="area-dot"></view>
+                  <text class="area-last">最近 {{item.lastDate || '暂无'}}</text>
+                </view>
+              </view>
+              <view class="area-heat-bar">
+                <view class="area-heat-fill level-{{item.heatLevel}}" style="width: {{item.count >= 5 ? 100 : item.count * 20}}%;"></view>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view class="bottom-spacer"></view>
+      </view>
+    </block>
+  </scroll-view>
+</view>

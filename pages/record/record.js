@@ -1,4 +1,4 @@
-const app = getApp()
+﻿﻿﻿const app = getApp()
 const { MOODS } = require('../../utils/constants.js')
 
 // v3: 6 滤镜本地定义（不修改 utils/constants.js）。css 字段直接作用于照片预览。
@@ -30,6 +30,7 @@ Page({
     filters: FILTERS,
     stickers: STICKERS,
     selectedStickers: [],
+    draggingIndex: -1,
     dateStr: '',
     timeStr: '',
     weatherText: '',
@@ -138,12 +139,72 @@ Page({
     this.setData({ selectedStickers: stickers })
   },
 
-  // v3: 点击已添加的贴纸移除
-  removeSticker(e) {
+  // v3: 贴纸拖拽 —— 短按移除，拖动改变位置
+  // touchstart 记录起点和贴纸索引，touchmove 实时更新百分比坐标，touchend 判断是否移动过
+  onStickerTouchStart(e) {
     const index = e.currentTarget.dataset.index
+    const touch = e.touches[0]
+    this._stickerDrag = {
+      index: index,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      moved: false,
+      rect: null
+    }
+    // 异步查询照片区域的位置尺寸，用于将像素坐标转为百分比
+    const query = wx.createSelectorQuery().in(this)
+    query.select('.polaroid-photo-area').boundingClientRect()
+    query.exec((res) => {
+      if (this._stickerDrag && res && res[0]) {
+        this._stickerDrag.rect = res[0]
+      }
+    })
+  },
+
+  onStickerTouchMove(e) {
+    if (!this._stickerDrag) return
+    const touch = e.touches[0]
+    const dx = touch.clientX - this._stickerDrag.startX
+    const dy = touch.clientY - this._stickerDrag.startY
+    // 移动超过 5px 判定为拖拽（而非短按）
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      if (!this._stickerDrag.moved) {
+        this._stickerDrag.moved = true
+        this.setData({ draggingIndex: this._stickerDrag.index })
+      }
+    }
+    if (!this._stickerDrag.moved || !this._stickerDrag.rect) return
+
+    const rect = this._stickerDrag.rect
+    // 将触摸坐标转为相对于照片区域的百分比，clamp 在 5%~92% 防止贴纸飞出照片
+    let newX = ((touch.clientX - rect.left) / rect.width) * 100
+    let newY = ((touch.clientY - rect.top) / rect.height) * 100
+    newX = Math.max(5, Math.min(92, newX))
+    newY = Math.max(5, Math.min(92, newY))
+
     const stickers = this.data.selectedStickers.slice()
-    stickers.splice(index, 1)
-    this.setData({ selectedStickers: stickers })
+    if (stickers[this._stickerDrag.index]) {
+      stickers[this._stickerDrag.index] = Object.assign({}, stickers[this._stickerDrag.index], {
+        x: Math.round(newX),
+        y: Math.round(newY)
+      })
+      this.setData({ selectedStickers: stickers })
+    }
+  },
+
+  onStickerTouchEnd(e) {
+    if (!this._stickerDrag) return
+    if (!this._stickerDrag.moved) {
+      // 短按 → 移除贴纸
+      const index = this._stickerDrag.index
+      const stickers = this.data.selectedStickers.slice()
+      stickers.splice(index, 1)
+      this.setData({ selectedStickers: stickers, draggingIndex: -1 })
+    } else {
+      // 拖拽结束 → 保留新位置
+      this.setData({ draggingIndex: -1 })
+    }
+    this._stickerDrag = null
   },
 
   onSave() {
@@ -298,7 +359,7 @@ Page({
 
   goNext() {
     if (this.data.isBreakthrough) {
-      wx.redirectTo({ url: '/pages/bt-certificate/bt-certificate' })
+      wx.redirectTo({ url: '/packageBreakthrough/pages/bt-certificate/bt-certificate' })
     } else {
       wx.switchTab({ url: '/pages/map/map' })
     }

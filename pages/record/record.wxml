@@ -17,8 +17,14 @@
           <view class="photo-mood-sticker" style="background: {{moods[moodIndex].tint}};">
             <image src="{{moods[moodIndex].icon}}" mode="aspectFit"></image>
           </view>
-          <!-- v3: 已添加的贴纸叠加层（点击移除） -->
-          <view wx:for="{{selectedStickers}}" wx:key="index" class="photo-emoji-sticker" data-index="{{index}}" style="left: {{item.x}}%; top: {{item.y}}%;" catchtap="removeSticker">{{item.emoji}}</view>
+          <!-- v3: 已添加的贴纸叠加层（拖动移动位置，短按移除） -->
+          <view wx:for="{{selectedStickers}}" wx:key="index"
+                class="photo-emoji-sticker {{draggingIndex === index ? 'dragging' : ''}}"
+                data-index="{{index}}"
+                style="left: {{item.x}}%; top: {{item.y}}%;"
+                catchtouchstart="onStickerTouchStart"
+                catchtouchmove="onStickerTouchMove"
+                catchtouchend="onStickerTouchEnd">{{item.emoji}}</view>
         </view>
         <!-- v3: 感受输入直接放在拍立得卡片内（inline 手写风） -->
         <textarea class="feeling-input" maxlength="200" value="{{feeling}}" bindinput="onFeelingInput" placeholder="写一句今天的感受" auto-height></textarea>

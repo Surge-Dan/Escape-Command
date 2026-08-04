@@ -9,10 +9,10 @@ const CATEGORIES = [
     icon: '/assets/icons/clock-brand.svg',
     accentColor: '#5CBF9E',
     items: [
-      { label: '时间线', path: '/pages/timeline/timeline', icon: '/assets/icons/clock-brand.svg' },
-      { label: '年度回顾', path: '/pages/year-review/year-review', icon: '/assets/icons/star-lemon.svg' },
-      { label: '心情日记', path: '/pages/mood-journal/mood-journal', icon: '/assets/icons/heart-lavender.svg' },
-      { label: '城市足迹', path: '/pages/city-progress/city-progress', icon: '/assets/icons/map-pin-brand.svg' }
+      { label: '时间线', path: '/packageBiz/pages/timeline/timeline', icon: '/assets/icons/clock-brand.svg' },
+      { label: '年度回顾', path: '/packageBiz/pages/year-review/year-review', icon: '/assets/icons/star-lemon.svg' },
+      { label: '心情日记', path: '/packageBiz/pages/mood-journal/mood-journal', icon: '/assets/icons/heart-lavender.svg' },
+      { label: '城市足迹', path: '/packageBiz/pages/city-progress/city-progress', icon: '/assets/icons/map-pin-brand.svg' }
     ]
   },
   {
@@ -22,10 +22,10 @@ const CATEGORIES = [
     icon: '/assets/icons/users-lavender.svg',
     accentColor: '#9B7BB8',
     items: [
-      { label: '搭档', path: '/pages/partner-list/partner-list', icon: '/assets/icons/users-lavender.svg' },
-      { label: '邀请', path: '/pages/invite/invite', icon: '/assets/icons/send.svg' },
-      { label: '排行榜', path: '/pages/leaderboard/leaderboard', icon: '/assets/icons/crown-lemon.svg' },
-      { label: '社区', path: '/pages/community/community', icon: '/assets/icons/heart-lavender.svg' }
+      { label: '搭档', path: '/packageBiz/pages/partner-list/partner-list', icon: '/assets/icons/users-lavender.svg' },
+      { label: '邀请', path: '/packageBiz/pages/invite/invite', icon: '/assets/icons/send.svg' },
+      { label: '排行榜', path: '/packageBiz/pages/leaderboard/leaderboard', icon: '/assets/icons/crown-lemon.svg' },
+      { label: '社区', path: '/packageBiz/pages/community/community', icon: '/assets/icons/heart-lavender.svg' }
     ]
   },
   {
@@ -38,6 +38,7 @@ const CATEGORIES = [
       { label: '我的收藏', path: '/pages/collection/collection', icon: '/assets/icons/bookmark-brand.svg' },
       { label: '分类', path: '/pages/collection-category/collection-category', icon: '/assets/icons/layers.svg' },
       { label: '破圈画像', path: '/pages/breakthrough-profile/breakthrough-profile', icon: '/assets/icons/zap-coral.svg' },
+      { label: '主题', path: '/pages/theme-market/theme-market', icon: '/assets/icons/sparkles.svg' },
       { label: '导出', path: '/pages/data-export/data-export', icon: '/assets/icons/share-2.svg' }
     ]
   },
@@ -62,6 +63,7 @@ const CATEGORIES = [
     accentColor: '#6B7280',
     items: [
       { label: '资料', path: '/pages/profile-edit/profile-edit', icon: '/assets/icons/user-brand.svg' },
+      { label: '破圈画像', path: '/pages/breakthrough-profile/breakthrough-profile', icon: '/assets/icons/zap-coral.svg' },
       { label: '设置', path: '/pages/settings/settings', icon: '/assets/icons/settings-brand.svg' },
       { label: '帮助', path: '/pages/help/help', icon: '/assets/icons/compass.svg' },
       { label: '关于', path: '/pages/about/about', icon: '/assets/icons/compass-ink-faint.svg' }
@@ -144,7 +146,7 @@ Page({
 
   goProfileEdit() {
     wx.navigateTo({
-      url: '/pages/profile-edit/profile-edit',
+      url: '/packageBiz/pages/profile-edit/profile-edit',
       fail: () => {
         // 兜底：用旧的内联编辑
         this.changeName()
@@ -173,7 +175,7 @@ Page({
   },
 
   goMember() {
-    wx.navigateTo({ url: '/pages/member/member' })
+    wx.navigateTo({ url: '/packageBiz/pages/member/member' })
   },
 
   onShareAppMessage() {

@@ -56,13 +56,61 @@ function fmtSize(bytes) {
 
 // 1. 全仓扫描
 const allResources = [];
+const allFiles = [];  // 全部文件（含代码 + 资源）—— 用来模拟微信 packOptions.ignore 后的体积
 walk(root, fp => {
-  if (!isResource(fp)) return;
   const stat = fs.statSync(fp);
-  allResources.push({ path: toPosix(path.relative(root, fp)), size: stat.size });
+  const rel = toPosix(path.relative(root, fp));
+  allFiles.push({ path: rel, size: stat.size });
+  if (!isResource(fp)) return;
+  allResources.push({ path: rel, size: stat.size });
 });
 
 const allOverThreshold = allResources.filter(r => r.size > THRESHOLD.SINGLE_FILE);
+
+// 1.5 读取 project.config.json 的 packOptions.ignore —— 模拟微信开发者工具扫描口径
+// 微信「主包」= 全仓文件 - packOptions.ignore 排除的目录/文件 - subPackages 整个 root
+let ignoredFolders = new Set();
+let ignoredFiles = new Set();   // 精确文件名
+let ignoredGlobs = [];          // glob 模式（如 *.mp4）
+try {
+  const pc = JSON.parse(fs.readFileSync(path.join(root, 'project.config.json'), 'utf-8'));
+  for (const item of (pc.packOptions && pc.packOptions.ignore) || []) {
+    if (item.type === 'folder') ignoredFolders.add(item.value);
+    else if (item.type === 'file') {
+      if (item.value.includes('*')) ignoredGlobs.push(item.value);
+      else ignoredFiles.add(item.value);
+    }
+  }
+} catch (e) {}
+
+// 1.6 读取 app.json 的 subPackages —— 分包整个 root 目录都不进主包
+// 例：{ root: 'packageSync', name: 'sync', pages: [...] } → packageSync/ 全排除
+try {
+  const aj = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf-8'));
+  for (const sp of (aj.subPackages || [])) {
+    if (sp && sp.root) ignoredFolders.add(sp.root);
+  }
+} catch (e) {}
+
+function isIgnored(rel) {
+  if (ignoredFiles.has(rel)) return true;
+  // 路径前缀匹配（任一祖先目录在 ignoredFolders 内）
+  const parts = rel.split('/');
+  for (let i = 1; i <= parts.length; i++) {
+    if (ignoredFolders.has(parts.slice(0, i).join('/'))) return true;
+  }
+  // glob 匹配（如 *.mp4）
+  for (const g of ignoredGlobs) {
+    const re = new RegExp('^' + g.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
+    if (re.test(rel) || re.test(parts[parts.length - 1])) return true;
+  }
+  return false;
+}
+
+// 微信开发者工具扫描口径下的「主包」 = 全仓文件 - ignore 目录/文件
+const mainBundleFiles = allFiles.filter(f => !isIgnored(f.path));
+const mainBundleSize = mainBundleFiles.reduce((s, f) => s + f.size, 0);
+const ignoredTotal = allFiles.reduce((s, f) => s + f.size, 0) - mainBundleSize;
 
 // 2. 主包估算（粗略：app.json 注册的页面引用的 webp + 全局字体 + tabBar 图标 + 启动页用到的）
 let mainBundleEstimate = 0;
@@ -198,16 +246,26 @@ if (allOverThreshold.length > 0) {
 }
 
 // 主包估算
-console.log(`3. 主包估算（粗略）`);
+console.log(`3. 主包估算（按微信 packOptions.ignore 口径）`);
+const ignoreDesc = [
+  ...Array.from(ignoredFolders).map(f => `📁 ${f}/`),
+  ...Array.from(ignoredFiles).map(f => `📄 ${f}`),
+  ...ignoredGlobs.map(g => `🎯 ${g}`)
+].join(' ');
+console.log(`   - 排除规则: ${ignoreDesc || '（无）'}`);
 console.log(`   - 字体（全局）        ${fontFiles.length} 个  ${fmtSize(fontTotal)}`);
 console.log(`   - tabBar 图标         ${tabIcons.length} 个  ${fmtSize(tabIconTotal)}`);
 console.log(`   - 注册页面 wxml 引用  ${referencedAssets.size} 个`);
 console.log(`   - app.js 引用（启动）`);
-console.log(`   = 估算主包 ${fmtSize(mainBundleEstimate)}（红线 ${fmtSize(THRESHOLD.MAIN_BUNDLE)}）`);
-if (mainBundleEstimate > THRESHOLD.MAIN_BUNDLE) {
+console.log(`   = 资源估算（粗略）${fmtSize(mainBundleEstimate)}`);
+console.log(`   = 全仓主包（微信扫描口径）${fmtSize(mainBundleSize)}（红线 ${fmtSize(THRESHOLD.MAIN_BUNDLE)}）`);
+if (mainBundleSize > THRESHOLD.MAIN_BUNDLE) {
   console.log('   ❌ 主包超 1.5MB 红线');
 } else {
   console.log('   ✅ 主包未超 1.5MB 红线');
+}
+if (ignoredTotal > 0) {
+  console.log(`   📦 已被 ignore 排除: ${fmtSize(ignoredTotal)}（不计入主包）`);
 }
 console.log('');
 
@@ -236,8 +294,8 @@ if (base) {
 // 红线检查结论
 const hasPrViolation = prViolations.length > 0;
 const allViolations = [...prViolations];
-if (mainBundleEstimate > THRESHOLD.MAIN_BUNDLE) {
-  allViolations.push(`主包估算 ${fmtSize(mainBundleEstimate)} 超 1.5MB 红线`);
+if (mainBundleSize > THRESHOLD.MAIN_BUNDLE) {
+  allViolations.push(`主包估算 ${fmtSize(mainBundleSize)} 超 1.5MB 红线`);
 }
 
 console.log('=== 结论 ===');
@@ -255,7 +313,7 @@ if (base) {
   }
 } else {
   // 不带 --base 走自检模式：报警不 fail
-  if (allOverThreshold.length > 0 || mainBundleEstimate > THRESHOLD.MAIN_BUNDLE) {
+  if (allOverThreshold.length > 0 || mainBundleSize > THRESHOLD.MAIN_BUNDLE) {
     console.log('⚠️  存在历史包体问题，建议处理后再提 PR');
   } else {
     console.log('🎉 包体健康');

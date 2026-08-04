@@ -1,0 +1,158 @@
+<view class="page-container hall-page">
+  <!-- 统一导航栏：标题居中 + 底部 1rpx 分割线 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="onBackTap">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">任务大厅</text>
+    <view class="nav-header-divider"></view>
+  </view>
+
+  <scroll-view scroll-y class="hall-scroll" enhanced show-scrollbar="{{false}}">
+    <!-- Hero 区 -->
+    <view class="hero">
+      <text class="hero-title">找搭子，一起出逃</text>
+      <text class="hero-subtitle">选择一个任务，或摇骰子匹配随机搭子</text>
+    </view>
+
+    <!-- 筛选栏（sticky，悬浮于列表之上） -->
+    <view class="filter-bar">
+      <scroll-view scroll-x class="tag-row" enhanced show-scrollbar="{{false}}">
+        <view class="tag-list">
+          <view
+            wx:for="{{districts}}"
+            wx:key="alias"
+            class="tag {{selectedDistrict === item.name ? 'selected' : ''}}"
+            data-name="{{item.name}}"
+            bindtap="onDistrictTap"
+          >{{item.alias}}</view>
+        </view>
+      </scroll-view>
+      <scroll-view scroll-x class="tag-row" enhanced show-scrollbar="{{false}}">
+        <view class="tag-list">
+          <view
+            wx:for="{{categories}}"
+            wx:key="key"
+            class="tag {{selectedCategory === item.key ? 'selected' : ''}}"
+            data-key="{{item.key}}"
+            bindtap="onCategoryTap"
+          >{{item.label}}</view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 任务卡片列表 -->
+    <view class="task-list">
+      <block wx:if="{{tasks.length > 0}}">
+        <view
+          wx:for="{{tasks}}"
+          wx:key="taskId"
+          class="task-card"
+          data-taskid="{{item.taskId}}"
+          bindtap="onTaskTap"
+        >
+          <!-- 第一行：主题 + 官方徽章 -->
+          <view class="card-head">
+            <text class="card-topic">{{item.topic}}</text>
+            <text wx:if="{{item.isOfficial}}" class="official-badge">官方</text>
+          </view>
+
+          <!-- 第二行：POI + 区域 -->
+          <view class="card-meta">
+            <text class="meta-poi">📍 {{item.poiName}} · {{item.district}}</text>
+          </view>
+
+          <!-- 第三行：人数进度 -->
+          <view class="card-progress">
+            <view class="progress-bar-bg">
+              <view
+                class="progress-bar-fill"
+                style="width: {{item.maxMembers ? (item.membersCount / item.maxMembers * 100) : 0}}%;"
+              ></view>
+            </view>
+            <text class="progress-text">{{item.membersCount}}/{{item.maxMembers}} 人</text>
+          </view>
+
+          <!-- 第四行：发起人 -->
+          <view class="card-host">
+            <text class="host-label">发起人</text>
+            <text class="host-name">{{item.hostNickname}}</text>
+          </view>
+
+          <!-- 第五行：tags -->
+          <view wx:if="{{item.tags.length > 0}}" class="card-tags">
+            <text
+              wx:for="{{item.tags}}"
+              wx:for-item="tag"
+              wx:key="*this"
+              class="mini-tag"
+            >{{tag}}</text>
+          </view>
+        </view>
+      </block>
+
+      <!-- 空状态 -->
+      <view wx:else class="empty-state">
+        <text class="empty-icon">🗂</text>
+        <text class="empty-text">暂无任务，创建一个？</text>
+        <view class="empty-btn" bindtap="onEmptyCreateTap">创建任务</view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部操作栏 -->
+  <view class="footer">
+    <view class="footer-btn ghost" bindtap="onCreateTap">
+      <text>创建任务</text>
+    </view>
+    <view class="footer-btn primary" bindtap="onDiceTap">
+      <text>🎲 摇骰子找搭子</text>
+    </view>
+  </view>
+
+  <!-- 骰子动画弹窗 -->
+  <view wx:if="{{showDice}}" class="dice-mask" bindtap="onDiceMaskTap">
+    <view class="dice-panel" catchtap="noop">
+      <view class="dice {{diceAnimating ? 'rolling' : ''}}">🎲</view>
+      <text class="dice-text">{{diceAnimating ? '匹配中...' : '已匹配'}}</text>
+    </view>
+  </view>
+
+  <!-- 匹配结果弹窗 -->
+  <view wx:if="{{matchResult}}" class="match-mask" bindtap="onMatchClose">
+    <view class="match-panel" catchtap="noop">
+      <text class="match-eyebrow">匹配成功</text>
+      <text class="match-topic">{{matchResult.topic}}</text>
+      <text class="match-poi">📍 {{matchResult.poiName}} · {{matchResult.district}}</text>
+
+      <view wx:if="{{matchResult.partners.length > 0}}" class="match-partners">
+        <view
+          wx:for="{{matchResult.partners}}"
+          wx:key="openId"
+          class="partner-avatar"
+        >
+          <image
+            wx:if="{{item.avatar}}"
+            class="partner-img"
+            src="{{item.avatar}}"
+            mode="aspectFill"
+          ></image>
+          <text wx:else class="partner-emoji">🧑</text>
+          <text class="partner-name">{{item.nickname}}</text>
+          <text wx:if="{{item.isReal}}" class="partner-real-badge">真人</text>
+          <text wx:if="{{matchPartnerTrustMap[item.openId].label}}" class="partner-trust-tag partner-trust-{{matchPartnerTrustMap[item.openId].tier}}">{{matchPartnerTrustMap[item.openId].label}}</text>
+        </view>
+      </view>
+
+      <text class="match-count">已有 {{matchResult.membersCount}}/{{matchResult.maxMembers}} 人</text>
+
+      <view class="match-actions">
+        <view class="match-btn ghost" bindtap="onMatchClose">稍后</view>
+        <view class="match-btn primary" bindtap="onMatchGoTap">出发</view>
+      </view>
+    </view>
+  </view>
+</view>

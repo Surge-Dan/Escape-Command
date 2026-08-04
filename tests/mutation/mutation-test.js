@@ -1,4 +1,4 @@
-// tests/mutation/mutation-test.js
+﻿// tests/mutation/mutation-test.js
 // 变异测试：对 group-room-store.js + generator-engine.js + record-builder.js + execution-progress.js + poi-command-builder.js + player-matcher.js + trust-score.js + player-trust-store.js + chat-store.js 注入变异，验证测试是否能捕获
 // 运行: node tests/mutation/mutation-test.js
 //
@@ -24,7 +24,7 @@ const mutations = [
   // ===== group-room-store.js 变异（C-01~C-08）=====
   {
     name: 'M1: createRoom 主题长度判断 > 改为 >=',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 't.length > 20',
     replace: 't.length >= 20',
     test: 'node tests/unit/store.test.js',
@@ -32,7 +32,7 @@ const mutations = [
   },
   {
     name: 'M2: createRoom 人数下限 < 改为 <=',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 'maxMembers < 3',
     replace: 'maxMembers <= 3',
     test: 'node tests/unit/store.test.js',
@@ -40,7 +40,7 @@ const mutations = [
   },
   {
     name: 'M3: createRoom 人数上限 > 改为 >=',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 'maxMembers > 6',
     replace: 'maxMembers >= 6',
     test: 'node tests/unit/store.test.js',
@@ -48,7 +48,7 @@ const mutations = [
   },
   {
     name: 'M4: generateRoomId 长度 6 改为 5',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 'i < 6; i++',
     replace: 'i < 5; i++',
     test: 'node tests/unit/store.test.js',
@@ -56,7 +56,7 @@ const mutations = [
   },
   {
     name: 'M5: 满员判断 >= 改为 >',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 'room.members.length >= room.maxMembers',
     replace: 'room.members.length > room.maxMembers',
     test: 'node tests/unit/store.test.js',
@@ -64,7 +64,7 @@ const mutations = [
   },
   {
     name: 'M6: submitVote 类型检查 includes 改为 excludes',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: "['time', 'budget', 'style'].includes(voteType)",
     replace: "!['time', 'budget', 'style'].includes(voteType)",
     test: 'node tests/unit/store.test.js',
@@ -72,7 +72,7 @@ const mutations = [
   },
   {
     name: 'M7: generateScript 完成状态 FINISHED 改为 VOTING',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 'room.status = ROOM_STATUS.FINISHED',
     replace: 'room.status = ROOM_STATUS.VOTING',
     test: 'node tests/unit/store.test.js',
@@ -83,7 +83,7 @@ const mutations = [
   // 每条变异针对 C-P2 函数的关键边界/状态机/守卫，由 unit/property/adversarial 精确断言守护
   {
     name: 'CP2-01: buildRoles 移除 relax 兜底（非法 style 时 pool.length 抛错）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 'const pool = ROLE_LIBRARY[style] || ROLE_LIBRARY.relax',
     replace: 'const pool = ROLE_LIBRARY[style]',
     test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
@@ -91,7 +91,7 @@ const mutations = [
   },
   {
     name: 'CP2-02: buildRoles 索引 i % pool.length 改为 i + pool.length（越界返回 undefined）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 'role: pool[i % pool.length]',
     replace: 'role: pool[i + pool.length]',
     test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
@@ -99,7 +99,7 @@ const mutations = [
   },
   {
     name: 'CP2-03: assignRoles 状态守卫 !== 改为 ===（非 FINISHED 也能分配）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: "if (room.status !== ROOM_STATUS.FINISHED) {\n    return { ok: false, errCode: 'INVALID_STATUS', errMsg: '剧本未生成，无法分配角色' }",
     replace: "if (room.status === ROOM_STATUS.FINISHED) {\n    return { ok: false, errCode: 'INVALID_STATUS', errMsg: '剧本未生成，无法分配角色' }",
     test: 'node tests/unit/store.test.js',
@@ -107,7 +107,7 @@ const mutations = [
   },
   {
     name: 'CP2-04: buildClues 永远返回「自由发挥」（steps 被忽略）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: "clue: sList.length > 0 ? sList[i % sList.length] : '自由发挥'",
     replace: "clue: '自由发挥'",
     test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
@@ -115,7 +115,7 @@ const mutations = [
   },
   {
     name: 'CP2-05: buildClues steps 非数组兜底移除（.length 抛错）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 'const sList = Array.isArray(steps) ? steps : []',
     replace: 'const sList = steps',
     test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
@@ -123,7 +123,7 @@ const mutations = [
   },
   {
     name: 'CP2-06: listPublicRooms visibility 检查反转（返回所有 private 房间）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 'r.visibility === \'public\' &&',
     replace: 'r.visibility !== \'public\' &&',
     test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
@@ -131,7 +131,7 @@ const mutations = [
   },
   {
     name: 'CP2-07: listPublicRooms FINISHED 排除反转（包含已完成房间）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: "r.status !== 'cancelled' &&\n    r.status !== ROOM_STATUS.FINISHED",
     replace: "r.status !== 'cancelled' &&\n    r.status === ROOM_STATUS.FINISHED",
     test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
@@ -139,7 +139,7 @@ const mutations = [
   },
   {
     name: 'CP2-08: listPublicRooms 排序方向反转（升序而非倒序）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: '(b.createdAt || 0) - (a.createdAt || 0)',
     replace: '(a.createdAt || 0) - (b.createdAt || 0)',
     test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
@@ -147,7 +147,7 @@ const mutations = [
   },
   {
     name: 'CP2-09: requestJoin visibility 守卫反转（非公开也能申请）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: "if (room.visibility !== 'public') {\n    return { ok: false, errCode: 'NOT_PUBLIC', errMsg: '仅公开组局可申请加入' }",
     replace: "if (room.visibility === 'public') {\n    return { ok: false, errCode: 'NOT_PUBLIC', errMsg: '仅公开组局可申请加入' }",
     test: 'node tests/unit/store.test.js && node tests/adversarial/group-attack.test.js',
@@ -155,7 +155,7 @@ const mutations = [
   },
   {
     name: 'CP2-10: requestJoin ALREADY_JOINED 守卫反转（已是成员可重复申请）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: "if (room.members.some(m => m.openId === openId)) {\n    return { ok: false, errCode: 'ALREADY_JOINED', errMsg: '你已在房间中' }",
     replace: "if (!room.members.some(m => m.openId === openId)) {\n    return { ok: false, errCode: 'ALREADY_JOINED', errMsg: '你已在房间中' }",
     test: 'node tests/unit/store.test.js && node tests/adversarial/group-attack.test.js',
@@ -163,7 +163,7 @@ const mutations = [
   },
   {
     name: 'CP2-11: requestJoin ROOM_FULL 边界 >= 改为 >（满员+1 才拒绝）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: "if (room.members.length >= room.maxMembers) {\n    return { ok: false, errCode: 'ROOM_FULL', errMsg: '房间已满' }",
     replace: "if (room.members.length > room.maxMembers) {\n    return { ok: false, errCode: 'ROOM_FULL', errMsg: '房间已满' }",
     test: 'node tests/unit/store.test.js',
@@ -171,7 +171,7 @@ const mutations = [
   },
   {
     name: 'CP2-12: approveJoin NOT_HOST 守卫反转（非房主也能审核）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: "if (room.hostOpenId !== openId) {\n    return { ok: false, errCode: 'NOT_HOST', errMsg: '只有发起人可以审核' }",
     replace: "if (room.hostOpenId === openId) {\n    return { ok: false, errCode: 'NOT_HOST', errMsg: '只有发起人可以审核' }",
     test: 'node tests/unit/store.test.js && node tests/adversarial/group-attack.test.js',
@@ -179,7 +179,7 @@ const mutations = [
   },
   {
     name: 'CP2-13: submitReview rating 上界 > 5 改为 >= 5（5 星被错误拒绝）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 'review.rating < 1 || review.rating > 5',
     replace: 'review.rating < 1 || review.rating >= 5',
     test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
@@ -187,7 +187,7 @@ const mutations = [
   },
   {
     name: 'CP2-14: submitReview ALREADY_REVIEWED 守卫反转（未评价者被拒）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: "if (reviews.some(r => r.openId === openId)) {\n    return { ok: false, errCode: 'ALREADY_REVIEWED', errMsg: '你已评价过' }",
     replace: "if (!reviews.some(r => r.openId === openId)) {\n    return { ok: false, errCode: 'ALREADY_REVIEWED', errMsg: '你已评价过' }",
     test: 'node tests/unit/store.test.js && node tests/adversarial/group-attack.test.js',
@@ -195,7 +195,7 @@ const mutations = [
   },
   {
     name: 'CP2-15: buildReviewSummary rating 上界 <= 5 改为 < 5（5 星被过滤）',
-    file: 'utils/group-room-store.js',
+    file: 'packageSync/utils/group-room-store.js',
     find: 'if (rating >= 1 && rating <= 5)',
     replace: 'if (rating >= 1 && rating < 5)',
     test: 'node tests/unit/store.test.js && node tests/property/group-property.test.js',
@@ -757,7 +757,7 @@ const mutations = [
   // 每条变异针对纯函数的关键不变量，由 unit/property/adversarial 精确断言守护
   {
     name: 'PM1: normalizePlayer isReal source === cloud 改为 === mock（真实玩家未标记）',
-    file: 'utils/player-matcher.js',
+    file: 'packageSync/utils/player-matcher.js',
     find: 'isReal: source === \'cloud\'',
     replace: 'isReal: source === \'mock\'',
     test: 'node tests/unit/player-matcher.test.js',
@@ -765,7 +765,7 @@ const mutations = [
   },
   {
     name: 'PM2: mergeAndPick real.concat(mock) 改为 mock.concat(real)（mock 优先）',
-    file: 'utils/player-matcher.js',
+    file: 'packageSync/utils/player-matcher.js',
     find: 'var merged = real.concat(mock)',
     replace: 'var merged = mock.concat(real)',
     test: 'node tests/unit/player-matcher.test.js && node tests/property/player-matcher-property.test.js',
@@ -773,7 +773,7 @@ const mutations = [
   },
   {
     name: 'PM3: mergeAndPick excludeOpenId 守卫反转（real 循环 === 改为 !==）',
-    file: 'utils/player-matcher.js',
+    file: 'packageSync/utils/player-matcher.js',
     find: 'if (excludeOpenId && p.openId === excludeOpenId) continue',
     replace: 'if (excludeOpenId && p.openId !== excludeOpenId) continue',
     test: 'node tests/unit/player-matcher.test.js && node tests/property/player-matcher-property.test.js',
@@ -781,7 +781,7 @@ const mutations = [
   },
   {
     name: 'PM4: mergeAndPick realOpenIds 去重反转（重复 openId 攻击）',
-    file: 'utils/player-matcher.js',
+    file: 'packageSync/utils/player-matcher.js',
     find: 'if (realOpenIds[mp.openId]) continue',
     replace: 'if (!realOpenIds[mp.openId]) continue',
     test: 'node tests/unit/player-matcher.test.js && node tests/property/player-matcher-property.test.js',
@@ -789,7 +789,7 @@ const mutations = [
   },
   {
     name: 'PM5: mergeAndPick slice count 改为 count + 1（返回超量）',
-    file: 'utils/player-matcher.js',
+    file: 'packageSync/utils/player-matcher.js',
     find: 'return merged.slice(0, Math.min(count, merged.length))',
     replace: 'return merged.slice(0, Math.min(count + 1, merged.length))',
     test: 'node tests/unit/player-matcher.test.js && node tests/property/player-matcher-property.test.js',
@@ -797,7 +797,7 @@ const mutations = [
   },
   {
     name: 'PM6: shouldFallback ok !== true 改为 === false（falsy ok 漏网，降级失效）',
-    file: 'utils/player-matcher.js',
+    file: 'packageSync/utils/player-matcher.js',
     find: 'if (result.ok !== true) return true',
     replace: 'if (result.ok === false) return true',
     test: 'node tests/adversarial/player-matcher-attack.test.js',
@@ -805,7 +805,7 @@ const mutations = [
   },
   {
     name: 'PM7: computePartnerCount cap < 0 兜底改为 cap = -1（负数上限漏网）',
-    file: 'utils/player-matcher.js',
+    file: 'packageSync/utils/player-matcher.js',
     find: 'if (cap < 0) cap = 0',
     replace: 'if (cap < 0) cap = -1',
     test: 'node tests/property/player-matcher-property.test.js && node tests/adversarial/player-matcher-attack.test.js',
@@ -813,7 +813,7 @@ const mutations = [
   },
   {
     name: 'PM8: computePartnerCount slots < 0 兜底改为 slots = -1（负数返回）',
-    file: 'utils/player-matcher.js',
+    file: 'packageSync/utils/player-matcher.js',
     find: 'if (slots < 0) slots = 0',
     replace: 'if (slots < 0) slots = -1',
     test: 'node tests/property/player-matcher-property.test.js',
@@ -821,7 +821,7 @@ const mutations = [
   },
   {
     name: 'PM9: computePartnerCount slots > cap 改为 slots = cap + 1（超上限）',
-    file: 'utils/player-matcher.js',
+    file: 'packageSync/utils/player-matcher.js',
     find: 'if (slots > cap) slots = cap',
     replace: 'if (slots > cap) slots = cap + 1',
     test: 'node tests/property/player-matcher-property.test.js',
@@ -829,7 +829,7 @@ const mutations = [
   },
   {
     name: 'PM10: rankByRelevance 排序方向反转（bScore - aScore 改为 aScore - bScore）',
-    file: 'utils/player-matcher.js',
+    file: 'packageSync/utils/player-matcher.js',
     find: 'return bScore - aScore',
     replace: 'return aScore - bScore',
     test: 'node tests/unit/player-matcher.test.js',
@@ -837,7 +837,7 @@ const mutations = [
   },
   {
     name: 'PM11: rankByRelevance null 守卫失效（aValid 恒 true，null 元素抛错）',
-    file: 'utils/player-matcher.js',
+    file: 'packageSync/utils/player-matcher.js',
     find: 'var aValid = a && typeof a === \'object\'',
     replace: 'var aValid = true',
     test: 'node tests/adversarial/player-matcher-attack.test.js',
@@ -852,7 +852,7 @@ const mutations = [
   // --- trust-score.js 变异（信任分纯函数）---
   {
     name: 'CP4-TS1: computeTrustScore newbie 边界 count < 3 改为 <= 3（3条评价仍判新手）',
-    file: 'utils/trust-score.js',
+    file: 'packageSync/utils/trust-score.js',
     find: 'if (count < 3) {',
     replace: 'if (count <= 3) {',
     test: 'node tests/unit/trust-score.test.js',
@@ -860,7 +860,7 @@ const mutations = [
   },
   {
     name: 'CP4-TS2: computeTrustScore gold 阈值 count >= 10 改为 >= 9（9条评价误升金牌）',
-    file: 'utils/trust-score.js',
+    file: 'packageSync/utils/trust-score.js',
     find: 'avg >= 4.8 && count >= 10',
     replace: 'avg >= 4.8 && count >= 9',
     test: 'node tests/unit/trust-score.test.js',
@@ -868,7 +868,7 @@ const mutations = [
   },
   {
     name: 'CP4-TS3: computeTrustScore reliable 边界 avg >= 4.5 改为 > 4.5（4.5分误降普通）',
-    file: 'utils/trust-score.js',
+    file: 'packageSync/utils/trust-score.js',
     find: 'avg >= 4.5',
     replace: 'avg > 4.5',
     test: 'node tests/unit/trust-score.test.js',
@@ -876,7 +876,7 @@ const mutations = [
   },
   {
     name: 'CP4-TS4: computeTrustScore watch 边界 avg < 3.0 改为 <= 3.0（3.0分误判待观察）',
-    file: 'utils/trust-score.js',
+    file: 'packageSync/utils/trust-score.js',
     find: 'avg < 3.0',
     replace: 'avg <= 3.0',
     test: 'node tests/unit/trust-score.test.js',
@@ -884,7 +884,7 @@ const mutations = [
   },
   {
     name: 'CP4-TS5: computeTrustScore 非法 rating 善意 sum += 5 改为 sum += 0（非法评价拉低分数）',
-    file: 'utils/trust-score.js',
+    file: 'packageSync/utils/trust-score.js',
     find: 'sum += 5',
     replace: 'sum += 0',
     test: 'node tests/unit/trust-score.test.js',
@@ -892,7 +892,7 @@ const mutations = [
   },
   {
     name: 'CP4-TS6: computeTrustScore score 保留一位小数 Math.round 改为 Math.floor（4.9→4.8 降级）',
-    file: 'utils/trust-score.js',
+    file: 'packageSync/utils/trust-score.js',
     find: 'Math.round(avg * 10) / 10',
     replace: 'Math.floor(avg * 10) / 10',
     test: 'node tests/unit/trust-score.test.js',
@@ -900,7 +900,7 @@ const mutations = [
   },
   {
     name: 'CP4-TS7: getTierWeight 未知 tier 兜底 normal(1.0) 改为 watch(0.3)（未知玩家被降权）',
-    file: 'utils/trust-score.js',
+    file: 'packageSync/utils/trust-score.js',
     find: 'return TRUST_TIER_WEIGHT.normal\n  }',
     replace: 'return TRUST_TIER_WEIGHT.watch\n  }',
     test: 'node tests/unit/trust-score.test.js',
@@ -908,7 +908,7 @@ const mutations = [
   },
   {
     name: 'CP4-TS8: isValidReview rating 下界 >= 1 改为 >= 0（0分评价通过校验）',
-    file: 'utils/trust-score.js',
+    file: 'packageSync/utils/trust-score.js',
     find: 'rating >= 1 && rating <= 5',
     replace: 'rating >= 0 && rating <= 5',
     test: 'node tests/unit/trust-score.test.js',
@@ -918,7 +918,7 @@ const mutations = [
   // --- player-trust-store.js 变异（信任数据层 + 降级协调）---
   {
     name: 'CP4-PT1: getTrustBatch 批量截断 ids.length < 20 改为 < 21（超量请求漏网）',
-    file: 'utils/player-trust-store.js',
+    file: 'packageSync/utils/player-trust-store.js',
     find: 'ids.length < 20',
     replace: 'ids.length < 21',
     test: 'node tests/unit/player-trust-store.test.js',
@@ -926,7 +926,7 @@ const mutations = [
   },
   {
     name: 'CP4-PT2: buildReviewDoc comment 截断 slice(0, 100) 改为 slice(0, 99)',
-    file: 'utils/player-trust-store.js',
+    file: 'packageSync/utils/player-trust-store.js',
     find: '.slice(0, 100)',
     replace: '.slice(0, 99)',
     test: 'node tests/unit/player-trust-store.test.js',
@@ -934,7 +934,7 @@ const mutations = [
   },
   {
     name: 'CP4-PT3: buildReviewDoc tags 上限 slice(0, 5) 改为 slice(0, 6)',
-    file: 'utils/player-trust-store.js',
+    file: 'packageSync/utils/player-trust-store.js',
     find: '.slice(0, 5)',
     replace: '.slice(0, 6)',
     test: 'node tests/unit/player-trust-store.test.js',
@@ -942,7 +942,7 @@ const mutations = [
   },
   {
     name: 'CP4-PT4: reportPlayer 空 openId 守卫移除（空 ID 不再拒绝）',
-    file: 'utils/player-trust-store.js',
+    file: 'packageSync/utils/player-trust-store.js',
     find: 'if (!targetOpenId) {',
     replace: 'if (false) {',
     test: 'node tests/unit/player-trust-store.test.js',
@@ -950,7 +950,7 @@ const mutations = [
   },
   {
     name: 'CP4-PT5: getTrustBatch 去重 indexOf === -1 改为 !== -1（重复 openId 攻击漏网）',
-    file: 'utils/player-trust-store.js',
+    file: 'packageSync/utils/player-trust-store.js',
     find: 'ids.indexOf(id) === -1',
     replace: 'ids.indexOf(id) !== -1',
     test: 'node tests/unit/player-trust-store.test.js',
@@ -958,7 +958,7 @@ const mutations = [
   },
   {
     name: 'CP4-PT6: submitReview 成功后缓存 setCachedTrust 移除（信任分不缓存）',
-    file: 'utils/player-trust-store.js',
+    file: 'packageSync/utils/player-trust-store.js',
     find: 'setCachedTrust(doc.targetOpenId, result.trust)',
     replace: '/* setCachedTrust(doc.targetOpenId, result.trust) */',
     test: 'node tests/unit/player-trust-store.test.js',
@@ -966,7 +966,7 @@ const mutations = [
   },
   {
     name: 'CP4-PT7: getTrustBatch 非数组守卫移除（null 输入抛 TypeError）',
-    file: 'utils/player-trust-store.js',
+    file: 'packageSync/utils/player-trust-store.js',
     find: 'if (!Array.isArray(openIds) || openIds.length === 0) {',
     replace: 'if (false) {',
     test: 'node tests/unit/player-trust-store.test.js',
@@ -974,7 +974,7 @@ const mutations = [
   },
   {
     name: 'CP4-PT8: getTrustBatch 补齐未返回 openId 时移除本地缓存读取（merged[tid] = DEFAULT_TRUST）',
-    file: 'utils/player-trust-store.js',
+    file: 'packageSync/utils/player-trust-store.js',
     find: 'merged[tid] = getCachedTrust(tid) || DEFAULT_TRUST',
     replace: 'merged[tid] = DEFAULT_TRUST',
     test: 'node tests/unit/player-trust-store.test.js',
@@ -984,7 +984,7 @@ const mutations = [
   // --- chat-store.js 变异（聊天数据层 + 乐观更新 + 轮询）---
   {
     name: 'CP4-CS1: validateContent 超长边界 > MAX_CONTENT_LEN 改为 >=（200字消息被拒）',
-    file: 'utils/chat-store.js',
+    file: 'packageSync/utils/chat-store.js',
     find: 'if (trimmed.length > MAX_CONTENT_LEN) {',
     replace: 'if (trimmed.length >= MAX_CONTENT_LEN) {',
     test: 'node tests/unit/chat-store.test.js',
@@ -992,7 +992,7 @@ const mutations = [
   },
   {
     name: 'CP4-CS2: sendMessage 乐观消息 isLocal: true 改为 false（乐观消息不标记）',
-    file: 'utils/chat-store.js',
+    file: 'packageSync/utils/chat-store.js',
     find: "isLocal: true,\n    status: 'pending'",
     replace: "isLocal: false,\n    status: 'pending'",
     test: 'node tests/unit/chat-store.test.js',
@@ -1000,7 +1000,7 @@ const mutations = [
   },
   {
     name: 'CP4-CS3: dedupMessages 排序方向 ca - cb 改为 cb - ca（消息倒序）',
-    file: 'utils/chat-store.js',
+    file: 'packageSync/utils/chat-store.js',
     find: 'if (ca !== cb) return ca - cb',
     replace: 'if (ca !== cb) return cb - ca',
     test: 'node tests/unit/chat-store.test.js',
@@ -1008,7 +1008,7 @@ const mutations = [
   },
   {
     name: 'CP4-CS4: dedupMessages 乐观消息替换逻辑移除（replaceKey 命中不跳过）',
-    file: 'utils/chat-store.js',
+    file: 'packageSync/utils/chat-store.js',
     find: 'if (m.isLocal && tk && pendingKeys[tk]) {',
     replace: 'if (false && m.isLocal && tk && pendingKeys[tk]) {',
     test: 'node tests/unit/chat-store.test.js',
@@ -1016,7 +1016,7 @@ const mutations = [
   },
   {
     name: 'CP4-CS5: filterAfter 增量游标 > 改为 >=（已拉取消息重复返回）',
-    file: 'utils/chat-store.js',
+    file: 'packageSync/utils/chat-store.js',
     find: 'list[i].createdAt > lastCreatedAt',
     replace: 'list[i].createdAt >= lastCreatedAt',
     test: 'node tests/unit/chat-store.test.js',
@@ -1024,7 +1024,7 @@ const mutations = [
   },
   {
     name: 'CP4-CS6: saveMessages tempKey 持久化移除（乐观消息替换匹配失效）',
-    file: 'utils/chat-store.js',
+    file: 'packageSync/utils/chat-store.js',
     find: 'tempKey: typeof m.tempKey === \'string\' ? m.tempKey : \'\',',
     replace: "tempKey: '',",
     test: 'node tests/unit/chat-store.test.js',
@@ -1032,7 +1032,7 @@ const mutations = [
   },
   {
     name: 'CP4-CS7: sendMessage 云端降级 local_only 返回 ok: true 改为 ok: false（降级失效）',
-    file: 'utils/chat-store.js',
+    file: 'packageSync/utils/chat-store.js',
     find: "ok: true,\n      source: 'local_only',",
     replace: "ok: false,\n      source: 'local_only',",
     test: 'node tests/unit/chat-store.test.js',
@@ -1040,7 +1040,7 @@ const mutations = [
   },
   {
     name: 'CP4-CS8: computeNewOnes 去重 seenIds[id] 改为 !seenIds[id]（已存在消息重复计入新增）',
-    file: 'utils/chat-store.js',
+    file: 'packageSync/utils/chat-store.js',
     find: 'if (id && seenIds[id]) continue',
     replace: 'if (id && !seenIds[id]) continue',
     test: 'node tests/unit/chat-store.test.js',
@@ -1048,7 +1048,7 @@ const mutations = [
   },
   {
     name: 'CP4-CS9: startPolling 切换 room 时 stopPolling 移除（旧轮询不被停止）',
-    file: 'utils/chat-store.js',
+    file: 'packageSync/utils/chat-store.js',
     find: '// 已有轮询先停止\n  stopPolling()',
     replace: '// 已有轮询先停止',
     test: 'node tests/unit/chat-store.test.js',

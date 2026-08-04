@@ -37,7 +37,7 @@
     bindtap="closePopup"
     style="width: 100%; height: {{mapHeight}}px;"
   >
-    <!-- 顶部模式 tab + 时间筛选 -->
+    <!-- 顶部模式 tab + 时间筛选 + B4-B 类型/情绪筛选 -->
     <cover-view class="map-controls">
       <cover-view class="map-tabs">
         <cover-view
@@ -61,7 +61,7 @@
           <cover-view class="time-chip-text">{{item.name}}</cover-view>
         </cover-view>
       </cover-view>
-      <!-- 类型筛选（微逃/破圈/同频）-->
+<!-- B4-B: 类型筛选 -->
       <cover-view class="time-chips">
         <cover-view
           wx:for="{{typeFilters}}"
@@ -73,9 +73,16 @@
           <cover-view class="time-chip-text">{{item.name}}</cover-view>
         </cover-view>
       </cover-view>
-      <!-- 心情筛选 -->
-      <cover-view class="time-chips">
+<!-- B4-B: 情绪筛选（可折叠） -->
+      <cover-view wx:if="{{moodFilters.length > 1}}" class="time-chips">
         <cover-view
+          class="time-chip mood-toggle {{showMoodRow ? 'active' : ''}}"
+          bindtap="onToggleMoodRow"
+        >
+          <cover-view class="time-chip-text">情绪</cover-view>
+        </cover-view>
+        <cover-view
+          wx:if="{{showMoodRow}}"
           wx:for="{{moodFilters}}"
           wx:key="key"
           class="time-chip mood-chip {{activeMood === item.key ? 'active' : ''}}"
@@ -142,7 +149,7 @@
           <cover-view class="popup-mode-pill" style="background: {{popupRecord.typeColor}}1A; color: {{popupRecord.typeColor}};">{{popupRecord.modeName}}</cover-view>
         </cover-view>
         <cover-view class="popup-title">{{popupRecord.commandTitle}}</cover-view>
-        <cover-view wx:if="{{popupRecord.dateText}}" class="popup-date">{{popupRecord.dateText}}</cover-view>
+<cover-view wx:if="{{popupRecord.dateText}}" class="popup-date">{{popupRecord.dateText}}{{popupRecord.moodText ? ' · ' + popupRecord.moodText : ''}}</cover-view>
 
         <!-- 缩略图（同频聚合无图时不展示） -->
         <cover-image wx:if="{{popupRecord.photoThumb}}" class="popup-thumb" src="{{popupRecord.photoThumb}}" mode="aspectFill"></cover-image>
@@ -167,9 +174,34 @@
           </cover-view>
         </cover-view>
 
+        <!-- B4-B: 重返此地按钮 -->
+        <cover-view wx:if="{{popupRecord.canRevisit}}" class="popup-revisit-btn" catchtap="onRevisitTap">
+          <cover-view class="popup-revisit-text">重返此地</cover-view>
+        </cover-view>
+
         <!-- 查看完整记录按钮（同频聚合无单条记录，不展示） -->
         <cover-view wx:if="{{!popupRecord.isGroupAgg}}" class="popup-cta" catchtap="goRecordDetailFromMap">
           <cover-view class="popup-cta-text">查看完整记录 ›</cover-view>
+        </cover-view>
+      </cover-view>
+    </cover-view>
+
+    <!-- B4-B: 城市关系总结条（本月） -->
+    <cover-view wx:if="{{citySummary}}" class="map-summary-bar">
+      <cover-view class="summary-text">{{citySummary.summary}}</cover-view>
+    </cover-view>
+
+    <!-- B4-B: 重返此地确认弹窗 -->
+    <cover-view wx:if="{{revisitPopup}}" class="revisit-modal" catchtap="closeRevisitPopup">
+      <cover-view class="revisit-card" catchtap="noop">
+        <cover-view class="revisit-title">{{revisitPopup.title}}</cover-view>
+        <cover-view class="revisit-subtitle">{{revisitPopup.subtitle}}</cover-view>
+        <cover-view class="revisit-actions">
+          <cover-view class="revisit-cancel" bindtap="closeRevisitPopup">取消</cover-view>
+          <cover-view class="revisit-confirm" catchtap="confirmRevisit">{{revisitPopup.actionText}}</cover-view>
+        </cover-view>
+      </cover-view>
+    </cover-view>
         </cover-view>
       </cover-view>
     </cover-view>

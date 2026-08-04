@@ -31,7 +31,20 @@ const badges = [
   { id: 'city_detective', name: '城市侦探', desc: '探索过 50 个不同角落', icon: '/assets/icons/badge-city-detective.svg', gradient: 'linear-gradient(135deg, #FFF0D4, #C9B037)', color: '#8A7620', category: 'special' },
   { id: 'member_pro', name: '出逃会员', desc: '会员功能暂不展示', icon: '/assets/icons/badge-member-pro.svg', gradient: 'linear-gradient(135deg, #2E2F33, #1A1B1E)', color: '#C9B037', category: 'special' },
   { id: 'explorer', name: '探索家', desc: '完成 6 种类型的指令', icon: '/assets/icons/badge-explorer.svg', gradient: 'linear-gradient(135deg, #D4E8FF, #5B8FB9)', color: '#3A6D96', category: 'special' },
-  { id: 'challenge_king', name: '挑战王', desc: '完成 7 个每日挑战', icon: '/assets/icons/badge-challenge-king.svg', gradient: 'linear-gradient(135deg, #FFE4B5, #FF6B6B)', color: '#A04040', category: 'special' }
+  { id: 'challenge_king', name: '挑战王', desc: '完成 7 个每日挑战', icon: '/assets/icons/badge-challenge-king.svg', gradient: 'linear-gradient(135deg, #FFE4B5, #FF6B6B)', color: '#A04040', category: 'special' },
+
+  // ===== B4 milestone 阶段记录（出逃次数里程碑）=====
+  { id: 'stage_explorer', name: '初探者', desc: '完成 10 次出逃', icon: '/assets/icons/badge-stage-explorer.svg', gradient: 'linear-gradient(135deg, #D4EDFF, #7BAE7F)', color: '#5A8E5E', category: 'milestone' },
+  { id: 'stage_familiar', name: '熟路人', desc: '完成 30 次出逃', icon: '/assets/icons/badge-stage-familiar.svg', gradient: 'linear-gradient(135deg, #FFE8D6, #D98A5C)', color: '#A8603A', category: 'milestone' },
+  { id: 'stage_detective', name: '城市侦探', desc: '完成 50 次出逃', icon: '/assets/icons/badge-stage-detective.svg', gradient: 'linear-gradient(135deg, #FFF0D4, #C9B037)', color: '#8A7620', category: 'milestone' },
+  { id: 'stage_expert', name: '城市专家', desc: '完成 100 次出逃', icon: '/assets/icons/badge-stage-expert.svg', gradient: 'linear-gradient(135deg, #E8D5F5, #9B7BB8)', color: '#6B4F8A', category: 'milestone' },
+
+  // ===== B4 special 城市方向收集（基于坐标相对质心方位）=====
+  { id: 'direction_east', name: '东征', desc: '在城市东侧完成 3 次出逃', icon: '/assets/icons/badge-direction-east.svg', gradient: 'linear-gradient(135deg, #FFE4B5, #FFD700)', color: '#D4A017', category: 'special' },
+  { id: 'direction_south', name: '南探', desc: '在城市南侧完成 3 次出逃', icon: '/assets/icons/badge-direction-south.svg', gradient: 'linear-gradient(135deg, #D4EDFF, #7EC8F5)', color: '#3A8AB5', category: 'special' },
+  { id: 'direction_west', name: '西行', desc: '在城市西侧完成 3 次出逃', icon: '/assets/icons/badge-direction-west.svg', gradient: 'linear-gradient(135deg, #FFE8D6, #D98A5C)', color: '#A8603A', category: 'special' },
+  { id: 'direction_north', name: '北游', desc: '在城市北侧完成 3 次出逃', icon: '/assets/icons/badge-direction-north.svg', gradient: 'linear-gradient(135deg, #E8D5F5, #9B7BB8)', color: '#6B4F8A', category: 'special' },
+  { id: 'direction_central', name: '中枢', desc: '在城市中心完成 3 次出逃', icon: '/assets/icons/badge-direction-central.svg', gradient: 'linear-gradient(135deg, #C9E8E3, #5CBF9E)', color: '#3A8C6F', category: 'special' }
 ]
 
 module.exports = badges

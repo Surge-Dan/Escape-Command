@@ -1,4 +1,4 @@
-// tests/adversarial/chat-trust-attack.test.js
+﻿// tests/adversarial/chat-trust-attack.test.js
 // C-P4 社交增强对抗式攻击测试
 // 运行: node tests/adversarial/chat-trust-attack.test.js
 //
@@ -13,9 +13,9 @@
 var wx = require('../mock-wx.js')
 global.wx = wx
 
-var trustScore = require('../../utils/trust-score.js')
-var trustStore = require('../../utils/player-trust-store.js')
-var chatStore = require('../../utils/chat-store.js')
+var trustScore = require('../../packageSync/utils/trust-score.js')
+var trustStore = require('../../packageSync/utils/player-trust-store.js')
+var chatStore = require('../../packageSync/utils/chat-store.js')
 
 // ===== 测试统计 =====
 var passCount = 0

@@ -1,4 +1,4 @@
-// tests/unit/chat-store.test.js
+﻿// tests/unit/chat-store.test.js
 // 单元测试：chat-store.js (C-P4 聊天数据层)
 // 运行: node tests/unit/chat-store.test.js
 //
@@ -13,7 +13,7 @@ var assert = require('assert')
 var wx = require('../mock-wx.js')
 global.wx = wx
 
-var store = require('../../utils/chat-store.js')
+var store = require('../../packageSync/utils/chat-store.js')
 
 // ===== 测试框架（顺序执行 + 每个 test 内部 setup/teardown，确保异步隔离）=====
 

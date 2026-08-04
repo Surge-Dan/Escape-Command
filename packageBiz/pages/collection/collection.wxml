@@ -1,0 +1,127 @@
+<view class="page-container collection-page paper-texture" bindtap="closeSortMenu">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="goBack">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">收藏夹</text>
+    <view class="nav-header-divider"></view>
+    <view class="nav-header-right">
+      <text class="manage-btn" bindtap="toggleBatchMode">{{batchMode ? '完成' : '管理'}}</text>
+    </view>
+  </view>
+
+  <!-- 顶部筛选条 + 排序 -->
+  <view class="filter-bar">
+    <view class="filter-tabs">
+      <view
+        wx:for="{{statusFilters}}"
+        wx:key="key"
+        class="filter-chip {{activeFilter === item.key ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onFilterTap"
+      >
+        <text>{{item.name}}</text>
+      </view>
+    </view>
+    <view class="sort-btn" catchtap="toggleSortMenu">
+      <text>{{sortKey === 'newest' ? '最新' : sortKey === 'oldest' ? '最早' : '类型'}}</text>
+      <image class="sort-ico" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+    </view>
+  </view>
+
+  <!-- 排序下拉 -->
+  <view wx:if="{{sortMenuOpen}}" class="sort-menu" catchtap="noop">
+    <view
+      wx:for="{{sortOptions}}"
+      wx:key="key"
+      class="sort-menu-item {{sortKey === item.key ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onSortTap"
+    >
+      <text>{{item.name}}</text>
+      <text wx:if="{{sortKey === item.key}}" class="sort-menu-check">✓</text>
+    </view>
+  </view>
+
+  <scroll-view
+    scroll-y
+    class="collection-scroll"
+    style="height: calc(100vh - {{statusBarHeight}}px - 80rpx - 96rpx{{batchMode ? ' - 120rpx' : ''}});"
+  >
+    <!-- 空状态 -->
+    <view wx:if="{{items.length === 0}}" class="empty-state">
+      <image class="empty-illust" src="/assets/icons/empty-collection.svg" mode="aspectFit"></image>
+      <text class="empty-title">还没有收藏任何指令</text>
+      <text class="empty-desc">收藏喜欢的指令，随时查看</text>
+      <view class="empty-btn" bindtap="goToIndex">去发现更多出逃指令</view>
+    </view>
+
+    <view wx:else class="command-list">
+      <view
+        wx:for="{{items}}"
+        wx:key="id"
+        class="command-card {{batchMode && selectedIds[item.id] ? 'selected' : ''}}"
+        bindtap="onItemTap"
+        bindlongpress="onLongPress"
+        data-id="{{item.id}}"
+      >
+        <!-- 批量选择框 -->
+        <view wx:if="{{batchMode}}" class="batch-check {{selectedIds[item.id] ? 'checked' : ''}}">
+          <image wx:if="{{selectedIds[item.id]}}" src="/assets/icons/check-white.svg" mode="aspectFit"></image>
+        </view>
+
+        <view class="command-card-main">
+          <view class="command-card-left">
+            <view class="tag-row">
+              <view class="command-type-tag" style="background: {{item.typeColor}}14; color: {{item.typeColor}};">
+                <image class="tag-icon" src="{{item.typeIcon}}" mode="aspectFit"></image>
+                <text>{{item.typeName}}</text>
+              </view>
+              <view wx:if="{{item.mode && item.modeColor}}" class="command-mode-tag" style="background: {{item.modeColor}}14; color: {{item.modeColor}};">
+                <text>{{item.mode}}</text>
+              </view>
+              <view wx:if="{{item.status === 'done'}}" class="status-tag done">已完成</view>
+              <view wx:elif="{{item.status === 'fav'}}" class="status-tag fav">收藏</view>
+            </view>
+            <text class="command-title">{{item.title}}</text>
+            <view class="command-meta-row">
+              <view class="meta-item">
+                <image src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+                <text>约 {{item.duration}} 分钟</text>
+              </view>
+              <view class="meta-item">
+                <image src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
+                <text>{{item.distance}}</text>
+              </view>
+              <view wx:if="{{item.collectedAtText}}" class="meta-item">
+                <image src="/assets/icons/bookmark-brand.svg" mode="aspectFit"></image>
+                <text>{{item.collectedAtText}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="command-card-right">
+            <image class="card-img" src="{{item.illustration || '/assets/icons/empty-collection.svg'}}" mode="aspectFill"></image>
+            <view wx:if="{{!batchMode}}" class="remove-btn" catchtap="onRemoveTap" data-id="{{item.id}}">
+              <image class="remove-ico" src="/assets/icons/x-ink-faint.svg" mode="aspectFit"></image>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{items.length > 0 && !batchMode}}" class="bottom-tip">
+      <text class="tip-text">长按卡片可批量管理</text>
+    </view>
+    <view wx:if="{{batchMode}}" class="bottom-tip">
+      <text class="tip-text">已选 {{selectedCount}} 条</text>
+    </view>
+  </scroll-view>
+
+  <!-- 批量管理底栏 -->
+  <view wx:if="{{batchMode}}" class="batch-bar">
+    <view class="batch-cancel" bindtap="onBatchCancel">取消</view>
+    <view class="batch-delete {{selectedCount ? '' : 'disabled'}}" bindtap="onBatchDelete">删除({{selectedCount}})</view>
+  </view>
+</view>

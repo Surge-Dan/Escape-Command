@@ -6,7 +6,7 @@
 //   1. 单元测试（store + generator-engine + record-builder + execution-progress + poi-command-builder + task-hall-store + player-matcher + breakthrough + micro-escape-config）：函数级正确性
 //   2. Gherkin BDD：业务流程场景
 //   3. Property-Based Fuzz：1000+ 次随机输入不变量
-//   4. Adversarial Attack：~130 攻击向量，安全不变量
+//   4. Adversarial Attack：~336 攻击向量，安全不变量
 //   5. QA 质量检查：文件/常量/代码规范
 //   6. 覆盖率报告：函数 + 行级覆盖
 //   7. 变异测试：90+ 变异算子，验证测试有效性
@@ -30,8 +30,18 @@ const testSuites = [
   { name: '单元测试 - breakthrough (Henry 破圈骰子)', cmd: 'node tests/unit/breakthrough.test.js', timeout: 30000 },
   { name: '单元测试 - micro-escape-config (微逃骰子 C-P8)', cmd: 'node tests/unit/micro-escape-config.test.js', timeout: 30000 },
   { name: '单元测试 - safety-tip (B-安全 PRD §15)', cmd: 'node tests/unit/safety-tip.test.js', timeout: 30000 },
+  { name: '单元测试 - safety-helper (B1 安全合规)', cmd: 'node tests/unit/safety-helper.test.js', timeout: 30000 },
+  { name: '单元测试 - arrival-helper (B2 阶段感设计)', cmd: 'node tests/unit/arrival-helper.test.js', timeout: 30000 },
+  { name: '单元测试 - tracker (B3 数据埋点)', cmd: 'node tests/unit/tracker.test.js', timeout: 30000 },
+  { name: '单元测试 - quick-match-engine (B3 AI 快速匹配)', cmd: 'node tests/unit/quick-match-engine.test.js', timeout: 30000 },
+  { name: '单元测试 - badge-engine (B4 激励体系)', cmd: 'node tests/unit/badge-engine.test.js', timeout: 30000 },
+  { name: '单元测试 - map-marker-builder (B4 地图筛选)', cmd: 'node tests/unit/map-marker-builder.test.js', timeout: 30000 },
+  { name: '单元测试 - revisit-helper (B4 重返旧地点)', cmd: 'node tests/unit/revisit-helper.test.js', timeout: 30000 },
+  { name: '单元测试 - style-profile (B4 风格画像)', cmd: 'node tests/unit/style-profile.test.js', timeout: 30000 },
+  { name: '单元测试 - summary-builder (B4 总结生成)', cmd: 'node tests/unit/summary-builder.test.js', timeout: 30000 },
+  { name: '单元测试 - memory-revisit (B4 记忆回访)', cmd: 'node tests/unit/memory-revisit.test.js', timeout: 30000 },
   // ===== BDD =====
-  { name: 'Gherkin BDD (group + generator + completion + task-hall + c-p4-social + breakthrough)', cmd: 'node tests/gherkin/runner.js', timeout: 60000 },
+  { name: 'Gherkin BDD (group + generator + completion + task-hall + c-p4-social + breakthrough + safety + arrival + quick-match + badge-growth + map-enhancement)', cmd: 'node tests/gherkin/runner.js', timeout: 60000 },
   // ===== Fuzz =====
   { name: 'Property Fuzz - generator (1000+ 次)', cmd: 'node tests/property/generator-property.test.js', timeout: 120000 },
   { name: 'Property Fuzz - group (C-14~C-19)', cmd: 'node tests/property/group-property.test.js', timeout: 120000 },
@@ -42,6 +52,10 @@ const testSuites = [
   { name: 'Adversarial - group (49 攻击向量)', cmd: 'node tests/adversarial/group-attack.test.js', timeout: 60000 },
   { name: 'Adversarial - player-matcher (40 攻击向量)', cmd: 'node tests/adversarial/player-matcher-attack.test.js', timeout: 60000 },
   { name: 'Adversarial - chat-trust (C-P4)', cmd: 'node tests/adversarial/chat-trust-attack.test.js', timeout: 60000 },
+  { name: 'Adversarial - safety (B1 安全合规 31 攻击向量)', cmd: 'node tests/adversarial/safety-attack.test.js', timeout: 60000 },
+  { name: 'Adversarial - arrival (B2 阶段感设计 67 攻击向量)', cmd: 'node tests/adversarial/arrival-attack.test.js', timeout: 60000 },
+  { name: 'Adversarial - quick-match (B3 AI 快速匹配 52 攻击向量)', cmd: 'node tests/adversarial/quick-match-attack.test.js', timeout: 60000 },
+  { name: 'Adversarial - badge (B4 激励体系 52 攻击向量)', cmd: 'node tests/adversarial/badge-attack.test.js', timeout: 60000 },
   // ===== 质量与覆盖 =====
   { name: 'QA 质量检查', cmd: 'node tests/qa/check.js', timeout: 30000 },
   { name: '覆盖率报告', cmd: 'node tests/coverage/coverage-report.js', timeout: 30000 },

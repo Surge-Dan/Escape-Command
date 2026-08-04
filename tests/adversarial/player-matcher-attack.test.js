@@ -1,4 +1,4 @@
-// tests/adversarial/player-matcher-attack.test.js
+﻿// tests/adversarial/player-matcher-attack.test.js
 // D5 真实玩家联动对抗式攻击测试
 // 运行: node tests/adversarial/player-matcher-attack.test.js
 //
@@ -10,7 +10,7 @@
 
 'use strict'
 
-var playerMatcher = require('../../utils/player-matcher.js')
+var playerMatcher = require('../../packageSync/utils/player-matcher.js')
 
 // ===== 测试统计 =====
 var passCount = 0

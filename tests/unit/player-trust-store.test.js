@@ -1,4 +1,4 @@
-// tests/unit/player-trust-store.test.js
+﻿// tests/unit/player-trust-store.test.js
 // 单元测试：player-trust-store.js (C-P4 玩家信任数据层)
 // 运行: node tests/unit/player-trust-store.test.js
 //
@@ -11,7 +11,7 @@ var assert = require('assert')
 var wx = require('../mock-wx.js')
 global.wx = wx
 
-var store = require('../../utils/player-trust-store.js')
+var store = require('../../packageSync/utils/player-trust-store.js')
 
 // ===== 测试框架（顺序执行 + 每个 test 内部 setup/teardown，确保异步隔离）=====
 

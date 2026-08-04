@@ -476,6 +476,120 @@
   text-align: center;
 }
 
+/* ===== B4-B: 重返此地按钮 ===== */
+.popup-revisit-btn {
+  margin-top: 16rpx;
+  padding: 12rpx 24rpx;
+  background: #5CBF9E;
+  border-radius: 32rpx;
+  align-self: flex-start;
+}
+
+.popup-revisit-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+/* ===== B4-B: 情绪筛选切换 ===== */
+.mood-toggle {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.mood-toggle.active {
+  background: #5CBF9E;
+}
+
+/* ===== B4-B: 城市关系总结条 ===== */
+.map-summary-bar {
+  position: absolute;
+  left: 24rpx;
+  right: 24rpx;
+  bottom: 180rpx;
+  padding: 16rpx 24rpx;
+  background: rgba(46, 47, 51, 0.78);
+  border-radius: 16rpx;
+  backdrop-filter: blur(8rpx);
+}
+
+.summary-text {
+  font-size: 24rpx;
+  color: #FFFFFF;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ===== B4-B: 重返此地确认弹窗 ===== */
+.revisit-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.revisit-card {
+  width: 560rpx;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.revisit-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 16rpx;
+}
+
+.revisit-subtitle {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 32rpx;
+}
+
+.revisit-actions {
+  display: flex;
+  gap: 24rpx;
+  width: 100%;
+}
+
+.revisit-cancel {
+  flex: 1;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 40rpx;
+  background: #F5F3EF;
+  font-size: 28rpx;
+  color: var(--ink-soft);
+}
+
+.revisit-confirm {
+  flex: 1;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 40rpx;
+  background: #5CBF9E;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
 /* ===== TabBar 占位 ===== */
 .tabbar-placeholder {
   height: calc(var(--tabbar-floating-height) + var(--tabbar-bottom-gap) + var(--safe-bottom));

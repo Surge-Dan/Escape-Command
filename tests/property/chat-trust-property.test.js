@@ -13,8 +13,8 @@
 var wx = require('../mock-wx.js')
 global.wx = wx
 
-var trustScore = require('../../packageSync/utils/trust-score.js')
-var chatStore = require('../../packageSync/utils/chat-store.js')
+var trustScore = require('../../utils/trust-score.js')
+var chatStore = require('../../utils/chat-store.js')
 
 // ===== 种子化 PRNG（mulberry32）=====
 function makeRng(seed) {

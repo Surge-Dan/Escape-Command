@@ -1,4 +1,4 @@
-﻿// pages/group/hall/create-task/create-task.js
+// pages/group/hall/create-task/create-task.js
 // C-P3 任务大厅 - 创建出逃任务页
 //
 // 职责：
@@ -11,9 +11,9 @@
 //   - pages/group/hall/hall.js（getCurrentUser + onBackTap + Tag 数据准备）
 
 const app = getApp()
-const hallStore = require('../../../../utils/task-hall-store.js')
-const districtsData = require('../../../../data/guangzhou-districts.js')
-const poisData = require('../../../../data/guangzhou-pois.js')
+const hallStore = require('../../../utils/task-hall-store.js')
+const districtsData = require('../../../data/guangzhou-districts.js')
+const poisData = require('../../../data/guangzhou-pois.js')
 
 // 当前用户 openId 存储 key（与 hall.js / group-room-store.js 同源）
 const OPENID_KEY = 'localHostOpenId'

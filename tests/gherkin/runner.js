@@ -10,17 +10,17 @@ const path = require('path')
 const wx = require('../mock-wx.js')
 global.wx = wx
 
-const store = require('../../packageSync/utils/group-room-store.js')
+const store = require('../../utils/group-room-store.js')
 const engine = require('../../utils/generator-engine.js')
 const I = engine._internal
 const recordBuilder = require('../../utils/record-builder.js')
 const executionProgress = require('../../utils/execution-progress.js')
 const markerBuilder = require('../../utils/map-marker-builder.js')
 // C-P4 社交增强
-const trustScore = require('../../packageSync/utils/trust-score.js')
-const trustStore = require('../../packageSync/utils/player-trust-store.js')
-const chatStore = require('../../packageSync/utils/chat-store.js')
-const playerMatcher = require('../../packageSync/utils/player-matcher.js')
+const trustScore = require('../../utils/trust-score.js')
+const trustStore = require('../../utils/player-trust-store.js')
+const chatStore = require('../../utils/chat-store.js')
+const playerMatcher = require('../../utils/player-matcher.js')
 
 // ===== 测试统计 =====
 let passCount = 0
@@ -343,12 +343,12 @@ function on(matcher, handler) {
   })
   // Then 完成后跳转 record 拍照打卡页（静态契约：escape-record.js 含 navigateTo /pages/record/record）
   on(/^完成后跳转\s*record\s*拍照打卡页$/, () => {
-    const src = fs.readFileSync(path.join(__dirname, '..', '..', 'packageSync', 'pages', 'group', 'escape-record', 'escape-record.js'), 'utf-8')
+    const src = fs.readFileSync(path.join(__dirname, '..', '..', 'pages', 'group', 'escape-record', 'escape-record.js'), 'utf-8')
     return src.indexOf("navigateTo({ url: '/pages/record/record' })") >= 0
   })
   // Then 完成流程不直接调用 completeCommand（静态契约：escape-record.js 不含 app.completeCommand，改由 record 页 onSave 触发）
   on(/^完成流程不直接调用\s*completeCommand$/, () => {
-    const src = fs.readFileSync(path.join(__dirname, '..', '..', 'packageSync', 'pages', 'group', 'escape-record', 'escape-record.js'), 'utf-8')
+    const src = fs.readFileSync(path.join(__dirname, '..', '..', 'pages', 'group', 'escape-record', 'escape-record.js'), 'utf-8')
     return src.indexOf('app.completeCommand') < 0
   })
   // Then record 页去地图按钮跳转地图页（静态契约：record.js 含 switchTab /pages/map/map）
@@ -358,7 +358,7 @@ function on(matcher, handler) {
   })
   // Then 跳转目标不是个人页（静态契约：escape-record.js 不跳 /pages/profile/profile）
   on(/^跳转目标不是个人页$/, () => {
-    const src = fs.readFileSync(path.join(__dirname, '..', '..', 'packageSync', 'pages', 'group', 'escape-record', 'escape-record.js'), 'utf-8')
+    const src = fs.readFileSync(path.join(__dirname, '..', '..', 'pages', 'group', 'escape-record', 'escape-record.js'), 'utf-8')
     return src.indexOf("switchTab({ url: '/pages/profile/profile' })") < 0
   })
 })()
@@ -1034,10 +1034,10 @@ function on(matcher, handler) {
 // 复刻 utils/task-hall-store.js 全部公开 API 契约
 // ============================================================
 ;(function registerGroupFlowCP3() {
-  var hallStore = require('../../packageSync/utils/task-hall-store.js')
-  var poisData = require('../../packageSync/data/guangzhou-pois.js')
-  var masterTasks = require('../../packageSync/data/escape-master-tasks.js')
-  var mockPool = require('../../packageSync/utils/mock-user-pool.js')
+  var hallStore = require('../../utils/task-hall-store.js')
+  var poisData = require('../../data/guangzhou-pois.js')
+  var masterTasks = require('../../data/escape-master-tasks.js')
+  var mockPool = require('../../utils/mock-user-pool.js')
   var roomStore = store  // 复用顶层已导入的 group-room-store
 
   // ===== 工具函数 =====
@@ -1138,18 +1138,18 @@ function on(matcher, handler) {
   on(/^Sheet 包含「进入任务大厅找搭子」选项$/, () => true)
   // When 用户选择「邀请好友组局」
   on(/^用户选择「邀请好友组局」$/, (ctx) => {
-    ctx.route = '/packageSync/pages/group/create/create'
+    ctx.route = '/pages/group/create/create'
     return true
   })
   // When 用户选择「进入任务大厅找搭子」
   on(/^用户选择「进入任务大厅找搭子」$/, (ctx) => {
-    ctx.route = '/packageSync/pages/group/hall/hall'
+    ctx.route = '/pages/group/hall/hall'
     return true
   })
-  // Then 跳转到 packageSync/pages/group/create 创建房间流程
-  on(/^跳转到 packageSync\/pages\/group\/create 创建房间流程$/, (ctx) => ctx.route === '/packageSync/pages/group/create/create')
-  // Then 跳转到 packageSync/pages/group/hall 任务大厅页
-  on(/^跳转到 packageSync\/pages\/group\/hall 任务大厅页$/, (ctx) => ctx.route === '/packageSync/pages/group/hall/hall')
+  // Then 跳转到 pages/group/create 创建房间流程
+  on(/^跳转到 pages\/pages\/group\/create 创建房间流程$/, (ctx) => ctx.route === '/pages/group/create/create')
+  // Then 跳转到 pages/group/hall 任务大厅页
+  on(/^跳转到 pages\/pages\/group\/hall 任务大厅页$/, (ctx) => ctx.route === '/pages/group/hall/hall')
 
   // ===== @hall 任务大厅页面 =====
 
@@ -2772,11 +2772,11 @@ function on(matcher, handler) {
 //       escape-master-tasks 模板契约
 // ============================================================
 ;(function registerTaskHallEnhancement() {
-  var hallStore = require('../../packageSync/utils/task-hall-store.js')
-  var playerMatcher = require('../../packageSync/utils/player-matcher.js')
-  var poisData = require('../../packageSync/data/guangzhou-pois.js')
-  var masterTasks = require('../../packageSync/data/escape-master-tasks.js')
-  var mockPool = require('../../packageSync/utils/mock-user-pool.js')
+  var hallStore = require('../../utils/task-hall-store.js')
+  var playerMatcher = require('../../utils/player-matcher.js')
+  var poisData = require('../../data/guangzhou-pois.js')
+  var masterTasks = require('../../data/escape-master-tasks.js')
+  var mockPool = require('../../utils/mock-user-pool.js')
 
   // 工具：构造一个合成 master 任务并写入存储
   function createSyntheticHallTask(opts) {
@@ -2899,7 +2899,7 @@ function on(matcher, handler) {
   // Then 模板覆盖全部 11 个行政区
   on(/^模板覆盖全部\s*11\s*个行政区$/, (ctx) => {
     var tpls = ctx.templates || masterTasks.ESCAPE_MASTER_TEMPLATES
-    var districtsData = require('../../packageSync/data/guangzhou-districts.js')
+    var districtsData = require('../../data/guangzhou-districts.js')
     var allDistricts = districtsData.GUANGZHOU_DISTRICTS.map(function (d) { return d.name })
     var covered = {}
     for (var i = 0; i < tpls.length; i++) {
@@ -3579,7 +3579,7 @@ function on(matcher, handler) {
 // ============================================================
 ;(function registerBreakthroughFlow() {
   // 引入破圈指令池
-  const btData = require('../../packageBreakthrough/data/breakthrough-commands.js')
+  const btData = require('../../data/breakthrough-commands.js')
   const BT_POOL = btData.BREAKTHROUGH_COMMANDS
 
   // 模拟 app.rollBreakthroughCommand 核心逻辑（与 app.js 对齐）
@@ -4019,7 +4019,7 @@ function on(matcher, handler) {
 // 覆盖：主题推断 / 搭子数推断 / 兴趣推断 / 快速匹配主流程 / 不变量
 // ============================================================
 ;(function registerQuickMatchFlow() {
-  const qm = require('../../packageSync/utils/quick-match-engine.js')
+  const qm = require('../../utils/quick-match-engine.js')
 
   function mockPool() {
     return [

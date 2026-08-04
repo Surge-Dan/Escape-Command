@@ -1,4 +1,4 @@
-// tests/unit/breakthrough.test.js
+﻿// tests/unit/breakthrough.test.js
 // 破圈骰子单元测试
 // 运行: node tests/unit/breakthrough.test.js
 //
@@ -14,7 +14,7 @@
 'use strict'
 
 const { TYPE_META, MODE_LIST, HOME_DICE_LIST, TYPE_STEPS, normalizeType, getTypeMeta } = require('../../utils/constants.js')
-const btData = require('../../packageBreakthrough/data/breakthrough-commands.js')
+const btData = require('../../data/breakthrough-commands.js')
 const BREAKTHROUGH_COMMANDS = btData.BREAKTHROUGH_COMMANDS
 
 // ===== 自定义测试框架（与 record-builder.test.js 风格一致）=====

@@ -6,7 +6,7 @@ const wx = require('../mock-wx.js')
 // 注入 wx 到全局
 global.wx = wx
 
-const store = require('../../packageSync/utils/group-room-store.js')
+const store = require('../../utils/group-room-store.js')
 
 let passCount = 0
 let failCount = 0

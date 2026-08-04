@@ -6,7 +6,7 @@ const app = getApp()
 const roomStore = require('../../../utils/group-room-store.js')
 // execution-progress.js 是主包文件（executing 页也用），分包通过相对路径退到主包根 require
 // 修复：原 '../../../utils/execution-progress.js' 指向 packageSync/utils/（无此文件）导致 require 失败页面白屏
-const executionProgress = require('../../../../utils/execution-progress.js')
+const executionProgress = require('../../../utils/execution-progress.js')
 
 Page({
   data: {

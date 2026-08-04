@@ -1,10 +1,10 @@
-// tests/unit/quick-match-engine.test.js
+﻿// tests/unit/quick-match-engine.test.js
 // B3 同频骰子 AI 快速匹配引擎单元测试
 // 运行: node tests/unit/quick-match-engine.test.js
 
 'use strict'
 
-const qm = require('../../packageSync/utils/quick-match-engine.js')
+const qm = require('../../utils/quick-match-engine.js')
 
 let passCount = 0
 let failCount = 0

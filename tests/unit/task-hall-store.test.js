@@ -11,7 +11,7 @@ var assert = require('assert')
 var wx = require('../mock-wx.js')
 global.wx = wx
 
-var store = require('../../packageSync/utils/task-hall-store.js')
+var store = require('../../utils/task-hall-store.js')
 var internals = store._internal
 
 // ===== 测试框架 =====
@@ -853,9 +853,9 @@ test('diceMatchWithPartners：无可用任务 → NO_MATCH', function () {
 section('M. 45 条模板覆盖性验证（D4）')
 
 test('45 条模板覆盖全部 11 区', function () {
-  var masterTasks = require('../../packageSync/data/escape-master-tasks.js')
+  var masterTasks = require('../../data/escape-master-tasks.js')
   var templates = masterTasks.ESCAPE_MASTER_TEMPLATES
-  var districtsData = require('../../packageSync/data/guangzhou-districts.js')
+  var districtsData = require('../../data/guangzhou-districts.js')
   var allDistricts = districtsData.GUANGZHOU_DISTRICTS.map(function (d) { return d.name })
   var templateDistricts = {}
   templates.forEach(function (t) { templateDistricts[t.district] = true })
@@ -865,7 +865,7 @@ test('45 条模板覆盖全部 11 区', function () {
 })
 
 test('45 条模板覆盖全部 10 类主题（不含 custom）', function () {
-  var masterTasks = require('../../packageSync/data/escape-master-tasks.js')
+  var masterTasks = require('../../data/escape-master-tasks.js')
   var templates = masterTasks.ESCAPE_MASTER_TEMPLATES
   var expectedCategories = ['walk', 'art', 'salon', 'coffee', 'book', 'market', 'sport', 'music', 'photo', 'food']
   var templateCategories = {}
@@ -876,8 +876,8 @@ test('45 条模板覆盖全部 10 类主题（不含 custom）', function () {
 })
 
 test('45 条模板的 poiId 全部存在于 guangzhou-pois', function () {
-  var masterTasks = require('../../packageSync/data/escape-master-tasks.js')
-  var poisData = require('../../packageSync/data/guangzhou-pois.js')
+  var masterTasks = require('../../data/escape-master-tasks.js')
+  var poisData = require('../../data/guangzhou-pois.js')
   var templates = masterTasks.ESCAPE_MASTER_TEMPLATES
   for (var i = 0; i < templates.length; i++) {
     var poi = poisData.getPOIById(templates[i].poiId)
@@ -886,7 +886,7 @@ test('45 条模板的 poiId 全部存在于 guangzhou-pois', function () {
 })
 
 test('45 条模板的 templateId 无重复', function () {
-  var masterTasks = require('../../packageSync/data/escape-master-tasks.js')
+  var masterTasks = require('../../data/escape-master-tasks.js')
   var templates = masterTasks.ESCAPE_MASTER_TEMPLATES
   var ids = {}
   for (var i = 0; i < templates.length; i++) {
@@ -896,7 +896,7 @@ test('45 条模板的 templateId 无重复', function () {
 })
 
 test('45 条模板的 maxMembers 全部在 3-6 范围', function () {
-  var masterTasks = require('../../packageSync/data/escape-master-tasks.js')
+  var masterTasks = require('../../data/escape-master-tasks.js')
   var templates = masterTasks.ESCAPE_MASTER_TEMPLATES
   for (var i = 0; i < templates.length; i++) {
     var m = templates[i].maxMembers

@@ -10,7 +10,7 @@
 
 'use strict'
 
-var playerMatcher = require('../../packageSync/utils/player-matcher.js')
+var playerMatcher = require('../../utils/player-matcher.js')
 
 // ===== 测试统计 =====
 var passCount = 0

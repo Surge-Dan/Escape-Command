@@ -12,7 +12,7 @@
 
 var assert = require('assert')
 
-var matcher = require('../../packageSync/utils/player-matcher.js')
+var matcher = require('../../utils/player-matcher.js')
 
 // ===== 测试框架（支持同步 + 异步）=====
 

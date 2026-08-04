@@ -16,7 +16,7 @@ const projectRoot = path.resolve(__dirname, '..', '..')
 const sources = [
   {
     name: 'group-room-store.js',
-    path: 'packageSync/utils/group-room-store.js',
+    path: 'utils/group-room-store.js',
     // 测试套件：哪些测试文件覆盖此源
     testFiles: [
       'tests/unit/store.test.js',
@@ -73,7 +73,7 @@ const sources = [
   },
   {
     name: 'player-matcher.js',
-    path: 'packageSync/utils/player-matcher.js',
+    path: 'utils/player-matcher.js',
     testFiles: [
       'tests/unit/player-matcher.test.js',
       'tests/property/player-matcher-property.test.js',
@@ -85,7 +85,7 @@ const sources = [
   },
   {
     name: 'trust-score.js',
-    path: 'packageSync/utils/trust-score.js',
+    path: 'utils/trust-score.js',
     testFiles: [
       'tests/unit/trust-score.test.js',
       'tests/qa/check.js'
@@ -95,7 +95,7 @@ const sources = [
   },
   {
     name: 'player-trust-store.js',
-    path: 'packageSync/utils/player-trust-store.js',
+    path: 'utils/player-trust-store.js',
     testFiles: [
       'tests/unit/player-trust-store.test.js',
       'tests/qa/check.js'
@@ -105,7 +105,7 @@ const sources = [
   },
   {
     name: 'chat-store.js',
-    path: 'packageSync/utils/chat-store.js',
+    path: 'utils/chat-store.js',
     testFiles: [
       'tests/unit/chat-store.test.js',
       'tests/qa/check.js'

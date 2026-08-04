@@ -1,4 +1,4 @@
-// tests/adversarial/quick-match-attack.test.js
+﻿// tests/adversarial/quick-match-attack.test.js
 // B3 quick-match-engine 对抗式测试
 // 运行: node tests/adversarial/quick-match-attack.test.js
 //
@@ -12,7 +12,7 @@
 
 'use strict'
 
-const qm = require('../../packageSync/utils/quick-match-engine.js')
+const qm = require('../../utils/quick-match-engine.js')
 
 let passCount = 0
 let failCount = 0

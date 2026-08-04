@@ -9,7 +9,7 @@
 
 var assert = require('assert')
 
-var trustScore = require('../../packageSync/utils/trust-score.js')
+var trustScore = require('../../utils/trust-score.js')
 var computeTrustScore = trustScore.computeTrustScore
 var isValidReview = trustScore.isValidReview
 var tierFromScore = trustScore.tierFromScore

@@ -325,17 +325,8 @@ heroSubText: '选个时长，给城市一个随机出口',
   // 实际路由逻辑（转动动画结束后调用）
   routeDice(dice) {
     if (dice.id === 'micro') {
-      // 微逃：弹细分窗，推荐时长仅作参考（用户必须自己选）
-      let records = []
-      try { records = wx.getStorageSync('records') || [] } catch (e) {}
-      const rec = recommendDuration(records)
-      this.setData({
-        showMicroSheet: true,
-        recommendedDuration: rec.duration,
-        isRecommended: rec.isRecommended,
-        // 关键：不再自动选中任何时长，用户必须自己选
-        selectedDuration: 0
-      })
+      // 微逃：跳转到 7 维度条件选择页（chenhao 设计）
+      wx.navigateTo({ url: '/pages/dice-micro-7d/dice-micro-7d' })
     } else if (dice.id === 'sync') {
       // sync-dice-sheet: 不再直达创建页，先弹底部 Sheet 让用户选择出逃方式
       this.setData({ showDiceSheet: true })

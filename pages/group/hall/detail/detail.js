@@ -1,4 +1,4 @@
-﻿// pages/group/hall/detail/detail.js
+// pages/group/hall/detail/detail.js
 // C-P3 任务详情页
 //
 // 职责：
@@ -12,9 +12,9 @@
 // 风格对齐 pages/group/hall/hall.js（nav-header + applyNavMetrics + onBackTap + getCurrentUser）
 
 const app = getApp()
-const hallStore = require('../../../../utils/task-hall-store.js')
-const roomStore = require('../../../../utils/group-room-store.js')
-const trustStore = require('../../../../utils/player-trust-store.js')
+const hallStore = require('../../../utils/task-hall-store.js')
+const roomStore = require('../../../utils/group-room-store.js')
+const trustStore = require('../../../utils/player-trust-store.js')
 
 // 当前用户 openId 存储 key（与 group-room-store.js / hall.js 同源）
 const OPENID_KEY = 'localHostOpenId'

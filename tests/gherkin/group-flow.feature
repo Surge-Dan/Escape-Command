@@ -1,4 +1,4 @@
-# tests/gherkin/group-flow.feature
+﻿# tests/gherkin/group-flow.feature
 # 同频组局完整流程 BDD 场景
 # 覆盖 C-01 到 C-08
 
@@ -403,13 +403,13 @@ Feature: 同频组局完整流程
   Scenario: 选择邀请好友组局
     Given 用户点击同频骰子并看到分流 Sheet
     When 用户选择「邀请好友组局」
-    Then 跳转到 packageSync/pages/group/create 创建房间流程
+    Then 跳转到 pages/group/create 创建房间流程
 
   @c-p3 @entry
   Scenario: 选择进入任务大厅
     Given 用户点击同频骰子并看到分流 Sheet
     When 用户选择「进入任务大厅找搭子」
-    Then 跳转到 packageSync/pages/group/hall 任务大厅页
+    Then 跳转到 pages/group/hall 任务大厅页
 
   # ----- 任务大厅页面 -----
   @c-p3 @hall

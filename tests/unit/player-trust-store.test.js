@@ -11,7 +11,7 @@ var assert = require('assert')
 var wx = require('../mock-wx.js')
 global.wx = wx
 
-var store = require('../../packageSync/utils/player-trust-store.js')
+var store = require('../../utils/player-trust-store.js')
 
 // ===== 测试框架（顺序执行 + 每个 test 内部 setup/teardown，确保异步隔离）=====
 

@@ -13,7 +13,7 @@
 const wx = require('../mock-wx.js')
 global.wx = wx
 
-const store = require('../../packageSync/utils/group-room-store.js')
+const store = require('../../utils/group-room-store.js')
 const I = store._internal
 
 // ===== 测试统计 =====

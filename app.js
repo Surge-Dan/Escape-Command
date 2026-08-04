@@ -1,4 +1,4 @@
-const { normalizeType, getTypeMeta, MOODS, DEFAULT_STEPS, TYPE_STEPS } = require('./utils/constants.js')
+const { normalizeType, getTypeMeta, getBreakthroughScene, MOODS, DEFAULT_STEPS, TYPE_STEPS } = require('./utils/constants.js')
 const BADGES = require('./data/badges.js')
 const challenges = require('./data/challenges.js')
 const themes = require('./data/themes.js')
@@ -251,7 +251,7 @@ App({
       typeColor: cmd.typeColor || meta.color,
       typeName: meta.name,
       typeIcon: meta.icon,
-      illustration: meta.scene,
+      illustration: type === 'breakthrough' ? getBreakthroughScene(cmd.id) : (cmd.illustration || meta.scene),
       distance: cmd.distance || (cmd.duration <= 15 ? '300m' : '1km'),
       people: cmd.people || (cmd.social || cmd.double ? '一人或朋友' : '一个人'),
       difficulty: cmd.difficulty || 1,

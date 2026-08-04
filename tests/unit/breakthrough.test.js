@@ -13,7 +13,7 @@
 
 'use strict'
 
-const { TYPE_META, MODE_LIST, HOME_DICE_LIST, TYPE_STEPS, normalizeType, getTypeMeta } = require('../../utils/constants.js')
+const { TYPE_META, MODE_LIST, HOME_DICE_LIST, TYPE_STEPS, normalizeType, getTypeMeta, BREAKTHROUGH_SCENES, getBreakthroughScene } = require('../../utils/constants.js')
 const btData = require('../../data/breakthrough-commands.js')
 const BREAKTHROUGH_COMMANDS = btData.BREAKTHROUGH_COMMANDS
 
@@ -201,6 +201,51 @@ describe('2. constants 配置一致性', () => {
     const steps = TYPE_STEPS.breakthrough
     assert(Array.isArray(steps), 'TYPE_STEPS.breakthrough 应为数组')
     assertEqual(steps.length, 4, '应为 4 步')
+  })
+
+  it('BREAKTHROUGH_SCENES 应含 5 个类别，每类 5 张插画', () => {
+    const keys = Object.keys(BREAKTHROUGH_SCENES)
+    assertEqual(keys.length, 5, '应有 5 个类别')
+    const prefixes = { street: 'bt-street-', role: 'bt-role-', fate: 'bt-fate-', reverse: 'bt-reverse-', endurance: 'bt-endurance-' }
+    keys.forEach(k => {
+      assert(Array.isArray(BREAKTHROUGH_SCENES[k]), k + ' 应为数组')
+      assertEqual(BREAKTHROUGH_SCENES[k].length, 5, k + ' 应有 5 张插画')
+      BREAKTHROUGH_SCENES[k].forEach(p => {
+        assert(typeof p === 'string' && p.indexOf('/assets/images/' + prefixes[k]) === 0, k + ' 命名应为 /assets/images/' + prefixes[k] + '<1-5>.png，实际: ' + p)
+      })
+    })
+  })
+
+  it('TYPE_META.breakthrough.scene 应指向破圈专属插画（而非感官体验占位图）', () => {
+    assertEqual(TYPE_META.breakthrough.scene, BREAKTHROUGH_SCENES.street[0], '兜底 scene 应为街头社死第 1 张')
+    assert(TYPE_META.breakthrough.scene.indexOf('sense-scene') < 0, '不应再使用 sense-scene.webp 作为破圈兜底')
+  })
+
+  it('getBreakthroughScene 按 id 区间映射 5 大类别（随机取组内一张）', () => {
+    assert(BREAKTHROUGH_SCENES.street.indexOf(getBreakthroughScene('bt001')) >= 0, 'bt001 应属于街头社死组')
+    assert(BREAKTHROUGH_SCENES.street.indexOf(getBreakthroughScene('bt020')) >= 0, 'bt020 应属于街头社死组')
+    assert(BREAKTHROUGH_SCENES.role.indexOf(getBreakthroughScene('bt021')) >= 0, 'bt021 应属于身份偷窃组')
+    assert(BREAKTHROUGH_SCENES.role.indexOf(getBreakthroughScene('bt040')) >= 0, 'bt040 应属于身份偷窃组')
+    assert(BREAKTHROUGH_SCENES.fate.indexOf(getBreakthroughScene('bt041')) >= 0, 'bt041 应属于随机命运组')
+    assert(BREAKTHROUGH_SCENES.fate.indexOf(getBreakthroughScene('bt060')) >= 0, 'bt060 应属于随机命运组')
+    assert(BREAKTHROUGH_SCENES.reverse.indexOf(getBreakthroughScene('bt061')) >= 0, 'bt061 应属于反向世界组')
+    assert(BREAKTHROUGH_SCENES.reverse.indexOf(getBreakthroughScene('bt080')) >= 0, 'bt080 应属于反向世界组')
+    assert(BREAKTHROUGH_SCENES.endurance.indexOf(getBreakthroughScene('bt081')) >= 0, 'bt081 应属于极限忍耐组')
+    assert(BREAKTHROUGH_SCENES.endurance.indexOf(getBreakthroughScene('bt100')) >= 0, 'bt100 应属于极限忍耐组')
+  })
+
+  it('getBreakthroughScene 非法 id 回退街头社死组（不抛错）', () => {
+    [undefined, null, '', 'xxx', 'bt000', 'bt999'].forEach(id => {
+      assert(BREAKTHROUGH_SCENES.street.indexOf(getBreakthroughScene(id)) >= 0, '非法 id=' + String(id) + ' 应回退街头社死组')
+    })
+  })
+
+  it('100 条破圈指令应能全部映射到专属插画', () => {
+    BREAKTHROUGH_COMMANDS.forEach(c => {
+      const scene = getBreakthroughScene(c.id)
+      assert(typeof scene === 'string' && scene.indexOf('/assets/images/bt-') === 0, c.id + ' 应映射到 bt- 前缀插画: ' + scene)
+      assert(scene.indexOf('sense-scene') < 0, c.id + ' 不应映射到 sense-scene')
+    })
   })
 })
 

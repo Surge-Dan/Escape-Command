@@ -16,8 +16,33 @@ const TYPE_META = {
   collect: { name: '收藏拼贴', color: '#C9B037', icon: '/assets/icons/bookmark.svg', pin: '/assets/icons/pin-collect.svg', scene: '/assets/images/collect-scene.webp' },
   food: { name: '美食探索', color: '#A67C52', icon: '/assets/icons/coffee.svg', pin: '/assets/icons/pin-food.svg', scene: '/assets/images/food-scene.webp' },
   culture: { name: '如实文化', color: '#5CBF9E', icon: '/assets/icons/compass-brand.svg', pin: '/assets/icons/pin-culture.svg', scene: '/assets/images/culture-scene.webp' },
-  breakthrough: { name: '破圈行动', color: '#9B7BB8', icon: '/assets/icons/breakthrough-dice-purple.svg', pin: '/assets/icons/breakthrough-dice-purple.svg', scene: '/assets/images/sense-scene.webp' },
+  breakthrough: { name: '破圈行动', color: '#9B7BB8', icon: '/assets/icons/breakthrough-dice-purple.svg', pin: '/assets/icons/breakthrough-dice-purple.svg', scene: '/assets/images/bt-street-1.png' },
   custom: { name: '自定义', color: '#E07A5F', icon: '/assets/icons/pin-color.svg', pin: '/assets/icons/pin-color.svg', scene: '/assets/images/color-scene.webp' }
+}
+
+// v19: 破圈骰子 5 大类别专属插画，每类 5 张，前端随机取一张（紫罗兰主色调与破圈主题统一）
+// 类别划分与 data/breakthrough-commands.js 注释一致：
+//   bt001-020 街头社死 | bt021-040 身份偷窃 | bt041-060 随机命运 | bt061-080 反向世界 | bt081-100 极限忍耐
+// 命名规范：bt-<类别>-<1~5>.png，存放于 assets/images/
+const BREAKTHROUGH_SCENES = {
+  street: ['/assets/images/bt-street-1.png', '/assets/images/bt-street-2.png', '/assets/images/bt-street-3.png', '/assets/images/bt-street-4.png', '/assets/images/bt-street-5.png'],
+  role: ['/assets/images/bt-role-1.png', '/assets/images/bt-role-2.png', '/assets/images/bt-role-3.png', '/assets/images/bt-role-4.png', '/assets/images/bt-role-5.png'],
+  fate: ['/assets/images/bt-fate-1.png', '/assets/images/bt-fate-2.png', '/assets/images/bt-fate-3.png', '/assets/images/bt-fate-4.png', '/assets/images/bt-fate-5.png'],
+  reverse: ['/assets/images/bt-reverse-1.png', '/assets/images/bt-reverse-2.png', '/assets/images/bt-reverse-3.png', '/assets/images/bt-reverse-4.png', '/assets/images/bt-reverse-5.png'],
+  endurance: ['/assets/images/bt-endurance-1.png', '/assets/images/bt-endurance-2.png', '/assets/images/bt-endurance-3.png', '/assets/images/bt-endurance-4.png', '/assets/images/bt-endurance-5.png']
+}
+
+// v19: 按破圈指令 id 区间定位类别，再随机取该类别一张插画
+// 纯函数，id 非法/未知时回退街头社死组，保证任何破圈指令都有贴切配图
+function getBreakthroughScene(id) {
+  const n = parseInt(String(id == null ? '' : id).replace(/\D/g, ''), 10)
+  let group = BREAKTHROUGH_SCENES.street
+  if (n >= 1 && n <= 20) group = BREAKTHROUGH_SCENES.street
+  else if (n >= 21 && n <= 40) group = BREAKTHROUGH_SCENES.role
+  else if (n >= 41 && n <= 60) group = BREAKTHROUGH_SCENES.fate
+  else if (n >= 61 && n <= 80) group = BREAKTHROUGH_SCENES.reverse
+  else if (n >= 81 && n <= 100) group = BREAKTHROUGH_SCENES.endurance
+  return group[Math.floor(Math.random() * group.length)]
 }
 
 const MODE_LIST = [
@@ -92,4 +117,4 @@ function getTypeMeta(type) {
   return TYPE_META[normalizeType(type)] || TYPE_META.walk
 }
 
-module.exports = { TYPE_ALIASES, TYPE_META, MODE_LIST, SHEET_MODES, HOME_DICE_LIST, FILTERS, MOODS, BADGES, DEFAULT_STEPS, TYPE_STEPS, normalizeType, getTypeMeta }
+module.exports = { TYPE_ALIASES, TYPE_META, BREAKTHROUGH_SCENES, getBreakthroughScene, MODE_LIST, SHEET_MODES, HOME_DICE_LIST, FILTERS, MOODS, BADGES, DEFAULT_STEPS, TYPE_STEPS, normalizeType, getTypeMeta }

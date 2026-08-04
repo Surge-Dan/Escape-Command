@@ -13,6 +13,9 @@ miniprogramRoot_backup/
 demo/
 screenshots/
 recordings/
+# 参考视频（大文件，不进 git，不进主包；packOptions.ignore 已排除 *.mp4）
+docs/video/
+*.mp4
 
 # ======================
 # Spec / 文档（团队文档托管在飞书，仓库里只留索引）
@@ -53,6 +56,10 @@ cloudfunctions/*/.envrc
 *.log
 *.local
 .cache/
+# 测试运行输出（run-all.js 会写日志）
+run-all-output/
+# 微信开发者工具 IDE 临时缓存
+.ide-cache/
 
 # ======================
 # 敏感配置（绝不能进 git）

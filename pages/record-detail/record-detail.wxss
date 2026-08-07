@@ -12,19 +12,29 @@
   text-align: center;
 }
 .empty-illust { width: 160rpx; height: 160rpx; margin-bottom: 32rpx; }
-.empty-title { font-size: 30rpx; font-weight: 600; color: var(--ink); }
-.empty-desc { margin-top: 12rpx; font-size: 26rpx; color: var(--ink-soft); line-height: 1.5; }
-.empty-btn { margin-top: 32rpx; min-width: 200rpx; }
+.empty-title { font-size: 32rpx; font-weight: 700; color: var(--ink); font-family: var(--serif); }
+.empty-desc { margin-top: 12rpx; font-size: 26rpx; color: var(--ink-soft); line-height: 1.6; letter-spacing: 0.3rpx; }
+.empty-btn {
+  margin-top: 32rpx;
+  min-width: 200rpx;
+  padding: 20rpx 48rpx;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  font-size: 28rpx;
+  font-weight: 600;
+  box-shadow: var(--shadow-btn);
+}
 
 /* 拍立得大卡 */
 .polaroid-card {
   width: 580rpx;
   margin: 16rpx auto 0;
   padding: 24rpx 24rpx 32rpx;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--white);
-  box-shadow: var(--shadow-popup);
-  border: var(--border);
+  box-shadow: 0 12rpx 40rpx rgba(91, 143, 185, 0.18);
+  border: 1rpx solid var(--border-soft);
   animation: polaroidIn 500ms var(--ease-bounce);
 }
 
@@ -101,6 +111,7 @@
   font-size: 32rpx;
   font-weight: 700;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 /* v6: 元信息栏 4 项均匀，图标在上文字在下 */
@@ -136,7 +147,13 @@
 }
 
 /* 完成的指令卡 */
-.cmd-card { padding: 28rpx; }
+.cmd-card {
+  padding: 28rpx;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+}
 .cmd-type {
   display: inline-flex;
   align-items: center;
@@ -152,6 +169,7 @@
   font-weight: 700;
   color: var(--ink);
   line-height: 1.4;
+  font-family: var(--serif);
 }
 .cmd-content {
   display: block;
@@ -162,7 +180,13 @@
 }
 
 /* C-12: 同频记录 - 和朋友一起 */
-.group-card { padding: 28rpx; }
+.group-card {
+  padding: 28rpx;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+}
 .group-members-row {
   display: flex;
   flex-wrap: wrap;
@@ -172,13 +196,13 @@
 .group-member-tag {
   padding: 8rpx 20rpx;
   border-radius: var(--radius-pill);
-  background: #5CBF9E1A;
-  color: #2E8B6F;
+  background: var(--heal-tint);
+  color: var(--success);
   font-size: 24rpx;
   font-weight: 600;
 }
 .group-timeline {
-  border-top: 1rpx solid rgba(0,0,0,0.06);
+  border-top: 1rpx solid var(--line);
   padding-top: 20rpx;
 }
 .timeline-item {
@@ -192,8 +216,8 @@
   width: 40rpx;
   height: 40rpx;
   border-radius: 50%;
-  background: #EEE;
-  color: #999;
+  background: var(--brand-weak);
+  color: var(--ink-faint);
   font-size: 22rpx;
   font-weight: 600;
   display: flex;
@@ -201,8 +225,8 @@
   justify-content: center;
 }
 .timeline-dot.done {
-  background: #5CBF9E;
-  color: #fff;
+  background: var(--brand);
+  color: var(--white);
 }
 .timeline-body {
   flex: 1;
@@ -224,7 +248,7 @@
   color: var(--ink-faint);
 }
 
-.bottom-spacer { height: 280rpx; }
+.bottom-spacer { height: calc(280rpx + var(--safe-bottom)); }
 
 /* 底部操作栏：3 按钮均分，图标在上文字在下 */
 .action-bar {
@@ -238,7 +262,7 @@
   padding: 24rpx 40rpx calc(16rpx + env(safe-area-inset-bottom));
   background: var(--white);
   border-top: 1rpx solid var(--line);
-  box-shadow: 0 -2rpx 16rpx rgba(46, 47, 51, 0.04);
+  box-shadow: 0 -2rpx 16rpx rgba(91, 143, 185, 0.06);
 }
 .action-btn {
   flex: 1;

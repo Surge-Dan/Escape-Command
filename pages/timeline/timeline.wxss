@@ -21,7 +21,7 @@
   gap: 8rpx;
   padding: 14rpx 28rpx;
   background: var(--white);
-  border: 2rpx solid var(--border);
+  border: var(--border);
   border-radius: var(--radius-pill);
   font-size: 26rpx;
   color: var(--ink-soft);
@@ -33,7 +33,7 @@
   background: var(--brand);
   border-color: var(--brand);
   color: var(--white);
-  box-shadow: 0 4rpx 16rpx rgba(200, 149, 110, 0.24);
+  box-shadow: 0 4rpx 16rpx rgba(91, 143, 185, 0.24);
 }
 
 .filter-chip:active { transform: scale(0.96); }
@@ -55,7 +55,7 @@
   right: 0;
   top: 0;
   bottom: 0;
-  background: rgba(46, 47, 51, 0.12);
+  background: rgba(45, 90, 123, 0.12);
   z-index: 50;
 }
 
@@ -63,7 +63,7 @@
   position: relative;
   margin: -8rpx 40rpx 0;
   background: var(--white);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   border: var(--border);
   box-shadow: var(--shadow-elevated);
   padding: 20rpx;
@@ -143,7 +143,7 @@
   height: 18rpx;
   border-radius: 50%;
   background: var(--brand);
-  box-shadow: 0 0 0 6rpx rgba(200, 149, 110, 0.16);
+  box-shadow: 0 0 0 6rpx rgba(91, 143, 185, 0.16);
   flex-shrink: 0;
   margin-top: 6rpx;
 }
@@ -166,6 +166,7 @@
   font-weight: 700;
   color: var(--ink);
   line-height: 1.2;
+  font-family: var(--serif);
 }
 
 .date-tag-row {
@@ -219,12 +220,12 @@
   width: 160rpx;
   height: 188rpx;
   background: var(--white);
-  border: 2rpx solid rgba(122, 78, 43, 0.08);
+  border: 1rpx solid var(--border-soft);
   border-radius: 8rpx;
   padding: 10rpx 10rpx 32rpx;
   position: relative;
   flex-shrink: 0;
-  box-shadow: 0 4rpx 14rpx rgba(46, 47, 51, 0.10);
+  box-shadow: 0 4rpx 14rpx rgba(91, 143, 185, 0.12);
   transition: transform 200ms var(--ease-standard);
 }
 
@@ -305,6 +306,7 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
+  font-family: var(--serif);
 }
 
 .record-meta-row {
@@ -371,7 +373,7 @@
 }
 
 .bottom-spacer {
-  height: 60rpx;
+  height: calc(60rpx + var(--safe-bottom));
 }
 
 /* 空状态 */
@@ -393,10 +395,10 @@
   width: 220rpx;
   height: 240rpx;
   background: var(--white);
-  border: 2rpx solid rgba(122, 78, 43, 0.08);
+  border: 1rpx solid var(--border-soft);
   border-radius: var(--radius-sm);
   padding: 16rpx 16rpx 40rpx;
-  box-shadow: 0 8rpx 24rpx rgba(46, 47, 51, 0.10);
+  box-shadow: 0 8rpx 24rpx rgba(91, 143, 185, 0.12);
   transform: rotate(-3deg);
   animation: floatSoft 3s var(--ease-standard) infinite;
 }
@@ -408,8 +410,8 @@
     45deg,
     var(--canvas),
     var(--canvas) 12rpx,
-    rgba(122, 78, 43, 0.04) 12rpx,
-    rgba(122, 78, 43, 0.04) 24rpx
+    rgba(91, 143, 185, 0.04) 12rpx,
+    rgba(91, 143, 185, 0.04) 24rpx
   );
   border-radius: 6rpx;
 }
@@ -423,6 +425,7 @@
   font-size: 32rpx;
   font-weight: 600;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .empty-desc {
@@ -438,12 +441,12 @@
   margin-top: 48rpx;
   padding: 22rpx 60rpx;
   min-height: 88rpx;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   color: var(--white);
   border-radius: var(--radius-pill);
   font-size: 28rpx;
   font-weight: 600;
-  box-shadow: 0 4rpx 16rpx rgba(200, 149, 110, 0.24);
+  box-shadow: var(--shadow-btn);
   transition: transform 150ms var(--ease-standard);
 }
 

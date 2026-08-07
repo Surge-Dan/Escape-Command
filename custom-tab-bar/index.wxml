@@ -7,14 +7,7 @@
     data-index="{{index}}"
     bindtap="switchTab"
   >
-    <view class="tabbar-icon-wrap">
-      <image
-        class="tabbar-icon"
-        src="{{selected === index ? item.iconActive : item.icon}}"
-        mode="aspectFit"
-      ></image>
-    </view>
-    <text class="tabbar-label">{{item.text}}</text>
+    <text class="tabbar-text">{{item.text}}</text>
   </view>
 </view>
 <view class="tabbar-placeholder"></view>

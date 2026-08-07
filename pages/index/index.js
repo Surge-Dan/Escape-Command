@@ -1,4 +1,4 @@
-﻿const app = getApp()
+const app = getApp()
 const { MODE_LIST, SHEET_MODES, HOME_DICE_LIST, getTypeMeta } = require('../../utils/constants.js')
 
 Page({
@@ -7,22 +7,19 @@ Page({
     capsuleTop: 26,
     navHeaderStyle: '',
     fontLoaded: false,
-    // v4: 模式选择 —— 仅展示 3 个核心模式 Sheet
     selectedMode: 'smart',
     sheetModes: SHEET_MODES,
     currentModeMeta: SHEET_MODES[0],
-    // 保留 6 个 MODE_LIST 给 hero / 双人 / 雨天等状态切换使用
     modes: MODE_LIST,
     rolling: false,
     isBouncing: false,
     selectedCommand: null,
     collected: false,
-    greetingText: '早啊',
+    greetingText: '早安',
     locationText: '当前位置附近',
-    weatherText: '26℃ 晴',
-    // v8: 参考风格 hero —— 强调词 + 真实日期 + 副标题
-    heroEmphasis: '出去走走',
-    heroTail: '换个节奏',
+    weatherText: '',
+    heroEmphasis: '今天',
+    heroTail: '出去走走',
     weekdayText: '周一',
     dateText: '今日',
     collectedCount: 0,
@@ -30,55 +27,54 @@ Page({
     showBadgeEarned: false,
     earnedBadges: [],
     invitedByFriend: false,
-    friendRollHint: false,  // B4-D: 朋友替你摇的指令提示
-    // v3 Hero 区：随选中模式切换
-    heroColor: '#5CBF9E',
+    friendRollHint: false,
+    heroColor: '#5B8FB9',
     heroScene: '/assets/images/color-scene.webp',
-    heroDesc: '算法懂你，随机推荐',
+    heroDesc: '选个时长，给城市一个随机出口',
     nightHint: false,
-    // v3 每日推荐（即"推荐出逃任务"）
     dailyRecommend: [],
-    // C-P8: 出逃记录板块（上次 + 最近）
     lastRecord: null,
     recentRecords: [],
-    // home-dice-entry-01: 3 骰子 Cover Flow 状态机
-    diceList: HOME_DICE_LIST,
+    diceList: [
+      { id: 'micro',       name: '微出逃',   icon: '/assets/icons/sprout-brand-strong.svg',  color: '#7BAE7F', desc: '碎片时间，快速出逃', prefix: 'dice-red' },
+      { id: 'sync',        name: '同频组局', icon: '/assets/icons/dice-5-brand-strong.svg', color: '#5CBF9E', desc: '约上朋友，一起出逃', prefix: 'dice-green' },
+      { id: 'breakthrough', name: '破圈出逃', icon: '/assets/icons/breakthrough-dice-purple.svg', color: '#9B7BB8', desc: '做一件平时不会做的事', prefix: 'dice-purple' }
+    ],
     currentDiceIndex: 0,
     isSliding: false,
     touchStartX: 0,
-    // home-dice-entry-01: 点击掷骰转动动画
     isRolling: false,
-    // home-dice-entry-01: 微逃细分弹窗
     showMicroSheet: false,
     selectedDuration: 0,
     recommendedDuration: 0,
     isRecommended: false,
-    // sync-dice-sheet: 同频骰子入口选择弹层
     showDiceSheet: false,
-    // v18 破圈骰子
     showLegacyDice: false,
     breakthroughRemainCount: 5,
     isBreakthroughRolling: false,
-    // v18: Hero 副标题（随选中骰子切换）
-heroSubText: '选个时长，给城市一个随机出口',
-    theme: 'default'
+    heroSubText: '用15分钟，给城市一个随机出口',
+    theme: 'default',
+    currentModeName: '微出逃',
+    dicePositions: { micro: 'center', sync: 'right', breakthrough: 'left' },
+    currentDiceFace: {
+      micro: '/assets/images/红色骰子3d.png',
+      breakthrough: '/assets/images/紫色骰子3d.png',
+      sync: '/assets/images/绿色骰子3d.png'
+    }
   },
+
+  _autoSwitchTimer: null,
 
   onLoad(options) {
     this.applyNavMetrics()
-    // v7: onboarding 检测 —— 双重保险（localStorage + globalData），仅首次未完成才弹
     const localOnboarded = wx.getStorageSync('onboarded')
     if (!localOnboarded && !app.globalData.onboarded) {
-      // 同步把 globalData 也更新一下，避免后续页面读错
       app.globalData.onboarded = false
-      // v7 guard：设置 flag，阻止 onShow 在 redirect 期间执行逻辑
       this._redirecting = true
-      // 立即跳转（reLaunch 更稳妥，关闭所有页面栈避免竞态）
       setTimeout(() => {
         wx.reLaunch({
           url: '/pages/onboarding/onboarding',
           fail: () => {
-            // 跳转失败时恢复状态，避免 onShow 永远被跳过
             this._redirecting = false
             this.refreshState()
           }
@@ -86,35 +82,30 @@ heroSubText: '选个时长，给城市一个随机出口',
       }, 0)
       return
     }
-    // 修正：storage 里有 true 但 globalData 可能是初始 false，同步一下
     if (localOnboarded && !app.globalData.onboarded) {
       app.globalData.onboarded = true
     }
     this._redirecting = false
     this.checkNightMode()
     this.refreshState()
-    this.loadDailyRecommend()
+    this.updateDicePositions()
+    this.startAutoSwitch()
     this.loadEscapeRecords()
+    this.loadDailyRecommend()
     this.loadFontFace()
-    // home-dice-entry-01: 恢复上次选中的骰子位置
     this.restoreLastDiceIndex()
-    // 破圈指令池后台预热：进入首页 1.5s 后异步加载，避免首次点破圈骰子卡顿
-    // 不阻塞启动主流程
     if (app.preloadBreakthroughPool) app.preloadBreakthroughPool()
     if (options && options.mode === 'double' && options.cmd) this.applyInvitation(options.cmd)
-    // B4-D: 替朋友摇一次 —— 从分享链接进入，直接展示朋友摇的指令
     if (options && options.rollForFriend === '1' && options.cmd) {
       this.applyFriendRoll(options.cmd)
     }
   },
 
-  // B4-D: 应用朋友替你摇的指令
   applyFriendRoll(cmdId) {
     const decodedId = decodeURIComponent(cmdId)
     const pool = app.globalData.commandPool || []
     const cmd = pool.find(c => c.id === decodedId)
     if (!cmd) {
-      // 指令池未加载或指令已失效，提示并兜底
       wx.showToast({ title: '朋友摇的指令已失效，自己摇一个吧', icon: 'none', duration: 2500 })
       return
     }
@@ -126,40 +117,29 @@ heroSubText: '选个时长，给城市一个随机出口',
         typeIcon: meta.icon,
         illustration: cmd.illustration || meta.scene
       }),
-      friendRollHint: true  // 显示「朋友替你摇的」标签
+      friendRollHint: true
     })
-    // 数据埋点：替朋友摇一次 - 接收方
     try {
       const tracker = require('../../utils/tracker.js')
       tracker.track('friend_roll_receive', { cmdId: decodedId })
     } catch (e) {}
   },
 
-  // home-dice-entry-01: 读取持久化的骰子 index，兼容旧值与越界
   restoreLastDiceIndex() {
     try {
       const last = wx.getStorageSync('lastDiceIndex')
       const list = this.data.diceList || []
       if (typeof last === 'number' && last >= 0 && last < list.length) {
-        this.setData({ currentDiceIndex: last })
+        this.setData({ currentDiceIndex: last }, () => {
+          this.updateDicePositions()
+          this.updateHeroByDice()
+        })
       }
     } catch (e) {}
   },
 
   loadFontFace() {
-    // 包体瘦身（2026-07-28）：fonts/ 已从仓库移走（主包减重 1.4MB）。
-    // 字体文件目前走系统字体兜底（见 index.wxss 字体栈）。
-    // TODO 后续 Spec：将字体放到云存储 / CDN，改为远程 URL：
-    //   source: 'url("https://your-cdn.example.com/fonts/source-han-serif-cn-bold.woff2")'
-    // 当前实现：直接跳过 wx.loadFontFace，避免 console 噪音。
     this.setData({ fontLoaded: true })
-
-    // 历史 v10/v11/v12 实现（暂时禁用，保留作为恢复参考）
-    // wx.loadFontFace({
-    //   family: 'SourceHanSerifBold',
-    //   source: 'url("/assets/fonts/source-han-serif-cn-bold.woff2")',
-    //   ...
-    // })
   },
 
   applyInvitation(cmdId) {
@@ -180,22 +160,27 @@ heroSubText: '选个时长，给城市一个随机出口',
   },
 
   onShow() {
-    // v7 guard：onLoad 已决定 redirect 到 onboarding，跳过本页逻辑避免竞态
     if (this._redirecting) return
     this.applyNavMetrics()
     this.setData({ theme: app.globalData.theme || 'default' })
     this.refreshState()
-    this.loadDailyRecommend()
     this.loadEscapeRecords()
+    this.loadDailyRecommend()
     if (typeof this.getTabBar === 'function' && this.getTabBar()) this.getTabBar().setData({ selected: 0 })
-    // 从完成页返回时清除已过期的指令显示
     if (this.data.selectedCommand && !app.globalData.currentCommand) {
       this.setData({ selectedCommand: null })
     }
+    this.resetDiceFace()
+    this.startAutoSwitch()
   },
 
-  onHide() {},
-  onUnload() {},
+  onHide() {
+    this.stopAutoSwitch()
+  },
+
+  onUnload() {
+    this.stopAutoSwitch()
+  },
 
   applyNavMetrics() {
     const nav = app.getNavMetrics ? app.getNavMetrics() : {}
@@ -206,13 +191,9 @@ heroSubText: '选个时长，给城市一个随机出口',
     })
   },
 
-  // v2 修正：问候语单行「问候，地点 温度 天气」
   refreshState() {
     const gd = app.globalData
     const greetingData = this.buildGreeting()
-    const subText = this.data.currentDiceIndex === 0
-      ? '用 15 分钟，给城市一个随机出口'
-      : '破圈骰子 · 做一件平时不会做的事'
     this.setData({
       greetingText: greetingData.text,
       locationText: greetingData.location,
@@ -223,9 +204,9 @@ heroSubText: '选个时长，给城市一个随机出口',
       dateText: greetingData.dateText,
       collectedCount: (gd.collectedCommands || []).length,
       remainCount: gd.reRollCount,
-      breakthroughRemainCount: gd.breakthroughReRollCount,
-      heroSubText: subText
+      breakthroughRemainCount: gd.breakthroughReRollCount
     })
+    this.updateHeroByDice()
   },
 
   buildGreeting() {
@@ -235,19 +216,23 @@ heroSubText: '选个时长，给城市一个随机出口',
     const date = now.getDate()
     const weekdayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
     const weekday = weekdayNames[now.getDay()]
-    // 真实日期「7月12日 周一」
     const dateText = `${month}月${date}日 · ${weekday}`
 
     let text = '你好'
-    let emphasis = '出去走走'
-    let tail = '换个节奏'
-    if (hour >= 5 && hour < 9) { text = '早啊'; emphasis = '慢慢'; tail = '醒来' }
-    else if (hour < 12) { text = '上午好'; emphasis = '出门'; tail = '透口气' }
-    else if (hour < 14) { text = '午安'; emphasis = '散个步'; tail = '再回去' }
-    else if (hour < 17) { text = '下午好'; emphasis = '离开'; tail = '工位' }
-    else if (hour < 19) { text = '傍晚好'; emphasis = '赶上'; tail = '日落' }
-    else if (hour < 22) { text = '晚上好'; emphasis = '夜游'; tail = '这座城' }
-    else { text = '夜深了'; emphasis = '安静地'; tail = '晃一晃' }
+    let emphasis = '今天'
+    let tail = '出去走走'
+
+    if (hour >= 6 && hour < 11) {
+      text = '早安'; emphasis = '清晨'; tail = '适合出发'
+    } else if (hour >= 11 && hour < 14) {
+      text = '午安'; emphasis = '午后'; tail = '散个步吧'
+    } else if (hour >= 14 && hour < 18) {
+      text = '下午好'; emphasis = '离开'; tail = '工位一会儿'
+    } else if (hour >= 18 && hour < 22) {
+      text = '晚上好'; emphasis = '夜色'; tail = '正好漫游'
+    } else {
+      text = '晚安'; emphasis = '安静'; tail = '地晃一晃'
+    }
 
     const weather = app.globalData.weather || {}
     const location = app.globalData.locationName || '当前位置附近'
@@ -256,90 +241,176 @@ heroSubText: '选个时长，给城市一个随机出口',
     return { text, location, weather: `${temp}℃ ${desc}`, emphasis, tail, weekday, dateText }
   },
 
-  // v3 夜色模式自动高亮（21:00-03:00）
   checkNightMode() {
     const hour = app.getCurrentHour ? app.getCurrentHour() : new Date().getHours()
     const isNight = hour >= 21 || hour < 4
     this.setData({ nightHint: isNight })
   },
 
-  // 空方法：供 catchtap="noop" 拦截冒泡（catchtap="" 空字符串不会真正捕获事件，
-  // 会导致点击弹窗内部元素时冒泡到遮罩触发关闭）
   noop() {},
 
-  // ===== home-dice-entry-01: Cover Flow 滑动状态机 =====
+  resetDiceFace() {
+    // 固定显示透明3D斜角图，无需切换
+  },
+
+  updateDicePositions() {
+    const idx = this.data.currentDiceIndex
+    const list = this.data.diceList
+    const positions = {}
+    list.forEach((d, i) => {
+      let pos = 'center'
+      if (i === idx) pos = 'center'
+      else if ((i - idx + list.length) % list.length === 1) pos = 'right'
+      else pos = 'left'
+      positions[d.id] = pos
+    })
+    this.setData({ dicePositions: positions })
+  },
+
+  updateHeroByDice() {
+    const idx = this.data.currentDiceIndex
+    const dice = this.data.diceList[idx]
+    if (!dice) return
+    let subText = ''
+    let modeName = ''
+    if (dice.id === 'micro') {
+      subText = '用15分钟，给城市一个随机出口'
+      modeName = '微出逃'
+    } else if (dice.id === 'breakthrough') {
+      subText = '做一件平时不会做的事'
+      modeName = '破圈出逃'
+    } else {
+      subText = '约上朋友，一起出逃'
+      modeName = '同频组局'
+    }
+    this.setData({ heroSubText: subText, currentModeName: modeName })
+  },
+
+  startAutoSwitch() {
+    this.stopAutoSwitch()
+    this._autoSwitchTimer = setInterval(() => {
+      if (this.data.isRolling || this.data.isSliding || this.data.selectedCommand || this.data.showDiceSheet) return
+      this.switchToNext()
+    }, 3000)
+  },
+
+  stopAutoSwitch() {
+    if (this._autoSwitchTimer) {
+      clearInterval(this._autoSwitchTimer)
+      this._autoSwitchTimer = null
+    }
+  },
+
+  switchToNext() {
+    const len = this.data.diceList.length
+    const next = (this.data.currentDiceIndex + 1) % len
+    this.setData({ currentDiceIndex: next, isSliding: true }, () => {
+      this.updateDicePositions()
+      this.updateHeroByDice()
+      this.resetDiceFace()
+      try { wx.setStorageSync('lastDiceIndex', next) } catch (e) {}
+      setTimeout(() => this.setData({ isSliding: false }), 400)
+    })
+  },
+
+  switchToPrev() {
+    const len = this.data.diceList.length
+    const prev = (this.data.currentDiceIndex - 1 + len) % len
+    this.setData({ currentDiceIndex: prev, isSliding: true }, () => {
+      this.updateDicePositions()
+      this.updateHeroByDice()
+      this.resetDiceFace()
+      try { wx.setStorageSync('lastDiceIndex', prev) } catch (e) {}
+      setTimeout(() => this.setData({ isSliding: false }), 400)
+    })
+  },
+
   onTouchStart(e) {
     if (!e.touches || !e.touches.length) return
     this.data.touchStartX = e.touches[0].clientX
+    this._touchMoved = false
+    this.stopAutoSwitch()
   },
 
   onTouchEnd(e) {
+    this.startAutoSwitch()
     if (this.data.isSliding) return
     if (!e.changedTouches || !e.changedTouches.length) return
     const endX = e.changedTouches[0].clientX
     const dx = endX - this.data.touchStartX
-    // 小于阈值不触发，避免误触
-    if (Math.abs(dx) < 40) return
+    if (Math.abs(dx) < 50) return
+    this._touchMoved = true
     this.setData({ isSliding: true })
-    let newIndex = this.data.currentDiceIndex
+    try { wx.vibrateShort({ type: 'light' }) } catch (e) {}
     if (dx < 0) {
-      // 手指向左滑：下一骰子
-      newIndex = Math.min(this.data.currentDiceIndex + 1, this.data.diceList.length - 1)
+      this.switchToNext()
     } else {
-      // 手指向右滑：上一骰子
-      newIndex = Math.max(this.data.currentDiceIndex - 1, 0)
+      this.switchToPrev()
     }
-    if (newIndex !== this.data.currentDiceIndex) {
-      this.setData({ currentDiceIndex: newIndex })
-      try { wx.setStorageSync('lastDiceIndex', newIndex) } catch (e) {}
-      try { wx.vibrateShort({ type: 'light' }) } catch (e) {}
-    }
-    setTimeout(() => this.setData({ isSliding: false }), 300)
   },
 
-  // ===== home-dice-entry-01: 骰子点击分流（先转动再路由） =====
   onDiceTap(e) {
+    if (this._touchMoved) { this._touchMoved = false; return }
     if (this.data.isSliding) return
-    if (this.data.isRolling) return  // 转动中禁止重复点击
-    const index = this.data.currentDiceIndex
+    if (this.data.isRolling) return
+    const index = Number(e.currentTarget.dataset.index)
     const dice = this.data.diceList[index]
     if (!dice) return
 
-    // 破圈骰子：直接首页摇取（有专属 bt-dice-bounce 动画，不走 isRolling 转动）
-    if (dice.id === 'breakthrough') {
-      this.rollBreakthroughCommand()
-      return
+    if (index === this.data.currentDiceIndex) {
+      this.doRoll(dice)
+    } else {
+      this.stopAutoSwitch()
+      this.setData({ currentDiceIndex: index, isSliding: true }, () => {
+        this.updateDicePositions()
+        this.updateHeroByDice()
+        this.resetDiceFace()
+        try { wx.setStorageSync('lastDiceIndex', index) } catch (e) {}
+        try { wx.vibrateShort({ type: 'light' }) } catch (e) {}
+        setTimeout(() => {
+          this.setData({ isSliding: false })
+          this.startAutoSwitch()
+        }, 400)
+      })
     }
-
-    // 微逃/同频：触发酷炫转动动画，800ms 后分流
-    this.setData({ isRolling: true })
-    try { wx.vibrateShort({ type: 'medium' }) } catch (e) {}
-
-    // 800ms 动画结束后执行分流
-    setTimeout(() => {
-      this.setData({ isRolling: false })
-      this.routeDice(dice)
-    }, 800)
   },
 
-  // 实际路由逻辑（转动动画结束后调用）
+  onRollTap() {
+    if (this._touchMoved) { this._touchMoved = false; return }
+    if (this.data.isSliding) return
+    if (this.data.isRolling) return
+    const index = this.data.currentDiceIndex
+    const dice = this.data.diceList[index]
+    if (!dice) return
+    this.doRoll(dice)
+  },
+
+  doRoll(dice) {
+    this.stopAutoSwitch()
+    try { wx.vibrateShort({ type: 'medium' }) } catch (e) {}
+    this.routeDice(dice)
+  },
+
   routeDice(dice) {
     if (dice.id === 'micro') {
-      // 微逃：跳转到 7 维度条件选择页（chenhao 设计）
       wx.navigateTo({ url: '/pages/dice-micro-7d/dice-micro-7d' })
+    } else if (dice.id === 'breakthrough') {
+      this.rollBreakthroughCommand()
     } else if (dice.id === 'sync') {
-      // sync-dice-sheet: 不再直达创建页，先弹底部 Sheet 让用户选择出逃方式
       this.setData({ showDiceSheet: true })
     }
   },
 
-  // ===== sync-dice-sheet: 同频骰子入口 Sheet =====
   onDiceSheetMaskTap() {
     this.setData({ showDiceSheet: false })
+    this.resetDiceFace()
+    this.startAutoSwitch()
   },
 
   onDiceSheetClose() {
     this.setData({ showDiceSheet: false })
+    this.resetDiceFace()
+    this.startAutoSwitch()
   },
 
   onInviteFriendsTap() {
@@ -352,46 +423,52 @@ heroSubText: '选个时长，给城市一个随机出口',
     wx.navigateTo({ url: '/pages/group/hall/hall' })
   },
 
-  // ===== B3: AI 快速匹配入口 =====
   onQuickMatchTap() {
     this.setData({ showDiceSheet: false })
     wx.navigateTo({ url: '/pages/quick-match/quick-match' })
   },
 
-  // 微逃细分弹窗已移除：改用 dice-micro-7d 7维条件选择页（见 routeDice micro 分支）
-
-  // v18 左右滑动切换骰子
   onDiceSwiperChange(e) {
     const index = e.detail.current
-    this.setData({ currentDiceIndex: index }, () => this.refreshState())
+    this.setData({ currentDiceIndex: index }, () => {
+      this.updateDicePositions()
+      this.updateHeroByDice()
+      this.refreshState()
+    })
   },
 
-  // v18 点击指示器切换骰子
   onDiceIndicatorTap(e) {
     const index = Number(e.currentTarget.dataset.index)
     if (index === this.data.currentDiceIndex) return
-    this.setData({ currentDiceIndex: index }, () => this.refreshState())
+    this.stopAutoSwitch()
+    this.setData({ currentDiceIndex: index, isSliding: true }, () => {
+      this.updateDicePositions()
+      this.updateHeroByDice()
+      this.resetDiceFace()
+      try { wx.setStorageSync('lastDiceIndex', index) } catch (e) {}
+      try { wx.vibrateShort({ type: 'light' }) } catch (e) {}
+      setTimeout(() => {
+        this.setData({ isSliding: false })
+        this.startAutoSwitch()
+      }, 400)
+    })
   },
 
   rollBreakthroughCommand() {
     if (this.data.rolling || this.data.selectedCommand || this.data.isBreakthroughRolling) return
-    // 无剩余次数时禁止摇取
     if (this.data.breakthroughRemainCount <= 0) {
       wx.showToast({ title: '今日破圈次数已用完，明天再来', icon: 'none', duration: 2000 })
       return
     }
-    // 无画像时仍然可摇，只是随机推荐；有画像则更精准
     this.setData({ isBreakthroughRolling: true, isBouncing: true })
     try { wx.vibrateShort({ type: 'light' }) } catch (e) {}
     setTimeout(() => {
-      // v2: app.rollBreakthroughCommand 改为异步（破圈指令池通过 require.async 分包加载）
       app.rollBreakthroughCommand((cmd) => {
         if (!cmd) {
           this.setData({ isBreakthroughRolling: false, isBouncing: false })
           wx.showToast({ title: '今天先休息一下', icon: 'none' })
           return
         }
-        // 每次摇取消耗 1 次（含首次）
         app.useBreakthroughReroll()
         this.refreshState()
         const meta = getTypeMeta(cmd.type)
@@ -440,14 +517,13 @@ heroSubText: '选个时长，给城市一个随机出口',
 
   reroll(e) {
     if (e && e.stopPropagation) e.stopPropagation()
-    // 破圈骰子重摇：rollBreakthroughCommand 内部已处理扣次
-    if (this.data.currentDiceIndex === 1) {
+    const curDice = this.data.diceList[this.data.currentDiceIndex]
+    if (curDice && curDice.id === 'breakthrough') {
       this.setData({ selectedCommand: null }, () => {
         this.rollBreakthroughCommand()
       })
       return
     }
-    // 微逃骰子重摇（原有逻辑）
     if (!app.useReroll()) {
       wx.showModal({
         title: '自定义出逃',
@@ -487,6 +563,8 @@ heroSubText: '选个时长，给城市一个随机出口',
   closeCommand(e) {
     if (e && e.stopPropagation) e.stopPropagation()
     this.setData({ selectedCommand: null, collected: false })
+    this.resetDiceFace()
+    this.startAutoSwitch()
   },
 
   collectCmd(e) {
@@ -513,43 +591,92 @@ heroSubText: '选个时长，给城市一个随机出口',
     wx.navigateTo({ url: '/pages/collection/collection' })
   },
 
-  // v3 快速入口导航
   goCommandDetail(e) {
     const id = e.currentTarget.dataset.id
     wx.navigateTo({ url: '/pages/command-detail/command-detail?id=' + id })
   },
 
-// C-P8: 加载出逃记录（上次 + 最近）—— 从 globalData.records 按时间倒序取
-  // records 字段：id, commandTitle, commandType, typeColor, duration, date, time, mood, location
   loadEscapeRecords() {
     const records = (app.globalData.records || []).slice()
     if (!records.length) {
       this.setData({ lastRecord: null, recentRecords: [] })
       return
     }
-    // 按 date+time 字符串倒序（YYYY-MM-DD HH:MM 字符串比较等价时间比较）
     records.sort((a, b) => {
       const ka = (a.date || '') + ' ' + (a.time || '')
       const kb = (b.date || '') + ' ' + (b.time || '')
       return kb.localeCompare(ka)
     })
     const lastRecord = this.decorateRecord(records[0])
-    // 最近出逃：取前 5 条（不含已被选作 lastRecord 的首条以避免重复展示）
     const recentRaw = records.slice(1, 6)
     const recentRecords = recentRaw.map(r => this.decorateRecord(r))
     this.setData({ lastRecord: lastRecord, recentRecords: recentRecords })
   },
 
-  // 给记录补展示用元数据（类型名/颜色/日期摘要）—— 纯函数，不改原对象
+  loadDailyRecommend() {
+    const pool = (app.globalData.commandPool || []).filter(c => c && c.title)
+    if (!pool.length) {
+      this.setData({ dailyRecommend: [] })
+      return
+    }
+    const today = this._todayStr()
+    const cacheKey = 'daily_rec_' + today
+    let pickedIds = []
+    try {
+      const cached = wx.getStorageSync(cacheKey)
+      if (Array.isArray(cached) && cached.length) pickedIds = cached
+    } catch (e) {}
+    const hour = new Date().getHours()
+    const isMorning = hour >= 6 && hour < 12
+    const isAfternoon = hour >= 12 && hour < 18
+    const isNight = hour >= 18 || hour < 6
+    const weather = app.globalData.weather || {}
+    const isRainy = /雨/.test(weather.description || '')
+    const isHot = (weather.temperature || 25) > 30
+    let scored = pool.map(cmd => {
+      let score = Math.random() * 5
+      const dur = Number(cmd.duration) || 15
+      if (isMorning && dur <= 30) score += 3
+      if (isNight && dur <= 60) score += 2
+      if (isAfternoon && dur >= 30) score += 2
+      if (isRainy && cmd.type === 'micro') score += 3
+      if (isHot && cmd.type === 'micro') score += 2
+      if (pickedIds.indexOf(cmd.id) >= 0) score += 10
+      return { cmd, score }
+    })
+    scored.sort((a, b) => b.score - a.score)
+    const picked = scored.slice(0, 3).map(s => s.cmd)
+    const list = picked.map(cmd => {
+      const meta = getTypeMeta(cmd.type)
+      return {
+        id: cmd.id,
+        title: cmd.title || cmd.content,
+        typeName: meta.name,
+        typeColor: cmd.typeColor || meta.color,
+        typeIcon: meta.icon,
+        duration: Number(cmd.duration) || 15,
+        distance: cmd.distance || '附近',
+        illustration: cmd.illustration || meta.scene
+      }
+    })
+    try {
+      wx.setStorageSync(cacheKey, list.map(i => i.id))
+    } catch (e) {}
+    this.setData({ dailyRecommend: list })
+  },
+
+  onRecommendTap(e) {
+    const id = e.currentTarget.dataset.id
+    if (!id) return
+    wx.navigateTo({ url: '/pages/command-detail/command-detail?id=' + id })
+  },
+
   decorateRecord(r) {
     if (!r) return null
     const meta = getTypeMeta(r.commandType)
     const typeColor = r.typeColor || meta.color
-    // duration 防御：历史/破圈记录可能缺字段，统一归一为数字（0 表示未记录），
-    // 避免 WXML {{duration}} 渲染成 "null 分钟" / "null分钟"
     const rawDur = r.duration
     const dur = (rawDur != null && rawDur !== '' && !isNaN(Number(rawDur))) ? Number(rawDur) : 0
-    // 日期摘要：今天/昨天/前天/具体日期
     let dateLabel = r.date || ''
     try {
       const today = this._todayStr()
@@ -559,7 +686,6 @@ heroSubText: '选个时长，给城市一个随机出口',
       else if (r.date === yesterday) dateLabel = '昨天'
       else if (r.date === beforeY) dateLabel = '前天'
       else {
-        // M月D日
         const parts = String(r.date).split('-')
         if (parts.length === 3) dateLabel = (parseInt(parts[1], 10) || 0) + '月' + (parseInt(parts[2], 10) || 0) + '日'
       }
@@ -588,7 +714,6 @@ heroSubText: '选个时长，给城市一个随机出口',
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
   },
 
-  // C-P8: 跳转记录详情
   goRecordDetail(e) {
     const id = e.currentTarget.dataset.id
     if (!id) return
@@ -596,14 +721,11 @@ heroSubText: '选个时长，给城市一个随机出口',
   },
 
   onShareAppMessage(e) {
-    // B4-D: 替朋友摇一次 —— 点击「替朋友摇」按钮触发
     const shareType = e && e.target && e.target.dataset && e.target.dataset.shareType
     if (shareType === 'friend') {
-      // 摇一条新指令给朋友（同步摇取，避免 share 回调异步问题）
       const mode = this.data.selectedMode || 'smart'
       const cmd = app.rollCommand ? app.rollCommand(mode) : null
       if (cmd && cmd.id) {
-        // 数据埋点：替朋友摇一次 - 发起方
         try {
           const tracker = require('../../utils/tracker.js')
           tracker.track('friend_roll_send', { cmdId: cmd.id, mode: mode })
@@ -613,7 +735,6 @@ heroSubText: '选个时长，给城市一个随机出口',
           path: '/pages/index/index?rollForFriend=1&cmd=' + encodeURIComponent(cmd.id)
         }
       }
-      // 摇取失败，走默认分享
     }
 
     const cmd = this.data.selectedCommand

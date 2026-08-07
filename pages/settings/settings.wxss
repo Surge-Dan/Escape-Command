@@ -3,37 +3,35 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  /* v11: 背景使用主题变量，切换主题时自动跟随 */
   background: var(--bg-gradient);
 }
 
-.status-bar { flex-shrink: 0; }
+.settings-page .status-bar { flex-shrink: 0; background: transparent; }
 .settings-page .nav-header { flex-shrink: 0; }
 
 .settings-scroll {
   flex: 1;
   height: 0;
-  padding: 0 40rpx;
+  padding: 8rpx 40rpx 0;
 }
 
 .settings-section {
-  margin-bottom: 48rpx;
+  margin-bottom: 40rpx;
 }
 
 .section-label {
   display: block;
-  font-size: 24rpx;
-  font-weight: 400;
+  font-size: 22rpx;
+  font-weight: 500;
   color: var(--ink-faint);
-  text-transform: uppercase;
   letter-spacing: 2rpx;
-  margin-bottom: 16rpx;
-  padding-left: 16rpx;
+  margin-bottom: 14rpx;
+  padding-left: 8rpx;
 }
 
 .setting-group {
   background: var(--white);
-  border-radius: 28rpx;
+  border-radius: var(--radius-xl);
   border: var(--border);
   box-shadow: var(--shadow-card);
   overflow: hidden;
@@ -43,8 +41,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx;
+  padding: 28rpx 32rpx;
   min-height: 96rpx;
+  transition: background 150ms ease;
+}
+
+.setting-item:active {
+  background: var(--brand-weak);
 }
 
 .setting-item.active {
@@ -58,7 +61,7 @@
 
 .setting-name {
   display: block;
-  font-size: 28rpx;
+  font-size: 30rpx;
   font-weight: 500;
   color: var(--ink);
 }
@@ -67,37 +70,42 @@
   display: block;
   font-size: 22rpx;
   color: var(--ink-faint);
-  margin-top: 8rpx;
-  line-height: 1.3;
+  margin-top: 6rpx;
+  line-height: 1.4;
 }
 
 .setting-divider {
-  margin: 0 28rpx;
+  margin: 0 32rpx;
   height: 1rpx;
   background: var(--line);
 }
 
 .danger-item {
+  background: transparent;
+}
+.danger-item:active {
   background: var(--danger-tint);
 }
-
 .danger-text {
   color: var(--danger);
+  font-weight: 500;
 }
 
 .check-ico {
-  width: 40rpx;
-  height: 40rpx;
-  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  width: 36rpx;
+  height: 36rpx;
+  background: linear-gradient(135deg, var(--brand), var(--brand-light));
   border-radius: 50%;
-  padding: 10rpx;
+  padding: 8rpx;
   flex-shrink: 0;
+  box-shadow: 0 4rpx 12rpx rgba(91, 143, 185, 0.3);
 }
 
 .arrow-ico {
-  width: 32rpx;
-  height: 32rpx;
+  width: 20rpx;
+  height: 20rpx;
   flex-shrink: 0;
+  opacity: 0.4;
 }
 
 .version-info {
@@ -105,14 +113,15 @@
   text-align: center;
   font-size: 22rpx;
   color: var(--ink-faint);
-  margin-top: 40rpx;
+  margin-top: 32rpx;
+  letter-spacing: 1rpx;
 }
 
 .bottom-spacer {
-  height: 48rpx;
+  height: calc(40rpx + var(--safe-bottom));
 }
 
-/* ===== 通知偏好行：时间选择器 + 开关 ===== */
+/* ===== 通知偏好行 ===== */
 .notification-item {
   align-items: center;
 }
@@ -125,15 +134,19 @@
 }
 
 .time-picker {
+  background: var(--brand-weak);
+  border-radius: var(--radius-pill);
+  padding: 10rpx 24rpx;
+  transition: background 150ms ease;
+}
+.time-picker:active {
   background: var(--brand-tint);
-  border-radius: 999rpx;
-  padding: 8rpx 20rpx;
 }
 
 .time-display {
-  font-size: 26rpx;
-  font-weight: 500;
-  color: var(--brand-dark);
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--brand);
   line-height: 1.4;
 }
 
@@ -141,7 +154,7 @@
 .theme-cards {
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .theme-card {
@@ -150,24 +163,25 @@
   align-items: center;
   background: var(--white);
   border-radius: var(--radius-xl);
-  border: var(--border);
+  border: 2rpx solid var(--border-soft);
   box-shadow: var(--shadow-card);
-  padding: 24rpx;
-  transition: all 0.2s ease;
+  padding: 28rpx;
+  transition: all 200ms var(--ease-standard);
 }
 
 .theme-card.active {
-  border: 2rpx solid var(--brand);
+  border-color: var(--brand);
   background: var(--brand-tint);
+  box-shadow: var(--shadow-float);
 }
 
 .theme-preview {
-  width: 80rpx;
-  height: 80rpx;
+  width: 72rpx;
+  height: 72rpx;
   border-radius: 50%;
   flex-shrink: 0;
-  border: 2rpx solid rgba(0, 0, 0, 0.05);
-  box-shadow: inset 0 0 0 4rpx rgba(255, 255, 255, 0.6);
+  border: 2rpx solid rgba(91, 143, 185, 0.15);
+  box-shadow: inset 0 0 0 4rpx rgba(255, 255, 255, 0.6), 0 4rpx 12rpx rgba(91, 143, 185, 0.15);
 }
 
 .theme-card-body {
@@ -179,35 +193,31 @@
 .theme-card-name {
   display: block;
   font-size: 28rpx;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--ink);
+  letter-spacing: 0.5rpx;
 }
 
 .theme-card-desc {
   display: block;
   font-size: 22rpx;
   color: var(--ink-faint);
-  margin-top: 6rpx;
-  line-height: 1.3;
+  margin-top: 4rpx;
+  line-height: 1.4;
 }
 
 .theme-check {
-  width: 40rpx;
-  height: 40rpx;
-  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  width: 36rpx;
+  height: 36rpx;
+  background: linear-gradient(135deg, var(--brand), var(--brand-light));
   border-radius: 50%;
-  padding: 10rpx;
+  padding: 8rpx;
   flex-shrink: 0;
   margin-left: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(91, 143, 185, 0.3);
 }
 
 .theme-check image {
   width: 100%;
   height: 100%;
-}
-
-/* ===== 缓存管理行（desc 显示尺寸，tap 触发清理） ===== */
-.setting-item .setting-desc.cache-desc {
-  color: var(--brand-dark);
-  font-weight: 500;
 }

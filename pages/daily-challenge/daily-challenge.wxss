@@ -22,6 +22,7 @@
   font-size: 36rpx;
   font-weight: 700;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 /* ===== Hero 卡片 ===== */
@@ -29,7 +30,7 @@
   position: relative;
   background: var(--white);
   border-radius: var(--radius-xl);
-  border: var(--border);
+  border: 1rpx solid var(--border-soft);
   box-shadow: var(--shadow-elevated);
   padding: 36rpx 32rpx 32rpx;
   margin: 16rpx 0 24rpx;
@@ -101,6 +102,7 @@
   color: var(--ink);
   line-height: 1.25;
   margin-bottom: 12rpx;
+  font-family: var(--serif);
 }
 
 .hero-desc {
@@ -167,11 +169,12 @@
   justify-content: center;
   gap: 12rpx;
   height: 96rpx;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   color: var(--white);
   border-radius: var(--radius-pill);
   font-size: 30rpx;
   font-weight: 600;
+  box-shadow: var(--shadow-btn);
   transition: transform 150ms var(--ease-standard), background 150ms var(--ease-standard);
 }
 
@@ -238,6 +241,7 @@
   font-size: 30rpx;
   font-weight: 700;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .info-sub {

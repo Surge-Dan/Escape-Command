@@ -1,3 +1,5 @@
+/* ===== 社区 · 浅雾蓝设计系统 ===== */
+
 .status-bar { flex-shrink: 0; }
 
 /* ===== 顶部 Tabs ===== */
@@ -7,7 +9,7 @@
   height: 96rpx;
   padding: 0 40rpx;
   border-bottom: 1rpx solid var(--line);
-  background: var(--canvas);
+  background: transparent;
 }
 
 .comm-tab {
@@ -20,12 +22,14 @@
   position: relative;
   font-size: 28rpx;
   color: var(--ink-soft);
+  font-weight: 500;
   transition: color 200ms var(--ease-standard);
 }
 
 .comm-tab.active {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 700;
+  font-family: var(--serif);
 }
 
 .comm-tab-underline {
@@ -34,7 +38,8 @@
   width: 48rpx;
   height: 6rpx;
   border-radius: 6rpx;
-  background: var(--brand);
+  background: linear-gradient(90deg, var(--brand) 0%, var(--brand-light) 100%);
+  box-shadow: 0 2rpx 8rpx rgba(91, 143, 185, 0.3);
   animation: tabSlide 220ms var(--ease-bounce);
 }
 
@@ -63,16 +68,18 @@
   border: var(--border);
   box-shadow: var(--shadow-card);
   padding: 28rpx 28rpx 20rpx;
-  transition: transform 150ms var(--ease-standard);
+  transition: transform 150ms var(--ease-standard), box-shadow 150ms var(--ease-standard);
 }
 
 .feed-card:active {
   transform: scale(0.99);
+  box-shadow: var(--shadow-elevated);
 }
 
 .feed-card-featured {
-  border: 2rpx solid rgba(201, 176, 55, 0.25);
-  box-shadow: 0 4rpx 24rpx rgba(201, 176, 55, 0.08);
+  border: 2rpx solid rgba(212, 160, 86, 0.35);
+  box-shadow: 0 4rpx 24rpx rgba(212, 160, 86, 0.12);
+  background: linear-gradient(180deg, #FFFBF0 0%, var(--white) 30%);
 }
 
 /* 精选标签 */
@@ -84,11 +91,12 @@
   align-items: center;
   gap: 6rpx;
   padding: 6rpx 14rpx 6rpx 10rpx;
-  background: linear-gradient(135deg, var(--gold-tint), #FFFBEC);
+  background: linear-gradient(135deg, var(--gold-tint) 0%, #FFFBEC 100%);
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   font-size: 20rpx;
   font-weight: 600;
   color: var(--gold);
+  box-shadow: 0 2rpx 8rpx rgba(212, 160, 86, 0.15);
 }
 
 .featured-flag image {
@@ -110,6 +118,7 @@
   border-radius: 50%;
   background: var(--canvas);
   flex-shrink: 0;
+  border: 2rpx solid var(--border-soft);
 }
 
 .author-info {
@@ -124,12 +133,13 @@
   font-size: 26rpx;
   font-weight: 600;
   color: var(--ink);
+  letter-spacing: 0.3rpx;
 }
 
 .author-meta {
   font-size: 22rpx;
   color: var(--ink-faint);
-  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  letter-spacing: 0.3rpx;
 }
 
 .type-tag {
@@ -141,6 +151,8 @@
   font-size: 22rpx;
   font-weight: 500;
   flex-shrink: 0;
+  background: var(--brand-weak);
+  color: var(--brand-strong);
 }
 
 .type-tag image {
@@ -154,8 +166,9 @@
   font-size: 32rpx;
   font-weight: 500;
   color: var(--ink);
-  line-height: 1.55;
+  line-height: 1.6;
   margin-bottom: 16rpx;
+  letter-spacing: 0.3rpx;
 }
 
 /* 标签 */
@@ -168,10 +181,12 @@
 
 .feed-tag {
   font-size: 22rpx;
-  color: var(--brand-dark);
-  background: var(--brand-weak);
-  padding: 4rpx 14rpx;
+  color: var(--brand-strong);
+  background: var(--brand-tint);
+  padding: 6rpx 16rpx;
   border-radius: var(--radius-pill);
+  font-weight: 500;
+  letter-spacing: 0.3rpx;
 }
 
 /* 时长 */
@@ -190,11 +205,13 @@
   gap: 6rpx;
   font-size: 22rpx;
   color: var(--ink-soft);
+  letter-spacing: 0.3rpx;
 }
 
 .meta-item image {
   width: 24rpx;
   height: 24rpx;
+  opacity: 0.7;
 }
 
 /* 互动行 */
@@ -224,21 +241,23 @@
 .action-icon {
   width: 32rpx;
   height: 32rpx;
+  opacity: 0.7;
 }
 
 .action-count {
   font-size: 24rpx;
   color: var(--ink-soft);
   font-weight: 500;
+  letter-spacing: 0.3rpx;
 }
 
 /* 点赞态 */
 .like-action.liked {
-  background: var(--heal-tint);
+  background: var(--brand-tint);
 }
 
 .like-action.liked .action-count {
-  color: #9B7BB8;
+  color: var(--brand-strong);
   font-weight: 600;
 }
 
@@ -264,11 +283,11 @@
 
 /* 收藏态 */
 .action-item.collected {
-  background: var(--brand-tint);
+  background: var(--accent-tint);
 }
 
 .action-item.collected .action-count {
-  color: var(--brand-dark);
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -280,6 +299,7 @@
   padding: 32rpx 0 8rpx;
   font-size: 22rpx;
   color: var(--ink-faint);
+  letter-spacing: 1rpx;
 }
 
 .feed-end-line {
@@ -314,15 +334,17 @@
 
 .empty-title {
   font-size: 32rpx;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .empty-desc {
   font-size: 26rpx;
   color: var(--ink-soft);
   margin-top: 12rpx;
-  line-height: 1.5;
+  line-height: 1.6;
+  letter-spacing: 0.3rpx;
 }
 
 .empty-btn {
@@ -332,19 +354,20 @@
   margin-top: 48rpx;
   padding: 20rpx 56rpx;
   min-height: 88rpx;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   color: var(--white);
   border-radius: var(--radius-pill);
   font-size: 28rpx;
   font-weight: 600;
+  box-shadow: var(--shadow-btn);
   transition: transform 150ms var(--ease-standard);
 }
 
 .empty-btn:active {
   transform: scale(0.97);
-  background: var(--brand-dark);
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 100%);
 }
 
 .bottom-spacer {
-  height: 48rpx;
+  height: calc(48rpx + var(--safe-bottom));
 }

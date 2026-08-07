@@ -3,7 +3,6 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  /* v11: 背景使用主题变量，切换主题时自动跟随 */
   background: var(--bg-gradient);
 }
 
@@ -20,30 +19,32 @@
 }
 
 .profile-body {
-  padding: 40rpx 40rpx 0;
+  padding: 24rpx 40rpx 0;
 }
 
-/* ===== 用户信息卡 ===== */
+/* ===== 用户信息卡：毛玻璃 ===== */
 .profile-card {
   position: relative;
   display: flex;
   align-items: center;
   gap: 24rpx;
-  padding: 32rpx;
-  background: rgba(255, 255, 255, 0.45);
-  border-radius: 28rpx;
-  border: var(--border);
-  box-shadow: none;
-  margin-bottom: 36rpx;
+  padding: 36rpx 32rpx;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-radius: var(--radius-xl);
+  border: 1rpx solid rgba(255,255,255,0.8);
+  box-shadow: var(--shadow-elevated);
+  margin-bottom: 24rpx;
 }
 
 .avatar-wrap {
-  width: 144rpx;
-  height: 144rpx;
+  width: 140rpx;
+  height: 140rpx;
   border-radius: 50%;
   overflow: hidden;
-  border: 4rpx solid rgba(200, 149, 110, 0.25);
-  box-shadow: var(--shadow-card);
+  border: 4rpx solid rgba(255,255,255,0.9);
+  box-shadow: 0 8rpx 24rpx rgba(91, 143, 185, 0.22);
   background: var(--brand-tint);
   flex-shrink: 0;
 }
@@ -57,15 +58,17 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
+  gap: 10rpx;
   min-width: 0;
-  padding-right: 96rpx;
+  padding-right: 88rpx;
 }
 
 .user-name {
-  font-size: 32rpx;
+  font-size: 36rpx;
   font-weight: 700;
   color: var(--ink);
+  font-family: var(--serif);
+  letter-spacing: 2rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -77,43 +80,45 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  letter-spacing: 0.5rpx;
 }
 
-/* v6: 编辑按钮 56rpx 圆形，绝对定位右上 */
 .edit-btn {
   position: absolute;
-  right: 40rpx;
+  right: 28rpx;
   top: 50%;
   transform: translateY(-50%);
-  width: 56rpx;
-  height: 56rpx;
+  width: 64rpx;
+  height: 64rpx;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--brand-tint);
+  background: var(--brand-weak);
+  border: 1rpx solid var(--border-soft);
+  box-shadow: var(--shadow-card);
   flex-shrink: 0;
-  transition: transform 150ms var(--ease-standard);
+  transition: all 180ms var(--ease-bounce);
 }
 
-.edit-btn:active { transform: translateY(-50%) scale(0.92); }
+.edit-btn:active { transform: translateY(-50%) scale(0.9); background: var(--brand-tint); }
 
 .ico-pencil {
   width: 28rpx;
   height: 28rpx;
 }
 
-/* ===== 会员卡：统一白色卡片风格，与统计卡一致 ===== */
+/* ===== 会员卡 ===== */
 .member-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx 32rpx;
-  background: var(--white);
+  padding: 24rpx 28rpx;
+  background: linear-gradient(135deg, #FFF8E0 0%, #FFEFBF 100%);
   border-radius: var(--radius-xl);
-  border: var(--border);
-  box-shadow: var(--shadow-card);
-  margin-bottom: 32rpx;
+  border: 1rpx solid rgba(212, 160, 86, 0.2);
+  box-shadow: 0 4rpx 16rpx rgba(212, 160, 86, 0.12);
+  margin-bottom: 24rpx;
   transition: transform 200ms var(--ease-standard);
 }
 
@@ -122,12 +127,12 @@
 .member-left {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  gap: 18rpx;
 }
 
 .member-icon {
-  width: 72rpx;
-  height: 72rpx;
+  width: 60rpx;
+  height: 60rpx;
 }
 
 .member-text {
@@ -137,35 +142,35 @@
 }
 
 .member-title {
-  font-size: 30rpx;
+  font-size: 28rpx;
   font-weight: 700;
-  color: var(--ink);
+  color: #8C6028;
   letter-spacing: 1rpx;
 }
 
 .member-sub {
-  font-size: 24rpx;
-  color: var(--ink-faint);
+  font-size: 22rpx;
+  color: #B08B4C;
 }
 
 .member-cta {
-  padding: 12rpx 28rpx;
-  background: var(--canvas);
-  color: var(--ink-soft);
+  padding: 10rpx 22rpx;
+  background: rgba(255,255,255,0.6);
+  color: #8C6028;
   border-radius: var(--radius-pill);
   font-size: 24rpx;
-  font-weight: 500;
+  font-weight: 600;
   flex-shrink: 0;
 }
 
-/* ===== 数据统计：4 列 ===== */
+/* ===== 数据统计 ===== */
 .stats-card {
   background: var(--white);
   border-radius: var(--radius-xl);
   border: var(--border);
   box-shadow: var(--shadow-card);
-  padding: 32rpx 20rpx;
-  margin-bottom: 40rpx;
+  padding: 32rpx 16rpx;
+  margin-bottom: 32rpx;
   display: flex;
   justify-content: space-around;
 }
@@ -185,30 +190,32 @@
 }
 
 .stats-value {
-  font-size: 40rpx;
+  font-size: 44rpx;
   font-weight: 700;
   color: var(--ink);
   line-height: 1.1;
+  font-family: var(--serif);
   letter-spacing: 1rpx;
 }
 
 .stats-unit {
   font-size: 20rpx;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
+  margin-left: 2rpx;
 }
 
 .stats-label {
-  margin-top: 10rpx;
-  font-size: 24rpx;
+  margin-top: 8rpx;
+  font-size: 22rpx;
   color: var(--ink-faint);
+  letter-spacing: 0.5rpx;
 }
 
-/* ===== 5 分类卡片：统一白色干净风格，去掉五颜六色 ===== */
+/* ===== 分类卡片 ===== */
 .categories-section {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
-  margin-top: 40rpx;
+  gap: 20rpx;
 }
 
 .category-card {
@@ -218,6 +225,7 @@
   border: var(--border);
   box-shadow: var(--shadow-card);
   transition: transform 200ms var(--ease-standard);
+  overflow: hidden;
 }
 
 .category-card:active { transform: scale(0.99); }
@@ -226,23 +234,23 @@
   display: flex;
   align-items: center;
   gap: 20rpx;
-  padding: 28rpx 32rpx 20rpx;
+  padding: 28rpx 28rpx 16rpx;
 }
 
 .category-icon-wrap {
   width: 72rpx;
   height: 72rpx;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: var(--canvas);
+  background: linear-gradient(135deg, var(--brand-weak) 0%, var(--brand-tint) 100%);
 }
 
 .category-icon {
-  width: 44rpx;
-  height: 44rpx;
+  width: 40rpx;
+  height: 40rpx;
 }
 
 .category-text {
@@ -253,13 +261,14 @@
 }
 .category-title {
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink);
   line-height: 1.3;
-  letter-spacing: 0.5rpx;
+  letter-spacing: 1rpx;
+  font-family: var(--serif);
 }
 .category-sub {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: var(--ink-faint);
   line-height: 1.4;
 }
@@ -267,21 +276,21 @@
 .category-items {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8rpx;
-  padding: 8rpx 24rpx 28rpx;
+  gap: 4rpx;
+  padding: 4rpx 16rpx 24rpx;
 }
 
 .cat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20rpx 8rpx;
+  padding: 18rpx 8rpx;
   border-radius: var(--radius-md);
-  transition: all 200ms var(--ease-standard);
-  gap: 12rpx;
+  transition: all 180ms var(--ease-standard);
+  gap: 10rpx;
 }
 .cat-item:active {
-  background: var(--canvas);
+  background: var(--brand-weak);
   transform: scale(0.95);
 }
 
@@ -289,18 +298,19 @@
   width: 72rpx;
   height: 72rpx;
   border-radius: 50%;
-  background: var(--canvas);
+  background: var(--brand-weak);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 200ms var(--ease-standard);
+  transition: all 180ms var(--ease-standard);
 }
 .cat-item:active .cat-item-icon-wrap {
-  background: rgba(46, 47, 51, 0.08);
+  background: var(--brand-tint);
 }
 .cat-item-icon {
-  width: 40rpx;
-  height: 40rpx;
+  width: 36rpx;
+  height: 36rpx;
+  opacity: 0.85;
 }
 
 .cat-item-label {
@@ -312,7 +322,7 @@
 }
 
 .bottom-spacer {
-  height: calc(var(--tabbar-floating-height) + var(--tabbar-bottom-gap) + var(--safe-bottom));
+  height: calc(var(--tabbar-floating-height) + var(--tabbar-bottom-gap) + var(--safe-bottom) + 16rpx);
 }
 
 .tabbar-placeholder {

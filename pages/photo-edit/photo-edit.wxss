@@ -12,7 +12,7 @@
   text-align: center;
 }
 .empty-illust { width: 160rpx; height: 160rpx; margin-bottom: 32rpx; }
-.empty-title { font-size: 30rpx; font-weight: 600; color: var(--ink); }
+.empty-title { font-size: 30rpx; font-weight: 600; color: var(--ink); font-family: var(--serif); }
 .empty-desc { margin-top: 12rpx; font-size: 26rpx; color: var(--ink-soft); line-height: 1.5; }
 .empty-btn { margin-top: 32rpx; min-width: 200rpx; }
 
@@ -25,7 +25,7 @@
   overflow: hidden;
   background: var(--canvas);
   box-shadow: var(--shadow-card);
-  border: var(--border);
+  border: 1rpx solid var(--border-soft);
 }
 .preview-photo {
   width: 100%;
@@ -52,7 +52,7 @@
   transform: translateX(-50%);
   padding: 6rpx 18rpx;
   border-radius: var(--radius-pill);
-  background: rgba(46, 47, 51, 0.5);
+  background: rgba(45, 90, 123, 0.5);
   color: var(--white);
   font-size: 22rpx;
   z-index: 3;
@@ -72,6 +72,7 @@
   font-size: 32rpx;
   font-weight: 700;
   color: var(--ink);
+  font-family: var(--serif);
 }
 .section-head .section-title { margin-bottom: 0; }
 .clear-btn {
@@ -130,7 +131,7 @@
   height: 96rpx;
   border-radius: 50%;
   background: var(--white);
-  border: var(--border);
+  border: 1rpx solid var(--border-soft);
   box-shadow: var(--shadow-float);
   display: flex;
   align-items: center;

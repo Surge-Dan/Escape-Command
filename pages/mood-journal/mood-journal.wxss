@@ -15,6 +15,10 @@
 /* 通用图表卡 */
 .chart-card {
   padding: 28rpx;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
 }
 
 .card-head {
@@ -35,6 +39,7 @@
   font-weight: 700;
   color: var(--ink);
   line-height: 1.2;
+  font-family: var(--serif);
 }
 
 .card-sub {
@@ -140,14 +145,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2rpx 8rpx rgba(200, 149, 110, 0.24);
+  box-shadow: 0 2rpx 8rpx rgba(91, 143, 185, 0.24);
   transition: transform 150ms var(--ease-standard);
 }
 
 .trend-dot.today {
   border-color: var(--accent);
   background: var(--accent-tint);
-  box-shadow: 0 2rpx 12rpx rgba(212, 138, 90, 0.32);
+  box-shadow: 0 2rpx 12rpx rgba(92, 191, 158, 0.32);
 }
 
 .trend-dot-emoji {
@@ -239,8 +244,10 @@
   align-items: center;
   gap: 16rpx;
   padding: 20rpx 24rpx;
+  background: var(--white);
   border-radius: var(--radius-lg);
-  border: 2rpx solid transparent;
+  border: var(--border);
+  box-shadow: var(--shadow-card);
   transition: transform 150ms var(--ease-standard);
 }
 
@@ -265,6 +272,7 @@
   font-size: 28rpx;
   font-weight: 600;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .mood-stat-count {
@@ -318,6 +326,7 @@
   font-size: 28rpx;
   font-weight: 700;
   line-height: 1.2;
+  font-family: var(--serif);
 }
 
 .group-count {
@@ -346,7 +355,7 @@
   padding: 16rpx 18rpx 16rpx 0;
   background: var(--white);
   border-radius: var(--radius-md);
-  border: var(--border);
+  border: 1rpx solid var(--border-soft);
   transition: all 150ms var(--ease-standard);
 }
 
@@ -378,6 +387,7 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
   overflow: hidden;
+  font-family: var(--serif);
 }
 
 .rec-meta-row {
@@ -427,7 +437,7 @@
 }
 
 .bottom-spacer {
-  height: 60rpx;
+  height: calc(60rpx + var(--safe-bottom));
 }
 
 /* 空状态 */
@@ -472,6 +482,7 @@
   font-size: 32rpx;
   font-weight: 600;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .empty-desc {
@@ -487,12 +498,12 @@
   margin-top: 48rpx;
   padding: 22rpx 60rpx;
   min-height: 88rpx;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   color: var(--white);
   border-radius: var(--radius-pill);
   font-size: 28rpx;
   font-weight: 600;
-  box-shadow: 0 4rpx 16rpx rgba(200, 149, 110, 0.24);
+  box-shadow: var(--shadow-btn);
   transition: transform 150ms var(--ease-standard);
 }
 

@@ -5,7 +5,7 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(180deg, #FFF0E4 0%, #FFF6F0 18%, #F5F3EF 55%, #F5F3EF 100%);
+  background: var(--bg-gradient);
 }
 
 .group-create-page .nav-header {

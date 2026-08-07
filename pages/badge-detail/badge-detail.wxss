@@ -1,4 +1,5 @@
-/* ===== 徽章详情页 ===== */
+/* ===== 徽章详情页 · 浅雾蓝设计系统 ===== */
+
 .page-scroll { padding: 0; }
 
 .empty-state {
@@ -18,10 +19,11 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 40rpx;
+  border: 2rpx solid var(--border-soft);
 }
 .empty-circle image { width: 64rpx; height: 64rpx; }
-.empty-title { font-size: 36rpx; font-weight: 700; color: var(--ink); margin-bottom: 16rpx; }
-.empty-sub { font-size: 26rpx; color: var(--ink-soft); line-height: 1.5; margin-bottom: 48rpx; }
+.empty-title { font-size: 36rpx; font-weight: 700; color: var(--ink); margin-bottom: 16rpx; font-family: var(--serif); }
+.empty-sub { font-size: 26rpx; color: var(--ink-soft); line-height: 1.6; margin-bottom: 48rpx; letter-spacing: 0.3rpx; }
 .empty-back { padding: 0 48rpx; }
 
 .detail-body { padding: 24rpx 40rpx 0; }
@@ -55,17 +57,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 32rpx rgba(46, 47, 51, 0.12);
+  box-shadow: 0 8rpx 32rpx rgba(91, 143, 185, 0.18);
   overflow: hidden;
   transform-origin: center center;
+  border: 4rpx solid rgba(255,255,255,0.8);
 }
 .hero-badge.unlocked {
-  box-shadow: 0 8rpx 40rpx rgba(200, 149, 110, 0.28);
+  box-shadow: 0 8rpx 40rpx rgba(91, 143, 185, 0.35);
 }
 .hero-badge.locked {
   background: var(--canvas);
-  box-shadow: inset 0 0 0 2rpx rgba(122, 78, 43, 0.08);
-  filter: grayscale(1);
+  box-shadow: inset 0 0 0 2rpx var(--border-soft);
+  filter: grayscale(0.8);
+  opacity: 0.7;
 }
 .hero-icon { width: 96rpx; height: 96rpx; position: relative; z-index: 2; }
 .hero-lock { width: 72rpx; height: 72rpx; opacity: 0.5; }
@@ -75,7 +79,7 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.5) 0%, transparent 55%);
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.55) 0%, transparent 55%);
   pointer-events: none;
 }
 
@@ -106,7 +110,7 @@
   height: 12rpx;
   border-radius: 50%;
   background: var(--sun);
-  box-shadow: 0 0 12rpx rgba(255, 211, 107, 0.8);
+  box-shadow: 0 0 12rpx rgba(255, 211, 107, 0.85);
   z-index: 3;
   opacity: 0;
   animation: sparkleBlink 2.4s ease-in-out infinite;
@@ -131,13 +135,16 @@
   color: var(--ink);
   line-height: 1.2;
   margin-bottom: 12rpx;
+  font-family: var(--serif);
+  letter-spacing: 1rpx;
 }
 .badge-caption {
   display: block;
   font-size: 26rpx;
   color: var(--ink-soft);
-  line-height: 1.5;
+  line-height: 1.6;
   margin-bottom: 20rpx;
+  letter-spacing: 0.3rpx;
 }
 .category-pill {
   display: inline-block;
@@ -145,7 +152,8 @@
   border-radius: var(--radius-pill);
   font-size: 22rpx;
   font-weight: 600;
-  opacity: 0.85;
+  opacity: 0.9;
+  letter-spacing: 0.5rpx;
 }
 
 /* ===== 通用 Section Card ===== */
@@ -167,12 +175,14 @@
   width: 12rpx;
   height: 12rpx;
   border-radius: 50%;
+  box-shadow: 0 0 8rpx currentColor;
 }
 .section-label {
   font-size: 26rpx;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink);
   letter-spacing: 2rpx;
+  font-family: var(--serif);
 }
 
 /* ===== 解锁状态卡 ===== */
@@ -197,19 +207,22 @@
   font-weight: 700;
   color: var(--ink);
   line-height: 1.3;
+  font-family: var(--serif);
 }
 .status-card.is-unlocked .status-title { color: var(--brand-strong); }
 .status-sub {
   font-size: 24rpx;
   color: var(--ink-soft);
   margin-top: 4rpx;
+  line-height: 1.5;
+  letter-spacing: 0.3rpx;
 }
 
 /* ===== 故事卡 ===== */
 .story-body { padding-left: 4rpx; }
 .story-paragraph {
   font-size: 28rpx;
-  line-height: 1.75;
+  line-height: 1.8;
   color: var(--ink);
   margin-bottom: 20rpx;
   letter-spacing: 1rpx;
@@ -220,9 +233,10 @@
 .condition-text {
   display: block;
   font-size: 28rpx;
-  line-height: 1.7;
+  line-height: 1.75;
   color: var(--ink);
   margin-bottom: 24rpx;
+  letter-spacing: 0.5rpx;
 }
 .progress-block { padding-top: 8rpx; }
 .progress-row {
@@ -234,11 +248,13 @@
 .progress-label {
   font-size: 24rpx;
   color: var(--ink-soft);
+  letter-spacing: 0.5rpx;
 }
 .progress-count {
   font-size: 30rpx;
   font-weight: 700;
   color: var(--ink);
+  font-family: var(--serif);
 }
 .progress-track {
   width: 100%;
@@ -251,6 +267,7 @@
   height: 100%;
   border-radius: 8rpx;
   transition: width 600ms var(--ease-standard);
+  box-shadow: 0 0 8rpx rgba(91, 143, 185, 0.3);
 }
 .progress-hint {
   display: block;
@@ -258,6 +275,7 @@
   color: var(--ink-faint);
   margin-top: 14rpx;
   line-height: 1.5;
+  letter-spacing: 0.5rpx;
 }
 
 /* ===== 重放按钮 ===== */
@@ -269,8 +287,14 @@
   width: 100%;
   margin-top: 8rpx;
   min-height: 88rpx;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  font-size: 28rpx;
+  font-weight: 600;
+  box-shadow: var(--shadow-btn);
 }
 .replay-btn image { width: 32rpx; height: 32rpx; }
 .replay-btn:active { transform: scale(0.97); }
 
-.bottom-spacer { height: 80rpx; }
+.bottom-spacer { height: calc(80rpx + var(--safe-bottom)); }

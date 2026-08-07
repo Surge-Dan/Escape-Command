@@ -16,6 +16,7 @@
   letter-spacing: 2rpx;
   margin-bottom: 16rpx;
   padding-left: 16rpx;
+  font-family: var(--serif);
 }
 
 /* ===== Accordion ===== */
@@ -52,6 +53,7 @@
   font-weight: 600;
   color: var(--ink);
   line-height: 1.4;
+  font-family: var(--serif);
 }
 
 .acc-chev {
@@ -109,7 +111,8 @@
 .mode-ico {
   width: 56rpx;
   height: 56rpx;
-  border-radius: 16rpx;
+  border-radius: var(--radius-md);
+  background: var(--brand-tint);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -133,6 +136,7 @@
   font-size: 26rpx;
   font-weight: 600;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .mode-desc {
@@ -154,12 +158,17 @@
   flex-direction: column;
   gap: 12rpx;
   padding: 28rpx;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
 }
 
 .tip-ico {
   width: 64rpx;
   height: 64rpx;
-  border-radius: 18rpx;
+  border-radius: var(--radius-lg);
+  background: var(--brand-tint);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -174,6 +183,7 @@
   font-size: 28rpx;
   font-weight: 600;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .tip-desc {
@@ -198,5 +208,5 @@
 }
 
 .bottom-spacer {
-  height: 64rpx;
+  height: calc(64rpx + var(--safe-bottom));
 }

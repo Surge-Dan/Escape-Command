@@ -6,23 +6,25 @@
 
 /* 头部 */
 .header-section { padding: 24rpx 0 32rpx; }
-.header-title { display: block; font-size: 36rpx; font-weight: 600; color: var(--ink); line-height: 1.4; margin-bottom: 12rpx; }
+.header-title { display: block; font-size: 36rpx; font-weight: 600; color: var(--ink); line-height: 1.4; margin-bottom: 12rpx; font-family: var(--serif); }
 .header-desc { display: block; font-size: 28rpx; color: var(--ink-soft); line-height: 1.5; }
 
 /* 问题卡片 */
 .question-card {
-  background: #FFFFFF;
-  border-radius: 24rpx;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
   padding: 32rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-card);
 }
 .question-label {
   display: block;
   font-size: 30rpx;
   font-weight: 600;
-  color: #2D2A24;
+  color: var(--ink);
   margin-bottom: 20rpx;
+  font-family: var(--serif);
 }
 .option-row {
   display: flex;
@@ -34,41 +36,43 @@
   align-items: center;
   justify-content: center;
   padding: 16rpx 28rpx;
-  border-radius: 40rpx;
+  border-radius: var(--radius-pill);
   font-size: 28rpx;
-  color: #6B6B5F;
-  background: #F4F3EE;
+  color: var(--ink-soft);
+  background: var(--canvas);
   border: 2rpx solid transparent;
-  transition: all 0.2s;
+  transition: all 200ms var(--ease-standard);
 }
 .option-pill.active {
-  color: #7B3FAF;
-  background: #F3E8FF;
-  border-color: #9B7BB8;
+  color: var(--brand-dark);
+  background: var(--brand-tint);
+  border-color: var(--brand);
 }
 .option-pill.multi.active {
-  color: #7B3FAF;
-  background: #F3E8FF;
-  border-color: #9B7BB8;
+  color: var(--brand-dark);
+  background: var(--brand-tint);
+  border-color: var(--brand);
 }
 
 /* 底部按钮 */
-.bottom-area { padding: 20rpx 32rpx 48rpx; }
+.bottom-area { padding: 20rpx 32rpx calc(48rpx + var(--safe-bottom)); }
 .save-btn {
   width: 100%;
   height: 96rpx;
-  border-radius: 48rpx;
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #9B7BB8, #7B3FAF);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: var(--white);
   font-size: 32rpx;
   font-weight: 600;
-  box-shadow: 0 4rpx 16rpx rgba(123,63,175,0.3);
+  box-shadow: var(--shadow-btn);
+  transition: transform 150ms var(--ease-standard);
 }
+.save-btn:active { transform: scale(0.97); }
 .save-btn.disabled {
-  background: #D4D0C8;
-  color: #9A968A;
+  background: var(--line);
+  color: var(--ink-faint);
   box-shadow: none;
 }

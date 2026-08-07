@@ -65,7 +65,7 @@
   margin: 24rpx 0 16rpx;
   border-radius: var(--radius-md);
   background: var(--white);
-  border: var(--border);
+  border: 1rpx solid var(--border-soft);
 }
 
 .section-header:first-child {
@@ -90,6 +90,7 @@
   font-size: 30rpx;
   font-weight: 600;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .section-count {
@@ -151,7 +152,7 @@
 }
 
 .season-count {
-  background: rgba(46, 47, 51, 0.06) !important;
+  background: rgba(91, 143, 185, 0.06) !important;
   color: var(--ink-soft) !important;
 }
 
@@ -165,8 +166,8 @@
 .cmd-card {
   width: calc(50% - 8rpx);
   background: var(--white);
-  border-radius: var(--radius-lg);
-  border: var(--border);
+  border-radius: var(--radius-xl);
+  border: 1rpx solid var(--border-soft);
   box-shadow: var(--shadow-card);
   padding: 24rpx 24rpx 20rpx;
   display: flex;
@@ -200,6 +201,7 @@
   -webkit-line-clamp: 2;
   overflow: hidden;
   min-height: 76rpx;
+  font-family: var(--serif);
 }
 
 .cmd-card-meta {
@@ -260,6 +262,7 @@
   font-size: 32rpx;
   font-weight: 600;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .empty-desc {
@@ -276,11 +279,12 @@
   margin-top: 48rpx;
   padding: 20rpx 56rpx;
   min-height: 88rpx;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   color: var(--white);
   border-radius: var(--radius-pill);
   font-size: 28rpx;
   font-weight: 600;
+  box-shadow: var(--shadow-btn);
   transition: transform 150ms var(--ease-standard);
 }
 

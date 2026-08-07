@@ -1,306 +1,253 @@
-<view class="page-container home-page paper-texture theme-{{theme}} {{fontLoaded ? 'font-loaded' : ''}}">
-  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
-  <!-- v7: 统一导航栏，与 map/profile 一致，避开胶囊按钮 -->
-  <view class="nav-header" style="{{navHeaderStyle}}">
-    <text class="nav-header-title">出逃指令</text>
-    <view class="nav-header-divider"></view>
-  </view>
-  <scroll-view scroll-y class="home-scroll" enhanced show-scrollbar="{{false}}">
-    <!-- v9: hero 区精简——Pill 改淡灰色 + 真实日期 -->
-    <view class="hero-warm">
-      <view class="hero-pill">
-        <view class="hero-pill-dot"></view>
-        <text class="hero-pill-text">{{dateText}}</text>
+<!-- 出逃指令 · 首页 v20: 3D骰子 + 冰蓝背景 -->
+<view class="home-page {{theme}}">
+  <view class="status-bar" style="height:{{statusBarHeight}}px"></view>
+
+  <scroll-view class="home-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <!-- ===== Hero 首屏：标题 + 日期 + 问候 + 3D骰子 ===== -->
+    <view class="hero-section">
+      <!-- 居中标题 -->
+      <view class="hero-title">出逃指令</view>
+
+      <!-- 日期胶囊 -->
+      <view class="date-pill">
+        <text>{{dateText}}</text>
       </view>
-      <view class="hero-title-wrap">
-        <text class="hero-title-line">{{greetingText}},</text>
-        <text class="hero-title-line hero-title-second">
-          <text class="hero-italic">{{heroEmphasis}}</text>
-          <text>{{heroTail}}</text>
-        </text>
+
+      <!-- 问候语 -->
+      <view class="greeting-area">
+        <text class="greeting-prefix">{{greetingText}}，</text>
+        <text class="greeting-emphasis">{{heroEmphasis}}</text>
+        <text class="greeting-suffix">{{heroTail}}</text>
       </view>
-      <text class="hero-sub">{{heroSubText}}</text>
-    </view>
+      <view class="hero-sub">{{heroSubText}}</view>
 
-    <!-- home-dice-entry-01: 单骰居中 + 右划切换 + 点击转动 -->
-    <!-- v18 融合：微逃(shake-card脉冲环) / 破圈(breakthrough-card裂变骰子) / 同频(简洁圆形) -->
-    <view wx:if="{{!selectedCommand}}" class="dice-stage"
-          bindtouchstart="onTouchStart"
-          bindtouchend="onTouchEnd">
-      <view class="dice-stage-inner">
-        <view wx:for="{{diceList}}" wx:key="id"
-              class="dice-card {{currentDiceIndex === index ? 'active' : (index < currentDiceIndex ? 'prev' : 'next')}} {{isRolling && currentDiceIndex === index ? 'rolling' : ''}} {{item.id === 'breakthrough' ? 'dice-card-bt' : ''}} {{item.id === 'micro' ? 'dice-card-micro' : ''}}"
-              data-index="{{index}}"
-              bindtap="onDiceTap">
-
-          <!-- 微逃骰子：脉冲环 + 骰子盒（恢复 Henry shake-card 风格） -->
-          <block wx:if="{{item.id === 'micro'}}">
-            <view class="pulse-ring"></view>
-            <view class="pulse-ring pulse-ring-delay"></view>
-            <view class="dice-box {{isBouncing ? 'dice-bounce' : ''}}">
-              <image class="dice-ico" src="{{item.icon}}" mode="aspectFit"></image>
-            </view>
-            <text class="dice-card-title">{{item.name}}</text>
-            <text class="dice-card-sub">{{item.desc}}</text>
-            <view class="dice-card-remain">
-              <text>今日剩余 </text>
-              <text class="remain-num font-mono">{{remainCount}}</text>
-              <text> 次</text>
-            </view>
-          </block>
-
-          <!-- 破圈骰子：紫色脉冲环 + 裂变破壁骰子（恢复 Henry breakthrough-card 风格） -->
-          <block wx:elif="{{item.id === 'breakthrough'}}">
-            <view class="bt-pulse-ring"></view>
-            <view class="bt-pulse-ring bt-pulse-ring-delay"></view>
-            <view class="bt-dice-wrap {{isBouncing ? 'bt-dice-bounce' : ''}}">
-              <view class="bt-dice-bg"></view>
-              <view class="bt-dice-frag bt-frag-1"></view>
-              <view class="bt-dice-frag bt-frag-2"></view>
-              <view class="bt-dice-frag bt-frag-3"></view>
-              <image class="bt-dice-ico" src="{{item.icon}}" mode="aspectFit"></image>
-            </view>
-            <text class="dice-card-title bt-title">{{item.name}}</text>
-            <text class="dice-card-sub bt-sub">{{item.desc}}</text>
-            <view class="dice-card-remain bt-remain-row">
-              <text>今日剩余 </text>
-              <text class="bt-remain-num font-mono">{{breakthroughRemainCount}}</text>
-              <text> 次</text>
-            </view>
-          </block>
-
-          <!-- 同频骰子：简洁圆形图标 -->
-          <block wx:else>
-            <view class="dice-card-inner" style="background: {{item.color}}1A;">
-              <image class="dice-ico" src="{{item.icon}}" mode="aspectFit"></image>
-            </view>
-            <text class="dice-card-title">{{item.name}}</text>
-            <text class="dice-card-sub">{{item.desc}}</text>
-          </block>
+      <!-- 3D骰子舞台（预渲染斜角图 + CSS变换模拟3D） -->
+      <view
+        class="dice-stage-3d"
+        bindtouchstart="onTouchStart"
+        bindtouchend="onTouchEnd"
+        bindtap="onRollTap"
+      >
+        <view
+          wx:for="{{diceList}}"
+          wx:key="id"
+          class="die-item die-pos-{{dicePositions[item.id]}}"
+          data-dice-id="{{item.id}}"
+          data-index="{{index}}"
+          catchtap="onDiceTap"
+        >
+          <image
+            class="die-img"
+            src="{{currentDiceFace[item.id]}}"
+            mode="aspectFit"
+          ></image>
         </view>
       </view>
-      <view class="dice-dots">
-        <view wx:for="{{diceList}}" wx:key="id"
-              class="dice-dot {{currentDiceIndex === index ? 'active' : ''}}"
-              style="{{currentDiceIndex === index ? 'background: ' + item.color + ';' : ''}}"></view>
-      </view>
-      <view class="dice-info">
-        <text class="dice-info-name">{{diceList[currentDiceIndex].name}}</text>
-        <text class="dice-info-desc">{{diceList[currentDiceIndex].desc}}</text>
+
+      <!-- 模式名称胶囊（点击投掷） -->
+      <view class="mode-name-pill" bindtap="onRollTap">{{currentModeName}}</view>
+      <view class="roll-hint-text" bindtap="onRollTap">点击投掷</view>
+
+      <!-- 圆点指示器 -->
+      <view class="dice-indicators">
+        <view
+          wx:for="{{diceList}}"
+          wx:key="id"
+          class="indicator-dot {{currentDiceIndex === index ? 'active' : ''}}"
+          data-index="{{index}}"
+          bindtap="onDiceIndicatorTap"
+        ></view>
       </view>
     </view>
 
-<!-- v9: 收藏入口——0 条时改为极简一行 -->
-    <view wx:if="{{!selectedCommand && collectedCount === 0}}" class="collect-entry-mini" bindtap="goCollection">
-      <image class="collect-mini-ico" src="/assets/icons/bookmark.svg" mode="aspectFit"></image>
-      <text class="collect-mini-text">还没有收藏，去看看</text>
-      <image class="collect-mini-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
-    </view>
-    <view wx:if="{{!selectedCommand && collectedCount > 0}}" class="collect-entry-card" bindtap="goCollection">
-      <view class="collect-entry-icon-wrap">
-        <image class="collect-entry-ico" src="/assets/icons/bookmark-brand.svg" mode="aspectFit"></image>
+    <!-- ===== 下方内容区（下滑可见） ===== -->
+    <view class="below-fold">
+      <!-- 收藏入口 -->
+      <view wx:if="{{collectedCount === 0}}" class="collect-entry-mini" bindtap="goCollection">
+        <image class="collect-mini-ico" src="/assets/icons/bookmark.svg" mode="aspectFit"></image>
+        <text class="collect-mini-text">还没有收藏的指令，摇一个收藏吧</text>
+        <image class="collect-mini-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
       </view>
-      <view class="collect-entry-text">
-        <text class="collect-entry-title">我的收藏</text>
-        <text class="collect-entry-sub">{{collectedCount}} 条指令</text>
+      <view wx:else class="collect-entry-card" bindtap="goCollection">
+        <view class="collect-entry-icon-wrap">
+          <image class="collect-entry-ico" src="/assets/icons/bookmark-brand.svg" mode="aspectFit"></image>
+        </view>
+        <view class="collect-entry-text">
+          <text class="collect-entry-title">我的收藏</text>
+          <text class="collect-entry-sub">已收藏 {{collectedCount}} 条出逃指令</text>
+        </view>
+        <image class="collect-arrow" src="/assets/icons/chevron-right-brand.svg" mode="aspectFit"></image>
       </view>
-      <image class="collect-arrow" src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
-    </view>
 
-    <!-- C-P8: 上次出逃记录（单卡高亮） -->
-    <view wx:if="{{!selectedCommand && lastRecord}}" class="last-record-card" data-id="{{lastRecord.id}}" bindtap="goRecordDetail">
-      <view class="last-record-head">
-        <view class="last-record-tag" style="background: {{lastRecord.typeColor}}14; color: {{lastRecord.typeColor}};">
-          <text>{{lastRecord.typeName}}</text>
-        </view>
-        <text class="last-record-date">{{lastRecord.dateLabel}} · {{lastRecord.time}}</text>
-      </view>
-      <text class="last-record-title">{{lastRecord.commandTitle}}</text>
-      <view class="last-record-meta">
-        <view wx:if="{{lastRecord.duration}}" class="last-record-meta-item">
-          <image class="last-record-meta-ico" src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
-          <text>约 {{lastRecord.duration}} 分钟</text>
-        </view>
-        <view wx:if="{{lastRecord.location && lastRecord.location.latitude}}" class="last-record-meta-item">
-          <image class="last-record-meta-ico" src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
-          <text>已留痕</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- C-P8: 最近出逃记录（横向滚动） -->
-    <view wx:if="{{!selectedCommand && recentRecords.length}}" class="daily-section recent-section">
-      <view class="section-header">
-        <text class="section-title">最近出逃</text>
-        <text class="section-sub">{{recentRecords.length}} 条记录</text>
-      </view>
-      <scroll-view scroll-x class="daily-scroll" enhanced show-scrollbar="{{false}}">
-        <view wx:for="{{recentRecords}}" wx:key="id" class="daily-card recent-card" data-id="{{item.id}}" bindtap="goRecordDetail">
-          <view class="daily-type" style="background: {{item.typeColor}}14; color: {{item.typeColor}};">
-            <text>{{item.typeName}}</text>
+      <!-- 上次出逃记录 -->
+      <view wx:if="{{lastRecord}}" class="last-record-card" bindtap="goRecordDetail" data-id="{{lastRecord.id}}">
+        <view class="last-record-head">
+          <view class="last-record-tag" style="background:{{lastRecord.typeColor}}20; color:{{lastRecord.typeColor}}">
+            {{lastRecord.typeName}}
           </view>
-          <text class="daily-title">{{item.commandTitle}}</text>
-          <text class="daily-meta">{{item.dateLabel}}{{item.duration ? ' · ' + item.duration + '分钟' : ''}}</text>
+          <text class="last-record-date">{{lastRecord.dateLabel}}</text>
         </view>
-      </scroll-view>
-    </view>
-
-    <!-- 每日推荐（v9：进入首屏，即"推荐出逃任务"） -->
-    <view wx:if="{{!selectedCommand && dailyRecommend.length}}" class="daily-section">
-      <view class="section-header">
-        <text class="section-title">今日推荐</text>
-        <text class="section-sub">基于天气和时间</text>
-      </view>
-      <scroll-view scroll-x class="daily-scroll" enhanced show-scrollbar="{{false}}">
-        <view wx:for="{{dailyRecommend}}" wx:key="id" class="daily-card" data-id="{{item.id}}" bindtap="goCommandDetail">
-          <view class="daily-type" style="background: {{item.typeColor}}14; color: {{item.typeColor}};">
-            <text>{{item.typeName}}</text>
+        <text class="last-record-title">{{lastRecord.commandTitle}}</text>
+        <view class="last-record-meta">
+          <view class="last-record-meta-item">
+            <image class="last-record-meta-ico" src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
+            <text>{{lastRecord.duration}}分钟</text>
           </view>
-          <text class="daily-title">{{item.title}}</text>
-          <text class="daily-meta">{{item.duration ? '约 ' + item.duration + ' 分钟' : ''}}</text>
+          <view wx:if="{{lastRecord.mood}}" class="last-record-meta-item">
+            <text>{{lastRecord.mood}}</text>
+          </view>
         </view>
-      </scroll-view>
-    </view>
+      </view>
 
-    <!-- 指令详情卡 -->
-    <view wx:if="{{selectedCommand}}" class="command-sheet">
+      <!-- 今日推荐 -->
+      <view wx:if="{{dailyRecommend.length > 0}}" class="recommend-section">
+        <view class="section-header">
+          <text class="section-title">今日推荐</text>
+          <text class="section-sub">基于{{weatherText || '天气'}}和时间为你挑选</text>
+        </view>
+        <scroll-view class="daily-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+          <view
+            wx:for="{{dailyRecommend}}"
+            wx:key="id"
+            class="rec-card"
+            bindtap="onRecommendTap"
+            data-id="{{item.id}}"
+          >
+            <view class="rec-type" style="background:{{item.typeColor}}20; color:{{item.typeColor}}">
+              {{item.typeName}}
+            </view>
+            <text class="rec-title">{{item.title}}</text>
+            <view class="rec-meta">
+              <text class="rec-duration">{{item.duration}}分钟</text>
+              <text class="rec-dist">{{item.distance || '附近'}}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- 最近出逃 -->
+      <view wx:if="{{recentRecords.length > 0}}" class="recent-section">
+        <view class="section-header">
+          <text class="section-title">最近出逃</text>
+        </view>
+        <scroll-view class="daily-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+          <view
+            wx:for="{{recentRecords}}"
+            wx:key="id"
+            class="daily-card"
+            bindtap="goRecordDetail"
+            data-id="{{item.id}}"
+          >
+            <view class="daily-type" style="background:{{item.typeColor}}20; color:{{item.typeColor}}">
+              {{item.typeName}}
+            </view>
+            <text class="daily-title">{{item.commandTitle}}</text>
+            <text class="daily-meta">{{item.dateLabel}} · {{item.duration}}分钟</text>
+          </view>
+        </scroll-view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <!-- ===== 指令详情卡（遮罩+卡片） ===== -->
+  <view wx:if="{{selectedCommand}}" class="cmd-overlay" catchtap="closeCommand">
+    <view class="cmd-sheet" catchtap="noop">
       <view class="cmd-card">
-        <!-- v12: 关闭按钮左上角，收藏按钮右上角，分别绝对定位 -->
         <view class="cmd-close" catchtap="closeCommand">
-          <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+          <image src="/assets/icons/x-ink-faint.svg" mode="aspectFit"></image>
         </view>
         <view class="favorite-toggle {{collected ? 'active' : ''}}" catchtap="collectCmd">
           <image src="{{collected ? '/assets/icons/bookmark-brand.svg' : '/assets/icons/bookmark.svg'}}" mode="aspectFit"></image>
         </view>
-        <!-- 类型标签 -->
+
+        <view wx:if="{{friendRollHint}}" class="invite-tag friend-roll-tag">🎲 朋友替你摇的</view>
+        <view wx:elif="{{invitedByFriend}}" class="invite-tag">来自朋友的邀请</view>
+
         <view class="cmd-type-row">
-          <view class="cmd-type" style="background: {{selectedCommand.typeColor}}14; color: {{selectedCommand.typeColor}};">
+          <view class="cmd-type" style="background:{{selectedCommand.typeColor}}20; color:{{selectedCommand.typeColor}}">
             <image class="type-ico" src="{{selectedCommand.typeIcon}}" mode="aspectFit"></image>
             <text>{{selectedCommand.typeName}}</text>
           </view>
         </view>
 
-        <!-- 标题 -->
-        <view wx:if="{{invitedByFriend}}" class="invite-tag">
-          <text>来自朋友的邀请</text>
-        </view>
-        <view wx:if="{{friendRollHint}}" class="invite-tag friend-roll-tag">
-          <text>🎲 朋友替你摇的</text>
-        </view>
-        <text class="cmd-title">{{selectedCommand.title}}</text>
+        <text class="cmd-title">{{selectedCommand.title || selectedCommand.content}}</text>
 
-        <!-- 场景插画 -->
         <view class="cmd-image-wrap">
-          <view class="cmd-image-bg" style="background: linear-gradient(135deg, {{selectedCommand.typeColor}}40, {{selectedCommand.typeColor}}10);">
+          <view class="cmd-image-bg">
             <image class="cmd-image-icon" src="{{selectedCommand.typeIcon}}" mode="aspectFit"></image>
           </view>
-          <image class="cmd-image" src="{{selectedCommand.illustration}}" mode="aspectFill" wx:if="{{selectedCommand.illustration}}"></image>
-          <view class="cmd-image-badge" style="background: {{selectedCommand.typeColor}};">
-            <image class="badge-mini-ico" src="{{selectedCommand.typeIcon}}" mode="aspectFit"></image>
-          </view>
+          <image class="cmd-image" src="{{selectedCommand.illustration}}" mode="aspectFill"></image>
         </view>
 
-        <!-- 元信息 -->
         <view class="cmd-meta">
-          <view wx:if="{{selectedCommand.duration}}" class="meta-item">
+          <view class="meta-item">
             <image src="/assets/icons/clock-brand.svg" mode="aspectFit"></image>
-            <text>约 {{selectedCommand.duration}} 分钟</text>
+            <text>{{selectedCommand.duration}}分钟</text>
           </view>
           <view class="meta-item">
-            <image src="/assets/icons/map-pin-brand.svg" mode="aspectFit"></image>
-            <text>{{selectedCommand.distance}}</text>
+            <image src="/assets/icons/navigation-brand.svg" mode="aspectFit"></image>
+            <text>{{selectedCommand.distance || '附近'}}</text>
           </view>
           <view class="meta-item">
-            <image src="/assets/icons/user-brand.svg" mode="aspectFit"></image>
-            <text>{{selectedCommand.people}}</text>
+            <image src="/assets/icons/users-lavender.svg" mode="aspectFit"></image>
+            <text>{{selectedCommand.people || '1人'}}</text>
           </view>
         </view>
 
-        <!-- 小贴士 -->
         <view class="tip-box">
           <view class="tip-head">
             <view class="tip-icon-dot"></view>
             <text class="tip-label">小贴士</text>
           </view>
-          <text class="tip-text">{{selectedCommand.tip || '慢慢走，留意街边的细节。'}}</text>
+          <text class="tip-text">{{selectedCommand.tip || '按自己的节奏，享受这段出逃时光。'}}</text>
         </view>
-      </view>
 
-      <!-- 操作区：邀请朋友 + 替朋友摇 + 重摇 + 接受指令 -->
-      <view class="cmd-actions">
-        <button wx:if="{{selectedCommand.double || selectedCommand.social}}" class="invite-btn" open-type="share">
-          <image src="/assets/icons/users-white.svg" mode="aspectFit"></image>
-          <text>邀请朋友</text>
-        </button>
-        <button class="action-btn friend-roll-btn" open-type="share" data-share-type="friend">
-          <image src="/assets/icons/dice-5-brand-strong.svg" mode="aspectFit"></image>
-          <text>替朋友摇</text>
-        </button>
-        <view class="action-btn secondary" catchtap="reroll">
-          <image src="/assets/icons/refresh-cw-ink-soft.svg" mode="aspectFit"></image>
+        <view class="cmd-actions">
+          <button class="action-btn secondary" catchtap="reroll">
+            <image src="/assets/icons/refresh-cw-ink-soft.svg" mode="aspectFit"></image>
+          </button>
+          <button class="action-btn primary" catchtap="startCommand">开始出逃</button>
         </view>
-        <view class="action-btn primary" catchtap="startCommand">
-          <image src="/assets/icons/check-white.svg" mode="aspectFit"></image>
-          <text>接受指令</text>
-        </view>
-      </view>
-      <view wx:if="{{remainCount === 0}}" class="reroll-hint">
-        <text>次数用完，可自定义</text>
-      </view>
-    </view>
-    <view class="bottom-spacer"></view>
-  </scroll-view>
 
-<!-- home-dice-entry-01: 微逃时长细分弹窗 -->
-  <view wx:if="{{showMicroSheet}}" class="micro-sheet-mask" bindtap="onMicroCancel">
-    <view class="micro-sheet" catchtap="noop">
-      <view class="micro-sheet-handle"></view>
-      <text class="micro-sheet-title">选择出逃时长</text>
-      <view class="micro-options">
-        <view wx:for="{{[10, 20, 30, 60]}}" wx:key="*this"
-              class="micro-option {{selectedDuration === item ? 'active' : ''}} {{isRecommended && recommendedDuration === item ? 'recommended' : ''}}"
-              data-duration="{{item}}"
-              bindtap="onMicroOptionTap">
-          <text class="micro-option-num">{{item}}</text>
-          <text class="micro-option-unit">分钟</text>
-          <text wx:if="{{isRecommended && recommendedDuration === item}}" class="micro-option-tag">推荐</text>
-        </view>
+        <view class="reroll-hint">重掷消耗一次机会，次数每日0点重置</view>
       </view>
-      <view class="micro-start-btn {{selectedDuration ? 'enabled' : 'disabled'}}" bindtap="onMicroStart">
-        <text>开始出逃</text>
-      </view>
-      <view class="micro-cancel" bindtap="onMicroCancel">取消</view>
     </view>
   </view>
-  <!-- sync-dice-sheet: 同频骰子入口选择弹层 -->
+
+  <!-- ===== 微逃时长选择弹窗（dice-micro-7d 已替代，保留兜底） ===== -->
+  <!-- 微逃改走 dice-micro-7d 页面，不再使用此弹窗 -->
+
+  <!-- ===== 同频骰子入口选择弹层 ===== -->
   <view wx:if="{{showDiceSheet}}" class="dice-sheet-mask" bindtap="onDiceSheetMaskTap">
     <view class="dice-sheet-panel" catchtap="noop">
       <view class="dice-sheet-handle"></view>
       <view class="dice-sheet-header">
         <text class="dice-sheet-title">选择出逃方式</text>
-        <text class="dice-sheet-close" bindtap="onDiceSheetClose">✕</text>
+        <view class="dice-sheet-close" bindtap="onDiceSheetClose">✕</view>
       </view>
       <view class="dice-sheet-option" bindtap="onInviteFriendsTap">
         <text class="dice-option-icon">👥</text>
         <view class="dice-option-info">
-          <text class="dice-option-label">邀请好友组局</text>
-          <text class="dice-option-desc">约上熟人，一起掷骰决定今天的出逃任务</text>
+          <text class="dice-option-label">邀请好友</text>
+          <text class="dice-option-desc">创建房间，邀请朋友一起出逃</text>
         </view>
         <text class="dice-option-arrow">›</text>
       </view>
       <view class="dice-sheet-option" bindtap="onEnterHallTap">
-        <text class="dice-option-icon">🎲</text>
+        <text class="dice-option-icon">🏛</text>
         <view class="dice-option-info">
-          <text class="dice-option-label">进入任务大厅找搭子</text>
-          <text class="dice-option-desc">找到官方或用户创建的出逃任务，人齐就出发</text>
+          <text class="dice-option-label">出逃大厅</text>
+          <text class="dice-option-desc">加入公开房间，认识新朋友</text>
         </view>
         <text class="dice-option-arrow">›</text>
       </view>
       <view class="dice-sheet-option dice-sheet-option-highlight" bindtap="onQuickMatchTap">
-        <text class="dice-option-icon">✨</text>
+        <text class="dice-option-icon">🤖</text>
         <view class="dice-option-info">
           <text class="dice-option-label">AI 快速匹配</text>
-          <text class="dice-option-desc">基于你的偏好，秒级匹配任务 + 搭子 + 主题</text>
+          <text class="dice-option-desc">根据画像为你匹配同频伙伴</text>
         </view>
         <text class="dice-option-arrow">›</text>
       </view>

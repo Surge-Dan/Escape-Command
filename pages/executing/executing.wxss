@@ -25,7 +25,7 @@
 .step-count-card {
   background: var(--white);
   border: var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card);
   padding: 32rpx 40rpx;
   margin-bottom: 20rpx;
@@ -48,6 +48,7 @@
   font-weight: 700;
   color: var(--brand);
   line-height: 1.1;
+  font-family: var(--serif);
 }
 
 .timer-unit {
@@ -114,6 +115,7 @@
   font-weight: 700;
   color: var(--ink);
   line-height: 1.2;
+  font-family: var(--serif);
 }
 
 /* 步骤卡 */
@@ -123,6 +125,7 @@
   font-weight: 600;
   color: var(--ink);
   margin-bottom: 20rpx;
+  font-family: var(--serif);
 }
 
 .step-row {
@@ -188,8 +191,8 @@
 }
 
 @keyframes stepPulse {
-  0%, 100% { box-shadow: 0 0 0 0 var(--step-color, rgba(200, 149, 110, 0.4)); }
-  50% { box-shadow: 0 0 0 12rpx rgba(200, 149, 110, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 var(--step-color, rgba(91, 143, 185, 0.4)); }
+  50% { box-shadow: 0 0 0 12rpx rgba(91, 143, 185, 0); }
 }
 
 /* 步骤内容 */
@@ -214,7 +217,7 @@
   font-weight: 600;
   letter-spacing: 1rpx;
   transition: all 200ms var(--ease-standard);
-  box-shadow: 0 2rpx 8rpx rgba(200, 149, 110, 0.32);
+  box-shadow: 0 2rpx 8rpx rgba(91, 143, 185, 0.32);
 }
 
 .step-finish-ico {
@@ -230,7 +233,7 @@
 .step-finish-btn:active {
   background: var(--brand-dark);
   transform: scale(0.94);
-  box-shadow: 0 1rpx 4rpx rgba(200, 149, 110, 0.24);
+  box-shadow: 0 1rpx 4rpx rgba(91, 143, 185, 0.24);
 }
 
 /* v4: 已完成右侧勾标 */
@@ -255,7 +258,7 @@
   align-items: center;
 }
 
-.photo-title { font-size: 30rpx; font-weight: 600; color: var(--ink); }
+.photo-title { font-size: 30rpx; font-weight: 600; color: var(--ink); font-family: var(--serif); }
 .photo-count { font-size: 24rpx; color: var(--ink-soft); }
 
 /* v3: 横向滚动缩略图条 */
@@ -306,7 +309,7 @@
 .photo-add image { width: 48rpx; height: 48rpx; }
 
 /* 小贴士 */
-.tip-card { background: var(--brand-weak); }
+.tip-card { background: linear-gradient(135deg, var(--brand-weak) 0%, var(--white) 100%); }
 
 .tip-head {
   display: flex;
@@ -328,14 +331,14 @@
 .ex-actions {
   padding: 24rpx 40rpx calc(var(--safe-bottom, 0px) + var(--tabbar-floating-height) + var(--tabbar-bottom-gap));
   background: var(--canvas);
-  box-shadow: 0 -4rpx 16rpx rgba(46, 47, 51, 0.04);
+  box-shadow: 0 -4rpx 16rpx rgba(45, 90, 123, 0.05);
 }
 
 .finish-btn {
   width: 100%;
   height: 104rpx;
-  border-radius: var(--radius-md);
-  background: var(--brand);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   color: var(--white);
   display: flex;
   align-items: center;
@@ -345,13 +348,13 @@
   font-weight: 600;
   letter-spacing: 2rpx;
   transition: all 200ms var(--ease-standard);
-  box-shadow: var(--shadow-button);
+  box-shadow: var(--shadow-btn);
 }
 
 .finish-btn:active {
   background: var(--brand-dark);
   transform: scale(0.98);
-  box-shadow: 0 2rpx 8rpx rgba(200, 149, 110, 0.24);
+  box-shadow: 0 2rpx 8rpx rgba(91, 143, 185, 0.24);
 }
 
 .finish-btn.disabled {
@@ -367,13 +370,13 @@
 }
 
 .finish-btn image { width: 36rpx; height: 36rpx; }
-.bottom-spacer { height: 24rpx; }
+.bottom-spacer { height: calc(24rpx + var(--safe-bottom)); }
 
 /* ===== 破圈模式专属样式 ===== */
 .bt-courage-card {
-  background: linear-gradient(135deg, #F3E8FF, #FFF5F0);
+  background: linear-gradient(135deg, #F0EAF8, #F8F4FC);
   border: 2rpx solid #9B7BB8;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card);
   padding: 36rpx 40rpx;
   margin-bottom: 24rpx;
@@ -388,11 +391,13 @@
   font-size: 32rpx;
   font-weight: 700;
   color: #7B3FAF;
+  font-family: var(--serif);
 }
 .bt-courage-count {
   font-size: 40rpx;
   font-weight: 700;
   color: #9B7BB8;
+  font-family: var(--serif);
 }
 .bt-courage-sub {
   display: block;
@@ -415,9 +420,9 @@
   justify-content: center;
   font-size: 28rpx;
   font-weight: 700;
-  background: #F4F3EE;
-  color: #B8B4A8;
-  border: 2rpx solid #E0DDD0;
+  background: var(--brand-weak);
+  color: var(--ink-faint);
+  border: 2rpx solid var(--border-soft);
 }
 .bt-courage-dot.done {
   background: #9B7BB8;
@@ -482,7 +487,7 @@
 }
 .step-row.bt-step-row.finished .step-text {
   text-decoration: line-through;
-  text-decoration-color: #B8B4A8;
+  text-decoration-color: var(--ink-faint);
 }
 .step-row.bt-step-row.current {
   background: #F8F0FF;
@@ -499,8 +504,8 @@
 /* ===== B-安全: 安全提示卡（PRD §15） ===== */
 .safety-card {
   background: var(--white);
-  border: 2rpx solid var(--line);
-  border-radius: var(--radius-lg);
+  border: var(--border);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card);
   padding: 28rpx 32rpx 24rpx;
   margin-bottom: 20rpx;
@@ -508,15 +513,15 @@
 
 /* 三档视觉：info 蓝灰 / warn 琥珀 / danger 警示红 */
 .safety-card.safety-info {
-  background: linear-gradient(135deg, #F4F7FB 0%, #FFFFFF 60%);
-  border-color: #C8D3E0;
+  background: linear-gradient(135deg, var(--brand-weak) 0%, var(--white) 60%);
+  border-color: rgba(91, 143, 185, 0.25);
 }
 .safety-card.safety-warn {
-  background: linear-gradient(135deg, #FFF6E8 0%, #FFFFFF 60%);
+  background: linear-gradient(135deg, #FFF6E8 0%, var(--white) 60%);
   border-color: #E8C896;
 }
 .safety-card.safety-danger {
-  background: linear-gradient(135deg, #FFEFEC 0%, #FFFFFF 60%);
+  background: linear-gradient(135deg, #FFEFEC 0%, var(--white) 60%);
   border-color: #E8B4AE;
 }
 
@@ -531,17 +536,18 @@
   width: 14rpx;
   height: 14rpx;
   border-radius: 50%;
-  background: #5B8FB9;
+  background: var(--brand);
   flex-shrink: 0;
 }
 
-.safety-card.safety-warn .safety-icon-dot { background: #D98A5C; }
-.safety-card.safety-danger .safety-icon-dot { background: #E07A5F; }
+.safety-card.safety-warn .safety-icon-dot { background: var(--warning); }
+.safety-card.safety-danger .safety-icon-dot { background: var(--danger); }
 
 .safety-title {
   font-size: 26rpx;
   font-weight: 700;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .safety-card.safety-warn .safety-title { color: #A66A38; }
@@ -590,16 +596,16 @@
 }
 
 .safety-btn.exit {
-  background: #FFF0EC;
-  color: #B5522E;
-  border: 2rpx solid #E8B4AE;
+  background: var(--danger-tint);
+  color: var(--danger);
+  border: 2rpx solid rgba(224, 85, 85, 0.3);
 }
 
 .safety-btn.exit:active {
   transform: scale(0.97);
-  background: #E07A5F;
+  background: var(--danger);
   color: var(--white);
-  border-color: #E07A5F;
+  border-color: var(--danger);
 }
 
 /* 破圈完成按钮紫色 */
@@ -626,8 +632,8 @@
   gap: 8rpx;
   padding: 24rpx 12rpx;
   background: var(--white);
-  border: var(--border);
-  border-radius: var(--radius-lg);
+  border: 1rpx solid var(--border-soft);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card);
   transition: all 200ms var(--ease-standard);
 }
@@ -682,8 +688,8 @@
 }
 
 .step-card-phase-tag.arrived {
-  background: #E8F5E9;
-  color: #2E7D32;
+  background: var(--heal-tint);
+  color: var(--success);
 }
 
 /* 到达确认按钮 */
@@ -694,8 +700,8 @@
   gap: 12rpx;
   padding: 28rpx 32rpx;
   margin-bottom: 20rpx;
-  background: linear-gradient(135deg, #5CBF9E, #3A8C6F);
-  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--success), #3A8C6F);
+  border-radius: var(--radius-xl);
   box-shadow: 0 4rpx 16rpx rgba(92, 191, 158, 0.3);
   transition: all 200ms var(--ease-standard);
   animation: arrivePulse 2s ease-in-out infinite;

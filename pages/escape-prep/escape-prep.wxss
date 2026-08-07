@@ -1,6 +1,14 @@
-/* ===== 出逃准备页 ===== */
+/* ===== 出逃准备页 · 浅雾蓝设计系统 ===== */
 .page-scroll { width: 100%; }
 .prep-body { padding: 32rpx 40rpx 0; }
+
+/* 通用白色卡片容器 */
+.brief-card, .weather-card, .checklist-card, .route-card {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  box-shadow: var(--shadow-card);
+}
 
 /* 空状态 */
 .empty-state {
@@ -11,10 +19,20 @@
   padding: 160rpx 80rpx;
   text-align: center;
 }
-.empty-illust { width: 160rpx; height: 160rpx; margin-bottom: 32rpx; }
-.empty-title { font-size: 30rpx; font-weight: 600; color: var(--ink); }
-.empty-desc { margin-top: 12rpx; font-size: 26rpx; color: var(--ink-soft); line-height: 1.5; }
-.empty-btn { margin-top: 32rpx; min-width: 200rpx; }
+.empty-illust { width: 160rpx; height: 160rpx; margin-bottom: 32rpx; opacity: 0.7; }
+.empty-title { font-size: 32rpx; font-weight: 700; color: var(--ink); font-family: var(--serif); }
+.empty-desc { margin-top: 12rpx; font-size: 26rpx; color: var(--ink-soft); line-height: 1.6; letter-spacing: 0.3rpx; }
+.empty-btn {
+  margin-top: 32rpx;
+  min-width: 200rpx;
+  padding: 20rpx 48rpx;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  font-size: 28rpx;
+  font-weight: 600;
+  box-shadow: var(--shadow-btn);
+}
 
 /* 指令简述卡 */
 .brief-card { padding: 28rpx; }
@@ -26,15 +44,20 @@
   border-radius: var(--radius-pill);
   font-size: 22rpx;
   font-weight: 600;
+  letter-spacing: 0.5rpx;
+  background: var(--brand-weak);
+  color: var(--brand-strong);
 }
 .brief-type-ico { width: 28rpx; height: 28rpx; }
 .brief-title {
   display: block;
   margin-top: 16rpx;
-  font-size: 32rpx;
+  font-size: 34rpx;
   font-weight: 700;
   color: var(--ink);
   line-height: 1.4;
+  font-family: var(--serif);
+  letter-spacing: 0.5rpx;
 }
 .brief-meta {
   display: flex;
@@ -48,8 +71,9 @@
   gap: 6rpx;
   font-size: 22rpx;
   color: var(--ink-soft);
+  letter-spacing: 0.3rpx;
 }
-.meta-item image { width: 24rpx; height: 24rpx; }
+.meta-item image { width: 24rpx; height: 24rpx; opacity: 0.7; }
 
 /* 区块 */
 .section { margin-top: 40rpx; }
@@ -65,9 +89,11 @@
   font-size: 32rpx;
   font-weight: 700;
   color: var(--ink);
+  font-family: var(--serif);
+  letter-spacing: 1rpx;
 }
 .section-head .section-title { margin-bottom: 0; }
-.section-sub { color: var(--ink-faint); }
+.section-sub { color: var(--ink-faint); font-size: 22rpx; letter-spacing: 0.5rpx; }
 
 /* 天气卡 */
 .weather-card { padding: 28rpx; }
@@ -84,6 +110,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, var(--brand-tint) 0%, var(--white) 100%);
+  border: 3rpx solid rgba(255,255,255,0.8);
+  box-shadow: 0 4rpx 16rpx rgba(91, 143, 185, 0.12);
 }
 .weather-icon { width: 64rpx; height: 64rpx; }
 .weather-text { flex: 1; }
@@ -97,6 +126,7 @@
   font-weight: 700;
   color: var(--ink);
   line-height: 1.1;
+  font-family: var(--serif);
 }
 .weather-unit {
   font-size: 28rpx;
@@ -106,13 +136,15 @@
   margin-left: 12rpx;
   font-size: 28rpx;
   color: var(--ink);
+  font-weight: 500;
 }
 .weather-suggestion {
   display: block;
   margin-top: 8rpx;
   font-size: 24rpx;
   color: var(--ink-soft);
-  line-height: 1.5;
+  line-height: 1.6;
+  letter-spacing: 0.3rpx;
 }
 
 /* 物品清单卡 */
@@ -138,8 +170,9 @@
   transition: all 200ms var(--ease-standard);
 }
 .check-box.on {
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   border-color: var(--brand);
+  box-shadow: 0 4rpx 12rpx rgba(91, 143, 185, 0.3);
 }
 .check-ico { width: 28rpx; height: 28rpx; }
 .check-text {
@@ -148,6 +181,7 @@
   color: var(--ink);
   line-height: 1.5;
   transition: all 200ms var(--ease-standard);
+  letter-spacing: 0.3rpx;
 }
 .check-text.on { color: var(--ink-faint); text-decoration: line-through; }
 
@@ -157,7 +191,7 @@
   position: relative;
   width: 100%;
   height: 280rpx;
-  background: var(--canvas);
+  background: linear-gradient(180deg, var(--brand-weak) 0%, var(--canvas) 100%);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -168,7 +202,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 .route-pin {
   position: relative;
@@ -182,16 +216,18 @@
   width: 28rpx;
   height: 28rpx;
   border-radius: 50%;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   border: 6rpx solid var(--white);
   box-shadow: var(--shadow-float);
 }
 .pin-label {
   font-size: 20rpx;
-  color: var(--ink-soft);
+  color: var(--brand-strong);
   background: var(--white);
-  padding: 2rpx 12rpx;
+  padding: 4rpx 14rpx;
   border-radius: var(--radius-sm);
+  font-weight: 600;
+  box-shadow: var(--shadow-card);
 }
 .pin-ico { width: 56rpx; height: 56rpx; }
 .route-dash {
@@ -201,7 +237,7 @@
   margin: 0 24rpx;
   position: relative;
   z-index: 2;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 .route-text-row {
   display: flex;
@@ -218,25 +254,29 @@
 .route-label {
   font-size: 20rpx;
   color: var(--ink-faint);
+  letter-spacing: 0.5rpx;
 }
 .route-name {
   font-size: 28rpx;
   font-weight: 600;
   color: var(--ink);
+  font-family: var(--serif);
 }
 .route-arrow {
   width: 32rpx;
   height: 32rpx;
   margin: 0 24rpx;
+  opacity: 0.5;
 }
 .route-tip {
   display: block;
   padding: 0 28rpx 24rpx;
   font-size: 22rpx;
   color: var(--ink-faint);
+  letter-spacing: 0.3rpx;
 }
 
-.bottom-spacer { height: 180rpx; }
+.bottom-spacer { height: 200rpx; }
 
 /* 底部出发按钮 */
 .bottom-bar {
@@ -245,17 +285,23 @@
   right: 0;
   bottom: 0;
   padding: 20rpx 40rpx calc(40rpx + env(safe-area-inset-bottom));
-  background: var(--canvas);
-  border-top: 1rpx solid var(--line);
+  background: linear-gradient(180deg, rgba(232, 244, 252, 0) 0%, var(--canvas) 40%);
+  border-top: none;
 }
 .depart-btn {
   width: 100%;
-  min-height: 88rpx;
+  min-height: 96rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12rpx;
   font-size: 30rpx;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  box-shadow: var(--shadow-btn);
+  letter-spacing: 1rpx;
 }
 .depart-btn:active { transform: scale(0.97); }
 .depart-btn image { width: 32rpx; height: 32rpx; }

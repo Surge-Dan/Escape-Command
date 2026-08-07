@@ -1,14 +1,14 @@
-/* v3 重跑：.nav-header 迁移 + 9 照片横滑 + 6 滤镜(inline) + 贴纸库(两组) + 位置卡 + 手写感受 */
+/* ===== 记录页 · 浅雾蓝设计系统 ===== */
+/* v3 重跑：.nav-header 迁移 + 9 照片横滑 + 6 滤镜 + 贴纸库 + 位置卡 + 手写感受 */
+
 .record-page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--canvas);
+  background: var(--bg-gradient);
 }
 
 .status-bar { width: 100%; }
-
-/* 顶部导航已迁移至全局 .nav-header */
 
 .record-scroll { flex: 1; height: 0; }
 .record-body { padding: 32rpx 40rpx; }
@@ -18,12 +18,12 @@
   width: 560rpx;
   margin: 0 auto;
   padding: 28rpx 28rpx 36rpx;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--white);
-  box-shadow: var(--shadow-popup);
+  box-shadow: 0 12rpx 40rpx rgba(91, 143, 185, 0.18);
   transform: rotate(-1.5deg);
   animation: polaroidIn 500ms var(--ease-bounce);
-  border: var(--border);
+  border: 1rpx solid var(--border-soft);
 }
 
 @keyframes polaroidIn {
@@ -53,36 +53,36 @@
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-float);
-  border: var(--border);
+  border: 3rpx solid rgba(255,255,255,0.9);
+  background: var(--white);
 }
 
 .photo-mood-sticker image { width: 44rpx; height: 44rpx; }
 
-/* v3: emoji 贴纸叠加层（点击移除） */
+/* emoji 贴纸叠加层（点击移除） */
 .photo-emoji-sticker {
   position: absolute;
   transform: translate(-50%, -50%);
   font-size: 56rpx;
   line-height: 1;
   z-index: 5;
-  filter: drop-shadow(0 2rpx 6rpx rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 2rpx 6rpx rgba(45, 90, 123, 0.25));
   transition: transform 150ms var(--ease-standard);
-  /* 让触摸拖拽跟手：取消默认 touch 高亮 + 阻止长按菜单 */
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
 }
 
-/* 拖拽中：放大 1.2 倍 + 取消过渡让跟手即时 */
+/* 拖拽中：放大 1.25 倍 + 取消过渡 */
 .photo-emoji-sticker.dragging {
   transform: translate(-50%, -50%) scale(1.25);
   transition: none;
   z-index: 8;
-  filter: drop-shadow(0 4rpx 12rpx rgba(0, 0, 0, 0.35));
+  filter: drop-shadow(0 4rpx 12rpx rgba(45, 90, 123, 0.35));
 }
 
 .photo-emoji-sticker:active { transform: translate(-50%, -50%) scale(0.85); }
 
-/* v3: 感受输入（inline on polaroid，手写风） */
+/* 感受输入（inline on polaroid，手写风） */
 .feeling-input {
   width: 100%;
   min-height: 96rpx;
@@ -93,6 +93,7 @@
   line-height: 1.5;
   font-style: italic;
   font-family: "Kaiti", "STKaiti", "Songti SC", "Noto Serif SC", "Caveat", cursive;
+  letter-spacing: 0.5rpx;
 }
 
 .polaroid-meta {
@@ -103,9 +104,10 @@
   padding: 0 8rpx;
   font-size: 20rpx;
   color: var(--ink-faint);
+  letter-spacing: 0.5rpx;
 }
 
-/* ===== v3: 位置卡片 ===== */
+/* ===== 位置卡片 ===== */
 .location-card {
   margin: 24rpx auto 0;
   width: 560rpx;
@@ -113,13 +115,13 @@
   align-items: center;
   gap: 12rpx;
   padding: 18rpx 24rpx;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--white);
-  border: var(--border);
+  border: 2rpx solid var(--border-soft);
   box-shadow: var(--shadow-card);
 }
 
-.location-card image { width: 32rpx; height: 32rpx; flex-shrink: 0; }
+.location-card image { width: 32rpx; height: 32rpx; flex-shrink: 0; opacity: 0.7; }
 
 .location-name {
   flex: 1;
@@ -128,6 +130,7 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 /* ===== Section 通用 ===== */
@@ -137,11 +140,13 @@
   display: block;
   margin-bottom: 20rpx;
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink);
+  font-family: var(--serif);
+  letter-spacing: 1rpx;
 }
 
-/* v3: 照片缩略图横滑条 */
+/* ===== 照片缩略图横滑条 ===== */
 .photo-strip { width: 100%; }
 
 .photo-strip-list {
@@ -164,7 +169,7 @@
 
 .photo-strip-thumb.active {
   border-color: var(--brand);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-elevated);
 }
 
 .photo-strip-thumb:active { transform: scale(0.95); }
@@ -178,13 +183,14 @@
   width: 32rpx;
   height: 32rpx;
   border-radius: 50%;
-  background: rgba(46, 47, 51, 0.65);
+  background: rgba(45, 90, 123, 0.7);
   color: var(--white);
   font-size: 22rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
+  box-shadow: 0 2rpx 8rpx rgba(45, 90, 123, 0.3);
 }
 
 .photo-strip-add {
@@ -199,6 +205,7 @@
   font-size: 48rpx;
   flex-shrink: 0;
   transition: all 150ms var(--ease-standard);
+  background: var(--brand-weak);
 }
 
 .photo-strip-add:active {
@@ -207,7 +214,7 @@
   transform: scale(0.97);
 }
 
-/* ===== v3: 滤镜选择（120rpx 缩略图预览 + 名称） ===== */
+/* ===== 滤镜选择 ===== */
 .filter-row { width: 100%; }
 
 .filter-row-list {
@@ -238,7 +245,7 @@
 .filter-thumb.active .filter-thumb-img {
   border-color: var(--brand);
   box-shadow: var(--shadow-card);
-  transform: scale(1.03);
+  transform: scale(1.05);
 }
 
 .filter-thumb:active .filter-thumb-img { transform: scale(0.95); }
@@ -246,14 +253,15 @@
 .filter-thumb-name {
   font-size: 22rpx;
   color: var(--ink-soft);
+  letter-spacing: 0.3rpx;
 }
 
 .filter-thumb.active .filter-thumb-name {
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   font-weight: 600;
 }
 
-/* ===== v3: emoji 贴纸库（单组横滑，64rpx emoji） ===== */
+/* ===== emoji 贴纸库 ===== */
 .sticker-row { width: 100%; }
 
 .sticker-list {
@@ -267,7 +275,7 @@
   height: 96rpx;
   border-radius: var(--radius-md);
   background: var(--white);
-  border: var(--border);
+  border: 2rpx solid var(--border-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -279,6 +287,7 @@
 
 .sticker-item:active {
   background: var(--brand-tint);
+  border-color: var(--brand);
   transform: scale(0.92);
 }
 
@@ -298,6 +307,7 @@
   color: var(--ink-soft);
   font-size: 22rpx;
   transition: all 200ms var(--ease-standard);
+  letter-spacing: 0.3rpx;
 }
 
 .mood-circle {
@@ -308,12 +318,15 @@
   align-items: center;
   justify-content: center;
   border: 4rpx solid transparent;
+  background: var(--brand-weak);
   transition: all 200ms var(--ease-standard);
 }
 
 .mood-circle.picked {
   border-color: var(--brand);
+  background: var(--white);
   transform: scale(1.12);
+  box-shadow: var(--shadow-card);
 }
 
 .mood-circle:active { transform: scale(0.92); }
@@ -327,14 +340,14 @@
 /* ===== 底部保存按钮 ===== */
 .save-bar {
   padding: 24rpx 40rpx calc(48rpx + env(safe-area-inset-bottom));
-  background: var(--canvas);
+  background: linear-gradient(180deg, rgba(232, 244, 252, 0) 0%, var(--canvas) 40%);
 }
 
 .save-btn {
   width: 100%;
   min-height: 88rpx;
   border-radius: var(--radius-pill);
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   color: var(--white);
   display: flex;
   align-items: center;
@@ -343,17 +356,18 @@
   font-size: 28rpx;
   font-weight: 600;
   transition: all 150ms var(--ease-standard);
+  box-shadow: var(--shadow-btn);
+  letter-spacing: 1rpx;
 }
 
 .save-btn.loading { opacity: 0.75; }
 .save-btn:active {
-  background: var(--brand-dark);
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 100%);
   transform: scale(0.97);
 }
 .save-btn image { width: 32rpx; height: 32rpx; }
 
 /* ===== 分享画布 ===== */
-/* Canvas 2D 内部坐标系使用 px，定位也统一用 px 避免 rpx/px 混用 */
 .share-canvas {
   position: fixed;
   left: -9999px;
@@ -371,19 +385,21 @@
   align-items: center;
   justify-content: center;
   padding: 64rpx;
-  background: rgba(46, 47, 51, 0.45);
+  background: rgba(45, 90, 123, 0.5);
+  backdrop-filter: blur(8rpx);
 }
 
 .saved-card {
   width: 100%;
   padding: 48rpx;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   background: var(--white);
-  box-shadow: var(--shadow-popup);
+  box-shadow: 0 16rpx 48rpx rgba(45, 90, 123, 0.28);
   display: flex;
   flex-direction: column;
   align-items: center;
   animation: savedPop 350ms var(--ease-bounce);
+  border: 2rpx solid rgba(255,255,255,0.9);
 }
 
 @keyframes savedPop {
@@ -395,10 +411,11 @@
   width: 96rpx;
   height: 96rpx;
   border-radius: 50%;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(91, 143, 185, 0.4);
 }
 
 .saved-check image { width: 48rpx; height: 48rpx; }
@@ -408,12 +425,15 @@
   font-size: 36rpx;
   font-weight: 700;
   color: var(--ink);
+  font-family: var(--serif);
+  letter-spacing: 1rpx;
 }
 
 .saved-sub {
   margin-top: 8rpx;
   font-size: 24rpx;
   color: var(--ink-soft);
+  letter-spacing: 0.3rpx;
 }
 
 .saved-actions {
@@ -433,11 +453,16 @@
   font-size: 28rpx;
   font-weight: 600;
   transition: transform 150ms var(--ease-standard);
+  letter-spacing: 0.5rpx;
 }
 
 .saved-btn:active { transform: scale(0.97); }
-.saved-btn.ghost { background: transparent; color: var(--brand); border: 2rpx solid var(--brand); }
-.saved-btn.primary { background: var(--brand); color: var(--white); }
+.saved-btn.ghost { background: var(--brand-tint); color: var(--brand); border: 2rpx solid var(--brand); }
+.saved-btn.primary {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: var(--white);
+  box-shadow: var(--shadow-btn);
+}
 
 .saved-later {
   min-height: 88rpx;
@@ -445,6 +470,7 @@
   align-items: center;
   color: var(--ink-faint);
   font-size: 28rpx;
+  letter-spacing: 0.5rpx;
 }
 
 .bottom-spacer { height: 24rpx; }

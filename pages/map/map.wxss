@@ -1,9 +1,8 @@
-/* v4 重构：地图类型扩展为 3 类（普通 / 卫星 / 路线）；圆角统一收紧；定位按钮加 :active 反馈 */
+/* v4 重构 · 浅雾蓝设计系统改造 */
 .map-page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  /* v11: 背景使用主题变量，切换主题时自动跟随 */
   background: var(--bg-gradient);
 }
 
@@ -13,14 +12,14 @@
   border-bottom: none;
 }
 
-/* ===== 简洁主题区：v10 标题与城市 pill 左右排列 ===== */
+/* ===== 简洁主题区：标题与城市 pill 左右排列 ===== */
 .map-theme {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
   box-sizing: border-box;
-  padding: 32rpx 24rpx 32rpx 40rpx;
+  padding: 28rpx 24rpx 28rpx 40rpx;
   background: transparent;
 }
 
@@ -36,27 +35,31 @@
   font-weight: 700;
   color: var(--ink);
   line-height: 1.3;
+  font-family: var(--serif);
+  letter-spacing: 1rpx;
 }
 
 .map-theme-sub {
   display: block;
   font-size: 24rpx;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   line-height: 1.4;
 }
 
-/* ===== 城市入口 pill（v10 下放到主题区右侧；v11 紧贴右边缘） ===== */
+/* ===== 城市入口 pill ===== */
 .map-city-pill {
   display: inline-flex;
   align-items: center;
   height: 56rpx;
-  padding: 0 18rpx;
-  border-radius: 100rpx;
-  background: var(--canvas);
-  border: 2rpx solid var(--line);
+  padding: 0 20rpx;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1rpx solid var(--border-soft);
   gap: 8rpx;
   margin-left: auto;
-  transition: transform 150ms var(--ease-standard);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 150ms var(--ease-standard), background 150ms var(--ease-standard);
 }
 
 .map-city-pill:active {
@@ -101,19 +104,19 @@
   right: 24rpx;
   display: flex;
   flex-direction: column;
-  background-color: rgba(255, 255, 255, 0.96);
-  border-radius: 24rpx;
+  background-color: rgba(255, 255, 255, 0.92);
+  border-radius: var(--radius-xl);
   padding: 16rpx;
-  border-width: 2rpx;
-  border-style: solid;
-  border-color: var(--line);
+  border: 1rpx solid var(--border-soft);
   box-shadow: var(--shadow-elevated);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .map-tabs {
   display: flex;
   flex-direction: row;
-  background-color: var(--canvas);
+  background-color: var(--brand-weak);
   border-radius: var(--radius-md);
   padding: 4rpx;
 }
@@ -123,6 +126,7 @@
   text-align: center;
   padding: 14rpx 0;
   border-radius: var(--radius-sm);
+  transition: background 200ms var(--ease-standard);
 }
 
 .map-tab-text {
@@ -133,6 +137,7 @@
 
 .map-tab.active {
   background-color: var(--brand);
+  box-shadow: 0 2rpx 8rpx rgba(91, 143, 185, 0.25);
 }
 
 .map-tab.active .map-tab-text {
@@ -151,10 +156,9 @@
   padding: 10rpx 22rpx;
   margin-right: 12rpx;
   border-radius: var(--radius-pill);
-  background-color: var(--white);
-  border-width: 2rpx;
-  border-style: solid;
-  border-color: var(--line);
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1rpx solid var(--border-soft);
+  transition: all 180ms var(--ease-standard);
 }
 
 .time-chip-text {
@@ -170,35 +174,34 @@
 
 .time-chip.active .time-chip-text {
   color: var(--white);
+  font-weight: 500;
 }
 
-/* v4: 定位按钮 —— 圆形 88rpx，移到右下角，:active 加深阴影 */
+/* ===== 定位按钮 ===== */
 .map-locate-btn {
   position: absolute;
   right: 24rpx;
-  bottom: calc(var(--page-pad-bottom) + 148rpx);
+  bottom: calc(140rpx + env(safe-area-inset-bottom, 0px) + 116rpx);
   width: 88rpx;
   height: 88rpx;
-  background-color: var(--white);
+  background-color: rgba(255, 255, 255, 0.96);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-width: 2rpx;
-  border-style: solid;
-  border-color: var(--line);
-  box-shadow: 0 4rpx 16rpx rgba(46, 47, 51, 0.14);
-  transition: transform 200ms var(--ease-standard), box-shadow 200ms var(--ease-standard);
+  border: 1rpx solid var(--border-soft);
+  box-shadow: 0 4rpx 16rpx rgba(45, 90, 123, 0.12);
+  transition: transform 200ms var(--ease-standard), background 200ms var(--ease-standard);
   z-index: 101;
 }
 
 .map-locate-btn:active {
   transform: scale(0.92);
   background-color: var(--brand-tint);
-  box-shadow: 0 2rpx 8rpx rgba(46, 47, 51, 0.18);
+  box-shadow: 0 2rpx 8rpx rgba(45, 90, 123, 0.16);
 }
 
-/* v13: 定位图标用 cover-view + CSS 绘制，真机 100% 可见 */
+/* 定位图标（cover-view + CSS 绘制） */
 .locate-icon {
   position: relative;
   width: 48rpx;
@@ -228,7 +231,7 @@
   background-color: var(--brand);
 }
 
-/* v13: 加号图标用 cover-view + CSS 绘制 */
+/* 加号图标（cover-view + CSS 绘制） */
 .plus-icon {
   position: relative;
   width: 40rpx;
@@ -241,7 +244,7 @@
   left: 0;
   width: 40rpx;
   height: 4rpx;
-  background-color: #E07A5F;
+  background-color: var(--brand);
   border-radius: 2rpx;
 }
 
@@ -251,53 +254,50 @@
   top: 0;
   width: 4rpx;
   height: 40rpx;
-  background-color: #E07A5F;
+  background-color: var(--brand);
   border-radius: 2rpx;
 }
 
-/* v12: 添加/编辑出发点按钮 —— 使用品牌色 + 图标 */
+/* ===== 添加/编辑出发点按钮 ===== */
 .map-home-btn {
   position: absolute;
   right: 24rpx;
-  bottom: calc(var(--page-pad-bottom) + 252rpx);
+  bottom: calc(140rpx + env(safe-area-inset-bottom, 0px) + 220rpx);
   width: 88rpx;
   height: 88rpx;
-  background-color: var(--white);
+  background-color: rgba(255, 255, 255, 0.96);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-width: 2rpx;
-  border-style: solid;
-  border-color: var(--line);
-  box-shadow: 0 4rpx 16rpx rgba(46, 47, 51, 0.14);
-  transition: transform 200ms var(--ease-standard), box-shadow 200ms var(--ease-standard);
+  border: 1rpx solid var(--border-soft);
+  box-shadow: 0 4rpx 16rpx rgba(45, 90, 123, 0.12);
+  transition: transform 200ms var(--ease-standard), background 200ms var(--ease-standard);
 }
 
 .map-home-btn:active {
   transform: scale(0.92);
   background-color: var(--brand-tint);
-  box-shadow: 0 2rpx 8rpx rgba(46, 47, 51, 0.18);
+  box-shadow: 0 2rpx 8rpx rgba(45, 90, 123, 0.16);
 }
 
-/* v13: home-ico 已由 .plus-icon 替代，此样式保留兼容 */
-
-/* 底部统计条：悬浮胶囊卡片，与自定义 TabBar 风格一致 */
+/* ===== 底部统计条：悬浮胶囊卡片，紧贴TabBar上方 ===== */
 .map-stats-bar {
   position: absolute;
   left: 32rpx;
   right: 32rpx;
-  bottom: calc(var(--page-pad-bottom) + 16rpx);
+  bottom: calc(20rpx + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
   background: rgba(255, 255, 255, 0.96);
-  border: 1rpx solid rgba(122, 78, 43, 0.08);
-  border-radius: 32rpx;
-  padding: 20rpx 32rpx;
-  box-shadow: 0 8rpx 40rpx rgba(46, 47, 51, 0.12);
+  border: 1rpx solid var(--border-soft);
+  border-radius: var(--radius-xl);
+  padding: 20rpx 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(45, 90, 123, 0.12);
   backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
   z-index: 100;
 }
 
@@ -314,6 +314,7 @@
   color: var(--ink);
   line-height: 1.1;
   letter-spacing: 1rpx;
+  font-family: var(--serif);
 }
 
 .stat-label {
@@ -322,7 +323,7 @@
   color: var(--ink-faint);
 }
 
-/* 空状态 */
+/* ===== 空状态 ===== */
 .map-empty {
   position: absolute;
   top: 50%;
@@ -331,12 +332,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.94);
-  border-radius: var(--radius-lg);
-  padding: 40rpx 56rpx;
-  border-width: 2rpx;
-  border-style: solid;
-  border-color: var(--line);
+  background-color: rgba(255, 255, 255, 0.96);
+  border-radius: var(--radius-2xl);
+  padding: 48rpx 56rpx;
+  border: 1rpx solid var(--border-soft);
+  box-shadow: var(--shadow-elevated);
 }
 
 .empty-illust {
@@ -351,6 +351,7 @@
   color: var(--ink);
   margin-bottom: 8rpx;
   text-align: center;
+  font-family: var(--serif);
 }
 
 .empty-sub {
@@ -362,27 +363,26 @@
 .empty-cta {
   margin-top: 28rpx;
   padding: 18rpx 56rpx;
-  background-color: var(--brand);
+  background: var(--brand);
   color: var(--white);
   font-size: 28rpx;
   font-weight: 600;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   text-align: center;
+  box-shadow: 0 6rpx 20rpx rgba(91, 143, 185, 0.30);
 }
 
-/* 标记弹窗（C-12 富化版） */
+/* ===== 标记弹窗 ===== */
 .map-popup {
   position: absolute;
   left: 24rpx;
   right: 24rpx;
   top: 180rpx;
   background-color: var(--white);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-2xl);
   padding: 28rpx 28rpx 0;
-  border-width: 2rpx;
-  border-style: solid;
-  border-color: var(--line);
-  box-shadow: 0 8rpx 32rpx rgba(46, 47, 51, 0.16);
+  border: 1rpx solid var(--border-soft);
+  box-shadow: 0 12rpx 40rpx rgba(45, 90, 123, 0.18);
   z-index: 110;
 }
 
@@ -407,7 +407,7 @@
 
 .popup-mode-pill {
   padding: 4rpx 14rpx;
-  border-radius: 100rpx;
+  border-radius: var(--radius-pill);
   font-size: 20rpx;
   font-weight: 600;
 }
@@ -417,11 +417,12 @@
   font-weight: 600;
   color: var(--ink);
   margin-bottom: 6rpx;
+  font-family: var(--serif);
 }
 
 .popup-date {
   font-size: 22rpx;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   margin-bottom: 14rpx;
 }
 
@@ -431,7 +432,7 @@
   height: 200rpx;
   border-radius: var(--radius-md);
   margin-bottom: 14rpx;
-  background-color: var(--canvas);
+  background-color: var(--brand-weak);
 }
 
 /* 信息行：搭子 / 时长 / 心情 / 天气 */
@@ -463,7 +464,7 @@
 
 /* 查看完整记录按钮 */
 .popup-cta {
-  border-top: 2rpx solid var(--line);
+  border-top: 1rpx solid var(--line);
   padding: 22rpx 0;
   margin: 0 -28rpx;
   text-align: center;
@@ -476,41 +477,43 @@
   text-align: center;
 }
 
-/* ===== B4-B: 重返此地按钮 ===== */
+/* ===== 重返此地按钮 ===== */
 .popup-revisit-btn {
   margin-top: 16rpx;
   padding: 12rpx 24rpx;
-  background: #5CBF9E;
-  border-radius: 32rpx;
+  background: var(--brand);
+  border-radius: var(--radius-pill);
   align-self: flex-start;
 }
 
 .popup-revisit-text {
   font-size: 24rpx;
   font-weight: 600;
-  color: #FFFFFF;
+  color: var(--white);
   line-height: 1;
 }
 
-/* ===== B4-B: 情绪筛选切换 ===== */
+/* ===== 情绪筛选切换 ===== */
 .mood-toggle {
   background: rgba(255, 255, 255, 0.7);
 }
 
 .mood-toggle.active {
-  background: #5CBF9E;
+  background: var(--brand);
 }
 
-/* ===== B4-B: 城市关系总结条 ===== */
+/* ===== 城市关系总结条（位于统计条上方） ===== */
 .map-summary-bar {
   position: absolute;
-  left: 24rpx;
-  right: 24rpx;
-  bottom: 180rpx;
-  padding: 16rpx 24rpx;
-  background: rgba(46, 47, 51, 0.78);
-  border-radius: 16rpx;
-  backdrop-filter: blur(8rpx);
+  left: 48rpx;
+  right: 48rpx;
+  bottom: calc(148rpx + env(safe-area-inset-bottom, 0px));
+  padding: 14rpx 24rpx;
+  background: rgba(45, 90, 123, 0.82);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(12rpx);
+  -webkit-backdrop-filter: blur(12rpx);
+  z-index: 99;
 }
 
 .summary-text {
@@ -520,14 +523,14 @@
   text-align: center;
 }
 
-/* ===== B4-B: 重返此地确认弹窗 ===== */
+/* ===== 重返此地确认弹窗 ===== */
 .revisit-modal {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(45, 90, 123, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -536,12 +539,13 @@
 
 .revisit-card {
   width: 560rpx;
-  background: #FFFFFF;
-  border-radius: 24rpx;
+  background: var(--white);
+  border-radius: var(--radius-2xl);
   padding: 40rpx 32rpx 32rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: 0 16rpx 48rpx rgba(45, 90, 123, 0.24);
 }
 
 .revisit-title {
@@ -549,6 +553,7 @@
   font-weight: 700;
   color: var(--ink);
   margin-bottom: 16rpx;
+  font-family: var(--serif);
 }
 
 .revisit-subtitle {
@@ -571,8 +576,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 40rpx;
-  background: #F5F3EF;
+  border-radius: var(--radius-pill);
+  background: var(--brand-weak);
   font-size: 28rpx;
   color: var(--ink-soft);
 }
@@ -583,15 +588,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 40rpx;
-  background: #5CBF9E;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
   font-size: 28rpx;
   font-weight: 600;
-  color: #FFFFFF;
-}
-
-/* ===== TabBar 占位 ===== */
-.tabbar-placeholder {
-  height: calc(var(--tabbar-floating-height) + var(--tabbar-bottom-gap) + var(--safe-bottom));
-  flex-shrink: 0;
+  color: var(--white);
+  box-shadow: 0 6rpx 20rpx rgba(91, 143, 185, 0.30);
 }

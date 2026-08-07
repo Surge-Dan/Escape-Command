@@ -28,15 +28,17 @@
   font-weight: 600;
   color: var(--ink);
   letter-spacing: 2rpx;
+  font-family: var(--serif);
 }
 
 .hero-version {
   font-size: 24rpx;
   margin-top: 12rpx;
   background: var(--brand-tint);
-  padding: 4rpx 20rpx;
-  border-radius: 999rpx;
+  padding: 6rpx 20rpx;
+  border-radius: var(--radius-pill);
   color: var(--brand-dark);
+  font-weight: 500;
 }
 
 .hero-tagline {
@@ -67,7 +69,7 @@
 .section-card {
   background: var(--white);
   border-radius: var(--radius-xl);
-  border: var(--border);
+  border: 1rpx solid var(--border-soft);
   box-shadow: var(--shadow-card);
   padding: 32rpx 28rpx;
 }
@@ -131,6 +133,7 @@
   font-size: 28rpx;
   font-weight: 600;
   color: var(--brand-dark);
+  font-family: var(--serif);
 }
 
 .changelog-date {
@@ -149,7 +152,7 @@
 .setting-group {
   background: var(--white);
   border-radius: var(--radius-xl);
-  border: var(--border);
+  border: 1rpx solid var(--border-soft);
   box-shadow: var(--shadow-card);
   overflow: hidden;
 }
@@ -172,6 +175,7 @@
   font-size: 28rpx;
   font-weight: 500;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .setting-desc {
@@ -199,7 +203,7 @@
   color: var(--brand);
   background: var(--brand-tint);
   padding: 8rpx 20rpx;
-  border-radius: 999rpx;
+  border-radius: var(--radius-pill);
   flex-shrink: 0;
 }
 

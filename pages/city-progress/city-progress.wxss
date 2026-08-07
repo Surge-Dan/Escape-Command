@@ -16,7 +16,7 @@
 .city-hero {
   background: linear-gradient(135deg, var(--brand-tint), var(--brand-weak));
   border-radius: var(--radius-xl);
-  border: var(--border);
+  border: 1rpx solid var(--border-soft);
   padding: 28rpx;
   display: flex;
   flex-direction: column;
@@ -33,7 +33,7 @@
   width: 180rpx;
   height: 180rpx;
   border-radius: 50%;
-  background: rgba(200, 149, 110, 0.18);
+  background: rgba(91, 143, 185, 0.18);
 }
 
 .city-hero::after {
@@ -44,7 +44,7 @@
   width: 140rpx;
   height: 140rpx;
   border-radius: 50%;
-  background: rgba(212, 138, 90, 0.10);
+  background: rgba(91, 143, 185, 0.10);
 }
 
 .hero-row {
@@ -68,6 +68,7 @@
   font-weight: 700;
   color: var(--brand-dark);
   line-height: 1.2;
+  font-family: var(--serif);
 }
 
 .hero-stats {
@@ -94,6 +95,7 @@
   font-weight: 700;
   color: var(--ink);
   line-height: 1;
+  font-family: var(--serif);
 }
 
 .hero-stat-label {
@@ -130,6 +132,7 @@
   font-weight: 700;
   color: var(--ink);
   line-height: 1.2;
+  font-family: var(--serif);
 }
 
 .card-sub {
@@ -188,7 +191,7 @@
 }
 
 .heat-cell.hot {
-  box-shadow: 0 0 0 3rpx rgba(200, 149, 110, 0.45) inset;
+  box-shadow: 0 0 0 3rpx rgba(91, 143, 185, 0.45) inset;
 }
 
 .cell-count {
@@ -231,6 +234,7 @@
   color: var(--brand-dark);
   line-height: 1;
   letter-spacing: -2rpx;
+  font-family: var(--serif);
 }
 
 .progress-sep {
@@ -383,7 +387,7 @@
 
 .hot-rank.rank-1 { background: linear-gradient(135deg, #FFD36B, #E0A92E); box-shadow: 0 2rpx 8rpx rgba(224, 169, 46, 0.32); }
 .hot-rank.rank-2 { background: linear-gradient(135deg, #C8D0DA, #9AA8BA); box-shadow: 0 2rpx 8rpx rgba(154, 168, 186, 0.32); }
-.hot-rank.rank-3 { background: linear-gradient(135deg, #E8B594, #D98A5C); box-shadow: 0 2rpx 8rpx rgba(217, 138, 92, 0.32); }
+.hot-rank.rank-3 { background: linear-gradient(135deg, var(--ink-faint), var(--brand)); box-shadow: 0 2rpx 8rpx rgba(91, 143, 185, 0.32); }
 
 .hot-info {
   flex: 1;
@@ -401,6 +405,7 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
   overflow: hidden;
+  font-family: var(--serif);
 }
 
 .hot-meta {
@@ -491,12 +496,13 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
   overflow: hidden;
+  font-family: var(--serif);
 }
 
 .area-tag {
   font-size: 18rpx;
   color: var(--ink-faint);
-  background: rgba(122, 78, 43, 0.06);
+  background: rgba(91, 143, 185, 0.06);
   padding: 2rpx 8rpx;
   border-radius: var(--radius-pill);
   flex-shrink: 0;
@@ -604,6 +610,7 @@
   font-size: 32rpx;
   font-weight: 600;
   color: var(--ink);
+  font-family: var(--serif);
 }
 
 .empty-desc {
@@ -619,12 +626,12 @@
   margin-top: 48rpx;
   padding: 22rpx 60rpx;
   min-height: 88rpx;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   color: var(--white);
   border-radius: var(--radius-pill);
   font-size: 28rpx;
   font-weight: 600;
-  box-shadow: 0 4rpx 16rpx rgba(200, 149, 110, 0.24);
+  box-shadow: var(--shadow-btn);
   transition: transform 150ms var(--ease-standard);
 }
 

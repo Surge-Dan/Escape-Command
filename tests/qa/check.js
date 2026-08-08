@@ -285,7 +285,7 @@ check('MOCK_USERS 导出', Array.isArray(userPool.MOCK_USERS), 'error')
 check('MOCK_USERS ≥8 个', userPool.MOCK_USERS.length >= 8, 'error')
 check('getMockUsers 导出', typeof userPool.getMockUsers === 'function', 'error')
 check('getRandomPartner 导出', typeof userPool.getRandomPartner === 'function', 'error')
-check('Mock 用户 avatar 复用', userPool.MOCK_USERS.every(u => u.avatar === '/assets/images/avatar.webp'), 'error')
+check('Mock 用户 avatar 复用', userPool.MOCK_USERS.every(u => u.avatar === '/packageBt/images/avatar.webp'), 'error')
 
 // C. task-hall-store 函数导出
 const hallStore = require('../../utils/task-hall-store.js')
@@ -365,7 +365,7 @@ check('create-task.js 调用 getPOIsByDistrict', createTaskJs.includes('getPOIsB
 check('index.js 含 showDiceSheet', indexJs.includes('showDiceSheet'), 'error')
 check('index.js 含 onInviteFriendsTap', indexJs.includes('onInviteFriendsTap'), 'error')
 check('index.js 含 onEnterHallTap', indexJs.includes('onEnterHallTap'), 'error')
-check('index.js 跳转 hall 路由', indexJs.includes('/pages/group/hall/hall'), 'error')
+check('index.js 跳转 hall 路由', indexJs.includes('/packageGroup/pages/group/hall/hall'), 'error')
 
 // G. 路由注册（主包 pages + subPackages.pages 合并判断）
 const hallAppJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'app.json'), 'utf-8'))

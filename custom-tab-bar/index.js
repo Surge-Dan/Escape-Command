@@ -3,6 +3,11 @@ Component({
     selected: {
       type: Number,
       value: 0
+    },
+    // 控制显隐：弹窗弹出时设为 true，TabBar 滑出屏幕
+    tabbarHidden: {
+      type: Boolean,
+      value: false
     }
   },
   data: {

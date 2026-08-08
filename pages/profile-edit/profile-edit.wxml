@@ -16,7 +16,7 @@
       <view class="section-label">头像</view>
       <view class="avatar-card solid-card" bindtap="chooseAvatar">
         <view class="avatar-wrap">
-          <image class="avatar-img" src="{{avatarUrl}}" mode="aspectFill"></image>
+          <image class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" binderror="onAvatarError"></image>
           <view class="avatar-mask">
             <image class="avatar-cam" src="/assets/icons/camera-ink-soft.svg" mode="aspectFit"></image>
           </view>

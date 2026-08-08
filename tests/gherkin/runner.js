@@ -1138,18 +1138,18 @@ function on(matcher, handler) {
   on(/^Sheet 包含「进入任务大厅找搭子」选项$/, () => true)
   // When 用户选择「邀请好友组局」
   on(/^用户选择「邀请好友组局」$/, (ctx) => {
-    ctx.route = '/pages/group/create/create'
+    ctx.route = '/packageGroup/pages/group/create/create'
     return true
   })
   // When 用户选择「进入任务大厅找搭子」
   on(/^用户选择「进入任务大厅找搭子」$/, (ctx) => {
-    ctx.route = '/pages/group/hall/hall'
+    ctx.route = '/packageGroup/pages/group/hall/hall'
     return true
   })
   // Then 跳转到 pages/group/create 创建房间流程
-  on(/^跳转到 pages\/pages\/group\/create 创建房间流程$/, (ctx) => ctx.route === '/pages/group/create/create')
+  on(/^跳转到 pages\/pages\/group\/create 创建房间流程$/, (ctx) => ctx.route === '/packageGroup/pages/group/create/create')
   // Then 跳转到 pages/group/hall 任务大厅页
-  on(/^跳转到 pages\/pages\/group\/hall 任务大厅页$/, (ctx) => ctx.route === '/pages/group/hall/hall')
+  on(/^跳转到 pages\/pages\/group\/hall 任务大厅页$/, (ctx) => ctx.route === '/packageGroup/pages/group/hall/hall')
 
   // ===== @hall 任务大厅页面 =====
 
@@ -3126,7 +3126,7 @@ function on(matcher, handler) {
     ctx.rawPlayer = {
       openId: 'real_raw_01',
       nickname: '云端玩家',
-      avatar: '/assets/images/avatar.webp',
+      avatar: '/packageBt/images/avatar.webp',
       interests: ['food', 'photo'],
       district: '天河区',
       bio: '爱出逃'

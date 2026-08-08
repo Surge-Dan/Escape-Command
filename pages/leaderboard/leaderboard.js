@@ -1,4 +1,4 @@
-const app = getApp()
+﻿const app = getApp()
 
 const NAME_PREFIXES = ['周末', '迷路的', '踢影子的', '漫步的', '摘云的', '追风的', '捡落叶的', '清晨的', '黄昏的', '夜行的', '雨后的', '午后的']
 const NAME_SUFFIXES = ['漫游者', '散步家', '观察员', '记录人', '探险家', '闲逛者', '拾光人', '追风人']
@@ -19,7 +19,7 @@ const TABS = [
   { id: 'all', name: '总榜', scale: 1.0 }
 ]
 
-const DEFAULT_AVATAR = '/assets/images/avatar.webp'
+const DEFAULT_AVATAR = '/assets/avatar-default.webp'
 
 // 确定性 PRNG，保证同 tab 切换时榜单数据稳定
 function makeRng(seed) {

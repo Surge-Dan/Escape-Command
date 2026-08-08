@@ -1,4 +1,5 @@
-<view class="custom-tabbar">
+<!-- 自定义 TabBar - v10: 重命名属性为 tabbarHidden 避免与原生 hidden 冲突 -->
+<view class="custom-tabbar {{tabbarHidden ? 'is-hidden' : ''}}">
   <view
     wx:for="{{list}}"
     wx:key="index"
@@ -9,5 +10,7 @@
   >
     <text class="tabbar-text">{{item.text}}</text>
   </view>
+  <!-- 真实边框层：z-index:10 保证渲染在滑块之上，pointer-events:none 不挡点击 -->
+  <view class="tabbar-border-overlay"></view>
 </view>
-<view class="tabbar-placeholder"></view>
+<view class="tabbar-placeholder {{tabbarHidden ? 'is-hidden' : ''}}"></view>

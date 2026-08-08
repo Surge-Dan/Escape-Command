@@ -13,7 +13,7 @@
       <!-- 拍立得卡片 -->
       <view class="polaroid-card">
         <view class="polaroid-photo-area">
-          <image class="polaroid-photo" src="{{photos.length > 0 ? photos[mainPhoto] : (command.illustration || command.scene || '/assets/images/empty-collection.webp')}}" mode="aspectFill" style="filter: {{filters[filterIndex].css}};"></image>
+          <image class="polaroid-photo" src="{{photos.length > 0 ? photos[mainPhoto] : (command.illustration || command.scene || '/packageBt/images/empty-collection.webp')}}" mode="aspectFill" style="filter: {{filters[filterIndex].css}};"></image>
           <view class="photo-mood-sticker" style="background: {{moods[moodIndex].tint}};">
             <image src="{{moods[moodIndex].icon}}" mode="aspectFit"></image>
           </view>
@@ -62,7 +62,7 @@
         <scroll-view scroll-x class="filter-row" enhanced show-scrollbar="{{false}}">
           <view class="filter-row-list">
             <view wx:for="{{filters}}" wx:key="id" class="filter-thumb {{filter === item.id ? 'active' : ''}}" data-id="{{item.id}}" bindtap="selectFilter">
-              <image class="filter-thumb-img" src="{{photos.length > 0 ? photos[mainPhoto] : (command.illustration || command.scene || '/assets/images/empty-collection.webp')}}" mode="aspectFill" style="filter: {{item.css}};"></image>
+              <image class="filter-thumb-img" src="{{photos.length > 0 ? photos[mainPhoto] : (command.illustration || command.scene || '/packageBt/images/empty-collection.webp')}}" mode="aspectFill" style="filter: {{item.css}};"></image>
               <text class="filter-thumb-name">{{item.name}}</text>
             </view>
           </view>

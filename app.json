@@ -7,7 +7,6 @@
     "pages/map/map",
     "pages/profile/profile",
     "pages/escape-prep/escape-prep",
-    "pages/photo-edit/photo-edit",
     "pages/generating/generating",
     "pages/record-detail/record-detail",
     "pages/timeline/timeline",
@@ -24,29 +23,63 @@
     "pages/map-route/map-route",
     "pages/city-select/city-select",
     "pages/profile-edit/profile-edit",
-    "pages/help/help",
-    "pages/data-export/data-export",
-    "pages/invite/invite",
-    "pages/partner-list/partner-list",
     "pages/leaderboard/leaderboard",
-    "pages/group/create/create",
-    "pages/group/room/room",
-    "pages/group/escape-record/escape-record",
-    "pages/group/hall/hall",
-    "pages/group/hall/detail/detail",
-    "pages/group/hall/create-task/create-task",
-    "pages/breakthrough-profile/breakthrough-profile",
-    "pages/bt-certificate/bt-certificate",
     "pages/dice-micro-7d/dice-micro-7d",
     "pages/dice-result-7d/dice-result-7d",
     "pages/mode-intro/mode-intro",
-    "pages/member/member",
-    "pages/about/about",
     "pages/settings/settings",
     "pages/badges/badges",
     "pages/collection/collection",
     "pages/quick-match/quick-match",
     "pages/command-detail/command-detail"
+  ],
+  "subPackages": [
+    {
+      "root": "packageGroup",
+      "name": "group",
+      "pages": [
+        "pages/group/create/create",
+        "pages/group/room/room",
+        "pages/group/escape-record/escape-record",
+        "pages/group/hall/hall",
+        "pages/group/hall/detail/detail",
+        "pages/group/hall/create-task/create-task"
+      ]
+    },
+    {
+      "root": "packageBt",
+      "name": "bt",
+      "pages": [
+        "pages/breakthrough-profile/breakthrough-profile",
+        "pages/bt-certificate/bt-certificate"
+      ]
+    },
+    {
+      "root": "packageDice",
+      "name": "dice",
+      "pages": [
+        "pages/placeholder/placeholder"
+      ]
+    },
+    {
+      "root": "packageAssets",
+      "name": "assets",
+      "pages": [
+        "pages/placeholder/placeholder"
+      ]
+    },
+    {
+      "root": "packageMe",
+      "name": "me",
+      "pages": [
+        "pages/invite/invite",
+        "pages/member/member",
+        "pages/about/about",
+        "pages/help/help",
+        "pages/photo-edit/photo-edit",
+        "pages/data-export/data-export"
+      ]
+    }
   ],
   "lazyCodeLoading": "requiredComponents",
   "window": {

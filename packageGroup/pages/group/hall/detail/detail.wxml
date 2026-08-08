@@ -1,0 +1,125 @@
+<view class="page-container detail-page">
+  <!-- 状态栏 + 导航栏 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-header" style="{{navHeaderStyle}}">
+    <view class="nav-header-back" bindtap="onBackTap">
+      <image src="/assets/icons/chevron-left-ink.svg" mode="aspectFit"></image>
+    </view>
+    <text class="nav-header-title">任务详情</text>
+    <view class="nav-header-divider"></view>
+  </view>
+
+  <scroll-view scroll-y class="detail-scroll" enhanced show-scrollbar="{{false}}">
+    <view wx:if="{{task}}" class="detail-body">
+
+      <!-- 1. Hero 卡片 -->
+      <view class="hero-card">
+        <view class="hero-head">
+          <text class="hero-topic">{{task.topic}}</text>
+          <text wx:if="{{task.source === 'master'}}" class="official-badge">官方</text>
+        </view>
+        <view class="hero-poi">
+          <text class="poi-name">📍 {{task.poi.name}}</text>
+          <text class="poi-address">{{task.poi.address}}</text>
+        </view>
+        <view class="hero-chips">
+          <text class="chip">{{task.district}}</text>
+          <text class="chip">{{categoryLabel}}</text>
+        </view>
+      </view>
+
+      <!-- 2. 信息网格 -->
+      <view class="info-grid">
+        <view class="info-item">
+          <text class="info-label">人数</text>
+          <text class="info-value">{{task.members.length}}/{{task.maxMembers}} 人</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">发起人</text>
+          <view class="info-value">
+            <text wx:if="{{task.source === 'master'}}" class="master-mark">👑</text>
+            <text>{{task.hostNickname}}</text>
+          </view>
+        </view>
+        <view class="info-item">
+          <text class="info-label">时间偏好</text>
+          <text class="info-value">{{scheduledTimeLabel}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">状态</text>
+          <text class="info-value status-{{task.status}}">{{statusLabel}}</text>
+        </view>
+      </view>
+
+      <!-- 3. 当前成员 -->
+      <view class="section">
+        <text class="section-title">当前成员</text>
+        <view class="members-row">
+          <block wx:for="{{task.members}}" wx:key="openId">
+            <view class="member">
+              <image class="member-avatar" src="/packageBt/images/avatar.webp" mode="aspectFill"></image>
+              <text class="member-name">{{item.nickname}}</text>
+              <text wx:if="{{index === 0}}" class="host-tag">发起人</text>
+              <text wx:if="{{memberTrustMap[item.openId].label}}" class="member-trust-tag member-trust-{{memberTrustMap[item.openId].tier}}">{{memberTrustMap[item.openId].label}}</text>
+            </view>
+          </block>
+          <view wx:if="{{task.members.length === 0}}" class="members-empty">暂无成员，等你加入</view>
+        </view>
+      </view>
+
+      <!-- 4. 任务描述 -->
+      <view wx:if="{{task.description}}" class="section">
+        <text class="section-title">任务描述</text>
+        <view class="desc-card">
+          <text class="desc-text">{{task.description}}</text>
+        </view>
+      </view>
+
+      <!-- 5. 出逃步骤预览 -->
+      <view wx:if="{{task.steps.length > 0}}" class="section">
+        <text class="section-title">出逃步骤预览</text>
+        <view class="steps-card">
+          <view wx:for="{{task.steps}}" wx:key="*this" class="step-item">
+            <text class="step-no">{{index + 1}}</text>
+            <text class="step-text">{{item}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 6. 标签 -->
+      <view wx:if="{{task.tags.length > 0}}" class="section">
+        <text class="section-title">标签</text>
+        <view class="tags-row">
+          <text wx:for="{{task.tags}}" wx:key="*this" class="tag-chip">{{item}}</text>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <!-- 7. 底部操作栏（按状态切换）-->
+  <view wx:if="{{task}}" class="footer">
+    <!-- 招募中 -->
+    <block wx:if="{{task.status === 'recruiting'}}">
+      <view wx:if="{{!isJoined && !isFull}}" class="footer-btn primary" bindtap="onJoinTap">加入任务</view>
+      <view wx:elif="{{!isJoined && isFull}}" class="footer-btn disabled">人已满</view>
+      <view wx:else class="footer-actions">
+        <view class="footer-btn ghost" bindtap="onInviteTap">邀请朋友</view>
+        <view class="footer-btn disabled">等待人齐</view>
+      </view>
+    </block>
+
+    <!-- 人已齐 -->
+    <block wx:elif="{{task.status === 'ready'}}">
+      <view wx:if="{{isHost}}" class="footer-btn primary" bindtap="onStartEscapeTap">开始出逃</view>
+      <view wx:elif="{{isJoined}}" class="footer-btn disabled">等待房主开始出逃</view>
+      <view wx:else class="footer-btn disabled">人已满</view>
+    </block>
+
+    <!-- 已出发 / 已完成 -->
+    <block wx:elif="{{task.status === 'started' || task.status === 'finished'}}">
+      <view class="footer-btn primary" bindtap="onViewRoomTap">查看房间</view>
+    </block>
+  </view>
+</view>

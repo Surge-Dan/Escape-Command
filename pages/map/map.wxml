@@ -186,9 +186,12 @@
       </cover-view>
     </cover-view>
 
-    <!-- B4-B: 城市关系总结条（本月） -->
+    <!-- B4-B: 城市关系总结条（本月）—— 走马灯自动滚动 -->
     <cover-view wx:if="{{citySummary}}" class="map-summary-bar">
-      <cover-view class="summary-text">{{citySummary.summary}}</cover-view>
+      <cover-view class="summary-text-track">
+        <cover-view class="summary-text">{{citySummary.summary}}</cover-view>
+        <cover-view class="summary-text">{{citySummary.summary}}</cover-view>
+      </cover-view>
     </cover-view>
 
     <!-- B4-B: 重返此地确认弹窗 -->
@@ -204,6 +207,5 @@
     </cover-view>
   </map>
 
-  <!-- 自定义 TabBar -->
-  <custom-tab-bar selected="{{1}}"></custom-tab-bar>
+  <!-- 自定义 TabBar 由框架自动注入，通过 getTabBar().setData() 控制显隐 -->
 </view>

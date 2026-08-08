@@ -244,7 +244,7 @@ Page({
       ctx.fill()
 
       const cmd = this.data.command || {}
-      const photo = (record.photos && record.photos[0]) || cmd.illustration || cmd.scene || '/assets/images/empty-collection.webp'
+      const photo = (record.photos && record.photos[0]) || cmd.illustration || cmd.scene || '/packageBt/images/empty-collection.webp'
       const img = canvas.createImage()
       img.onload = () => {
         ctx.save()
@@ -359,7 +359,7 @@ Page({
 
   goNext() {
     if (this.data.isBreakthrough) {
-      wx.redirectTo({ url: '/pages/bt-certificate/bt-certificate' })
+      wx.redirectTo({ url: '/packageBt/pages/bt-certificate/bt-certificate' })
     } else {
       wx.switchTab({ url: '/pages/map/map' })
     }

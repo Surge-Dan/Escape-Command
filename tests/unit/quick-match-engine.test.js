@@ -294,20 +294,20 @@ test('null 用户兜底', function () {
   const u = qm.normalizeUser(null, ['food'])
   assertEqual(u.openId, 'local_user')
   assertEqual(u.nickname, '我')
-  assertEqual(u.avatar, '/assets/images/avatar.webp')
+  assertEqual(u.avatar, '/packageBt/images/avatar.webp')
   assertEqual(u.interests[0], 'food')
 })
 
 test('缺失字段补默认', function () {
   const u = qm.normalizeUser({ openId: 'x' }, ['food'])
   assertEqual(u.nickname, '我')
-  assertEqual(u.avatar, '/assets/images/avatar.webp')
+  assertEqual(u.avatar, '/packageBt/images/avatar.webp')
   assertEqual(u.interests[0], 'food')
 })
 
 test('空字符串 avatar 兜底', function () {
   const u = qm.normalizeUser({ avatar: '' }, [])
-  assertEqual(u.avatar, '/assets/images/avatar.webp')
+  assertEqual(u.avatar, '/packageBt/images/avatar.webp')
 })
 
 // ============================================================

@@ -1,4 +1,4 @@
-﻿const app = getApp()
+const app = getApp()
 
 // 5 分类卡片
 const CATEGORIES = [
@@ -23,7 +23,7 @@ const CATEGORIES = [
     accentColor: '#9B7BB8',
     items: [
       { label: '搭档', path: '/pages/partner-list/partner-list', icon: '/assets/icons/users-lavender.svg' },
-      { label: '邀请', path: '/pages/invite/invite', icon: '/assets/icons/send.svg' },
+      { label: '邀请', path: '/packageMe/pages/invite/invite', icon: '/assets/icons/send.svg' },
       { label: '排行榜', path: '/pages/leaderboard/leaderboard', icon: '/assets/icons/crown-lemon.svg' },
       { label: '社区', path: '/pages/community/community', icon: '/assets/icons/heart-lavender.svg' }
     ]
@@ -37,9 +37,8 @@ const CATEGORIES = [
     items: [
       { label: '我的收藏', path: '/pages/collection/collection', icon: '/assets/icons/bookmark-brand.svg' },
       { label: '分类', path: '/pages/collection-category/collection-category', icon: '/assets/icons/layers.svg' },
-      { label: '破圈画像', path: '/pages/breakthrough-profile/breakthrough-profile', icon: '/assets/icons/zap-coral.svg' },
-      { label: '主题', path: '/pages/theme-market/theme-market', icon: '/assets/icons/sparkles.svg' },
-      { label: '导出', path: '/pages/data-export/data-export', icon: '/assets/icons/share-2.svg' }
+      { label: '破圈画像', path: '/packageBt/pages/breakthrough-profile/breakthrough-profile', icon: '/assets/icons/zap-coral.svg' },
+      { label: '导出', path: '/packageMe/pages/data-export/data-export', icon: '/assets/icons/share-2.svg' }
     ]
   },
   {
@@ -58,15 +57,14 @@ const CATEGORIES = [
   {
     id: 'settings',
     title: '设置',
-    subtitle: '个人资料、帮助、关于',
+    subtitle: '帮助、关于、主题',
     icon: '/assets/icons/settings-brand.svg',
     accentColor: '#6B7280',
     items: [
-      { label: '资料', path: '/pages/profile-edit/profile-edit', icon: '/assets/icons/user-brand.svg' },
-      { label: '破圈画像', path: '/pages/breakthrough-profile/breakthrough-profile', icon: '/assets/icons/zap-coral.svg' },
       { label: '设置', path: '/pages/settings/settings', icon: '/assets/icons/settings-brand.svg' },
-      { label: '帮助', path: '/pages/help/help', icon: '/assets/icons/compass.svg' },
-      { label: '关于', path: '/pages/about/about', icon: '/assets/icons/compass-ink-faint.svg' }
+      { label: '破圈画像', path: '/packageBt/pages/breakthrough-profile/breakthrough-profile', icon: '/assets/icons/zap-coral.svg' },
+      { label: '帮助', path: '/packageMe/pages/help/help', icon: '/assets/icons/compass.svg' },
+      { label: '关于', path: '/packageMe/pages/about/about', icon: '/assets/icons/compass-ink-faint.svg' }
     ]
   }
 ]
@@ -77,11 +75,13 @@ Page({
     navHeaderStyle: '',
     userName: '',
     escapeCode: '',
-    avatarUrl: '/assets/images/avatar.webp',
+    avatarUrl: '/assets/avatar-default.webp',
     stats: [],
     categories: CATEGORIES,
     isMember: false,
-    theme: 'default'
+    theme: 'default',
+    showEditTip: true,
+    tabbarHidden: false
   },
 
   onLoad() {
@@ -93,7 +93,7 @@ Page({
     this.loadUserData()
     this.setData({ theme: app.globalData.theme || 'default' })
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 2 })
+      this.getTabBar().setData({ selected: 2, tabbarHidden: false })
     }
   },
 
@@ -122,7 +122,7 @@ Page({
     this.setData({
       userName: gd.escapeName || '出逃者',
       escapeCode: gd.escapeCode || '给城市留一点空白',
-      avatarUrl: gd.avatarUrl || '/assets/images/avatar.webp',
+      avatarUrl: gd.avatarUrl || '/assets/avatar-default.webp',
       isMember: !!(gd.memberStatus && gd.memberStatus.isMember),
       stats: [
         { label: '累计出逃', value: String(records.length), unit: '次' },
@@ -142,6 +142,12 @@ Page({
         wx.showToast({ title: '页面未就绪', icon: 'none' })
       }
     })
+  },
+
+  // 头像加载失败：清空 avatarUrl，让 image 隐藏，露出 CSS 渐变 + emoji 背景
+  onAvatarError() {
+    console.warn('[profile] avatar 加载失败，使用 CSS 背景兜底')
+    this.setData({ avatarUrl: '' })
   },
 
   goProfileEdit() {
@@ -175,7 +181,7 @@ Page({
   },
 
   goMember() {
-    wx.navigateTo({ url: '/pages/member/member' })
+    wx.navigateTo({ url: '/packageMe/pages/member/member' })
   },
 
   onShareAppMessage() {

@@ -86,7 +86,7 @@ Page({
     const user = {
       openId: gd.escapeCode || 'local_user',
       nickname: gd.escapeName || '我',
-      avatar: gd.avatarUrl || '/assets/images/avatar.webp',
+      avatar: gd.avatarUrl || '/packageBt/images/avatar.webp',
       interests: quickMatch.inferInterestsFromPrefs(gd.userPreferences),
       district: gd.currentCity || ''
     }
@@ -124,7 +124,7 @@ Page({
     const partnersDisplay = (result.partners || []).map((p, i) => ({
       openId: p.openId || ('p_' + i),
       nickname: p.nickname || '神秘搭子',
-      avatar: p.avatar || '/assets/images/avatar.webp',
+      avatar: p.avatar || '/packageBt/images/avatar.webp',
       bio: p.bio || '',
       isReal: !!p.isReal,
       index: i

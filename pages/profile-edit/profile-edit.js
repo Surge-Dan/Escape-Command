@@ -9,7 +9,7 @@ Page({
     statusBarHeight: 20,
     escapeName: '',
     escapeCode: '',
-    avatarUrl: '/assets/images/avatar.webp',
+    avatarUrl: '/assets/avatar-default.webp',
     nameCount: 0,
     codeCount: 0
   },
@@ -24,7 +24,7 @@ Page({
       navHeaderStyle: nav.navHeaderStyle || '',
       escapeName: name,
       escapeCode: code,
-      avatarUrl: gd.avatarUrl || '/assets/images/avatar.webp',
+      avatarUrl: gd.avatarUrl || '/assets/avatar-default.webp',
       nameCount: name.length,
       codeCount: code.length
     })
@@ -48,6 +48,14 @@ Page({
     this.setData({ escapeName: safe, nameCount: safe.length })
   },
 
+  // 头像加载失败：回退到默认头像（带防重试保护，避免无限循环）
+  onAvatarError() {
+    if (this._avatarErrorCount >= 2) return  // 最多重试 2 次，避免无限循环
+    this._avatarErrorCount = (this._avatarErrorCount || 0) + 1
+    console.warn('[profile-edit] avatar 加载失败，回退默认头像，重试次数：' + this._avatarErrorCount)
+    this.setData({ avatarUrl: '/assets/avatar-default.webp' })
+  },
+
   chooseAvatar() {
     wx.chooseMedia({
       count: 1,
@@ -57,6 +65,7 @@ Page({
       success: (res) => {
         const file = res.tempFiles && res.tempFiles[0]
         if (file && file.tempFilePath) {
+          this._avatarErrorCount = 0  // 重置错误计数
           this.setData({ avatarUrl: file.tempFilePath })
         }
       },

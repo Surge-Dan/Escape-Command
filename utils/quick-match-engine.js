@@ -1,4 +1,4 @@
-// utils/quick-match-engine.js
+﻿// utils/quick-match-engine.js
 // B3 同频骰子 AI 快速匹配引擎
 //
 // 设计目标：
@@ -271,7 +271,7 @@ function normalizeUser(user, interests) {
     return {
       openId: 'local_user',
       nickname: '我',
-      avatar: '/assets/images/avatar.webp',
+      avatar: '/assets/avatar-default.webp',
       interests: interests || [],
       district: '',
       bio: ''
@@ -280,7 +280,7 @@ function normalizeUser(user, interests) {
   return {
     openId: typeof user.openId === 'string' ? user.openId : 'local_user',
     nickname: typeof user.nickname === 'string' ? user.nickname : '我',
-    avatar: typeof user.avatar === 'string' && user.avatar ? user.avatar : '/assets/images/avatar.webp',
+    avatar: typeof user.avatar === 'string' && user.avatar ? user.avatar : '/assets/avatar-default.webp',
     interests: Array.isArray(user.interests) ? user.interests : (interests || []),
     district: typeof user.district === 'string' ? user.district : '',
     bio: typeof user.bio === 'string' ? user.bio : ''

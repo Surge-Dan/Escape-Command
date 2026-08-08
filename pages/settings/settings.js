@@ -151,7 +151,7 @@ Page({
   },
 
   navigateToAbout() {
-    wx.navigateTo({ url: '/pages/about/about' })
+    wx.navigateTo({ url: '/packageMe/pages/about/about' })
   },
 
   showAbout() {

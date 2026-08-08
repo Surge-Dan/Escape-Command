@@ -29,7 +29,7 @@ Page({
     invitedByFriend: false,
     friendRollHint: false,
     heroColor: '#5B8FB9',
-    heroScene: '/assets/images/color-scene.webp',
+    heroScene: '/packageBt/images/color-scene.webp',
     heroDesc: '选个时长，给城市一个随机出口',
     nightHint: false,
     dailyRecommend: [],
@@ -49,6 +49,8 @@ Page({
     recommendedDuration: 0,
     isRecommended: false,
     showDiceSheet: false,
+    // v16: 控制 TabBar 显隐，弹出骰子/任务弹窗时隐藏让弹窗可贴底
+    tabbarHidden: false,
     showLegacyDice: false,
     breakthroughRemainCount: 5,
     isBreakthroughRolling: false,
@@ -57,9 +59,19 @@ Page({
     currentModeName: '微出逃',
     dicePositions: { micro: 'center', sync: 'right', breakthrough: 'left' },
     currentDiceFace: {
-      micro: '/assets/images/红色骰子3d.png',
-      breakthrough: '/assets/images/紫色骰子3d.png',
-      sync: '/assets/images/绿色骰子3d.png'
+      // v2 风格：直接使用主包内的高清 3D 骰子（避免分包加载时序问题）
+      micro: '/assets/dice/dice-red-3d.png',
+      breakthrough: '/assets/dice/dice-purple-3d.png',
+      sync: '/assets/dice/dice-green-3d.png'
+    },
+    _diceImgRetry: 0,
+    _dicePkgReady: 0,
+    _diceImgLoaded: {},
+    // 备用：分包内的高清骰子（预加载完成后可使用）
+    _diceFaceFallback: {
+      micro: '/packageDice/images/dice-red-3d.png',
+      breakthrough: '/packageDice/images/dice-purple-3d.png',
+      sync: '/packageDice/images/dice-green-3d.png'
     }
   },
 
@@ -67,6 +79,8 @@ Page({
 
   onLoad(options) {
     this.applyNavMetrics()
+    // 首屏显示前先等待 3D 骰子分包预加载完成
+    this._preloadDicePkg()
     const localOnboarded = wx.getStorageSync('onboarded')
     if (!localOnboarded && !app.globalData.onboarded) {
       app.globalData.onboarded = false
@@ -101,6 +115,45 @@ Page({
     }
   },
 
+  // 预加载 3D 骰子分包（首屏显示前必须完成）
+  _preloadDicePkg() {
+    if (typeof wx.loadSubpackage !== 'function') return
+    wx.loadSubpackage({ root: 'packageDice' }).then(() => {
+      console.log('[index] packageDice 预加载完成')
+      // 触发一次 setData 让 image 重新请求分包资源
+      this.setData({ _dicePkgReady: Date.now() })
+    }).catch((e) => {
+      console.warn('[index] packageDice 预加载失败：', e)
+    })
+  },
+
+  // 骰子图片加载成功（埋点用）
+  onDiceImgLoad(e) {
+    const diceId = e.currentTarget?.dataset?.diceId
+    if (diceId) {
+      this.setData({ [`_diceImgLoaded.${diceId}`]: true })
+    }
+  },
+
+  // 骰子图片加载失败时降级到分包路径
+  onDiceImgError(e) {
+    const diceId = e.currentTarget?.dataset?.diceId
+    console.warn('[index] 骰子图片加载失败，尝试降级：', diceId, e.detail?.errMsg)
+    if (!diceId) return
+    // 已经降级到分包路径了，不再降级
+    const cur = this.data.currentDiceFace[diceId]
+    const fallback = this.data._diceFaceFallback && this.data._diceFaceFallback[diceId]
+    if (!fallback) return
+    if (cur === fallback) {
+      // 已经在分包路径了，记录日志不再降级
+      console.error('[index] 骰子图片分包路径也加载失败：', diceId, fallback)
+      return
+    }
+    // 第一次失败：降级到分包英文路径（兼容 iOS 中文路径解析问题）
+    const next = Object.assign({}, this.data.currentDiceFace, { [diceId]: fallback })
+    this.setData({ currentDiceFace: next, _diceImgRetry: Date.now() })
+  },
+
   applyFriendRoll(cmdId) {
     const decodedId = decodeURIComponent(cmdId)
     const pool = app.globalData.commandPool || []
@@ -110,15 +163,15 @@ Page({
       return
     }
     const meta = getTypeMeta(cmd.type)
-    this.setData({
-      selectedCommand: Object.assign({}, cmd, {
+    this._setSelectedCommand(
+      Object.assign({}, cmd, {
         typeName: meta.name,
         typeColor: cmd.typeColor || meta.color,
         typeIcon: meta.icon,
         illustration: cmd.illustration || meta.scene
       }),
-      friendRollHint: true
-    })
+      { friendRollHint: true }
+    )
     try {
       const tracker = require('../../utils/tracker.js')
       tracker.track('friend_roll_receive', { cmdId: decodedId })
@@ -139,7 +192,30 @@ Page({
   },
 
   loadFontFace() {
-    this.setData({ fontLoaded: true })
+    // 如果全局已加载成功，直接标记
+    if (app.globalData.serifFontLoaded) {
+      this.setData({ fontLoaded: true })
+      return
+    }
+    // 全局未成功 → 页面级重试加载（不设 global，对当前页面生效）
+    if (typeof wx.loadFontFace === 'function') {
+      wx.loadFontFace({
+        family: 'SourceHanSerifBold',
+        source: 'url("/assets/fonts/noto-serif-sc-bold-titles.woff2")',
+        success: () => {
+          console.log('[index] SourceHanSerifBold 页面级加载成功')
+          app.globalData.serifFontLoaded = true
+          app.globalData.serifFontFamily = 'SourceHanSerifBold'
+          this.setData({ fontLoaded: true })
+        },
+        fail: (e) => {
+          console.warn('[index] 页面级字体加载失败，降级到系统 serif', e)
+          this.setData({ fontLoaded: true })
+        }
+      })
+    } else {
+      this.setData({ fontLoaded: true })
+    }
   },
 
   applyInvitation(cmdId) {
@@ -147,16 +223,15 @@ Page({
     const cmd = pool.find(c => c.id === cmdId)
     if (!cmd) return
     const meta = getTypeMeta(cmd.type)
-    this.setData({
-      selectedMode: 'double',
-      invitedByFriend: true,
-      selectedCommand: Object.assign({}, cmd, {
+    this._setSelectedCommand(
+      Object.assign({}, cmd, {
         typeName: meta.name,
         typeColor: cmd.typeColor || meta.color,
         typeIcon: meta.icon,
         illustration: cmd.illustration || meta.scene
-      })
-    })
+      }),
+      { selectedMode: 'double', invitedByFriend: true }
+    )
   },
 
   onShow() {
@@ -166,9 +241,11 @@ Page({
     this.refreshState()
     this.loadEscapeRecords()
     this.loadDailyRecommend()
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) this.getTabBar().setData({ selected: 0 })
+    // 字体重试：onShow 时检查全局字体是否已加载，未加载则页面级重试
+    if (!app.globalData.serifFontLoaded) this.loadFontFace()
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) this.getTabBar().setData({ selected: 0, tabbarHidden: false })
     if (this.data.selectedCommand && !app.globalData.currentCommand) {
-      this.setData({ selectedCommand: null })
+      this._setSelectedCommand(null)
     }
     this.resetDiceFace()
     this.startAutoSwitch()
@@ -391,40 +468,67 @@ Page({
     this.routeDice(dice)
   },
 
+  // v16: 统一管理骰子弹窗的显隐 + 同步 TabBar 显隐（通过 getTabBar 控制）
+  _setDiceSheetVisible(visible, extra) {
+    this.setData(Object.assign(
+      { showDiceSheet: visible },
+      extra || {}
+    ))
+    // 框架自动注入的 TabBar 实例，通过 getTabBar 控制
+    const tabBar = typeof this.getTabBar === 'function' ? this.getTabBar() : null
+    if (tabBar) tabBar.setData({ tabbarHidden: visible })
+  },
+
+  // v17: 统一管理指令卡(cmd-sheet)的显隐 + 同步 TabBar 显隐
+  // cmd-sheet 是指令详情卡片（普通指令 / 破圈指令 / 朋友邀请共用），
+  // 弹出时必须隐藏 TabBar，否则卡片会被遮挡
+  _setSelectedCommand(cmd, extra) {
+    const hasCmd = !!cmd
+    this.setData(Object.assign(
+      {
+        selectedCommand: cmd,
+        collected: false
+      },
+      extra || {}
+    ))
+    const tabBar = typeof this.getTabBar === 'function' ? this.getTabBar() : null
+    if (tabBar) tabBar.setData({ tabbarHidden: hasCmd })
+  },
+
   routeDice(dice) {
     if (dice.id === 'micro') {
       wx.navigateTo({ url: '/pages/dice-micro-7d/dice-micro-7d' })
     } else if (dice.id === 'breakthrough') {
       this.rollBreakthroughCommand()
     } else if (dice.id === 'sync') {
-      this.setData({ showDiceSheet: true })
+      this._setDiceSheetVisible(true)
     }
   },
 
   onDiceSheetMaskTap() {
-    this.setData({ showDiceSheet: false })
+    this._setDiceSheetVisible(false)
     this.resetDiceFace()
     this.startAutoSwitch()
   },
 
   onDiceSheetClose() {
-    this.setData({ showDiceSheet: false })
+    this._setDiceSheetVisible(false)
     this.resetDiceFace()
     this.startAutoSwitch()
   },
 
   onInviteFriendsTap() {
-    this.setData({ showDiceSheet: false })
-    wx.navigateTo({ url: '/pages/group/create/create' })
+    this._setDiceSheetVisible(false)
+    wx.navigateTo({ url: '/packageGroup/pages/group/create/create' })
   },
 
   onEnterHallTap() {
-    this.setData({ showDiceSheet: false })
-    wx.navigateTo({ url: '/pages/group/hall/hall' })
+    this._setDiceSheetVisible(false)
+    wx.navigateTo({ url: '/packageGroup/pages/group/hall/hall' })
   },
 
   onQuickMatchTap() {
-    this.setData({ showDiceSheet: false })
+    this._setDiceSheetVisible(false)
     wx.navigateTo({ url: '/pages/quick-match/quick-match' })
   },
 
@@ -472,17 +576,15 @@ Page({
         app.useBreakthroughReroll()
         this.refreshState()
         const meta = getTypeMeta(cmd.type)
-        this.setData({
-          selectedCommand: Object.assign({}, cmd, {
+        this._setSelectedCommand(
+          Object.assign({}, cmd, {
             typeName: meta.name,
             typeColor: cmd.typeColor || meta.color,
             typeIcon: meta.icon,
             illustration: cmd.illustration || meta.scene
           }),
-          rolling: false,
-          isBouncing: false,
-          isBreakthroughRolling: false
-        })
+          { rolling: false, isBouncing: false, isBreakthroughRolling: false }
+        )
         if (app.playSound) app.playSound('shake')
         this.refreshState()
       })
@@ -500,16 +602,15 @@ Page({
         return
       }
       const meta = getTypeMeta(cmd.type)
-      this.setData({
-        selectedCommand: Object.assign({}, cmd, {
+      this._setSelectedCommand(
+        Object.assign({}, cmd, {
           typeName: meta.name,
           typeColor: cmd.typeColor || meta.color,
           typeIcon: meta.icon,
           illustration: cmd.illustration || meta.scene
         }),
-        rolling: false,
-        isBouncing: false
-      })
+        { rolling: false, isBouncing: false }
+      )
       if (app.playSound) app.playSound('shake')
       this.refreshState()
     }, 200)
@@ -519,9 +620,8 @@ Page({
     if (e && e.stopPropagation) e.stopPropagation()
     const curDice = this.data.diceList[this.data.currentDiceIndex]
     if (curDice && curDice.id === 'breakthrough') {
-      this.setData({ selectedCommand: null }, () => {
-        this.rollBreakthroughCommand()
-      })
+      this._setSelectedCommand(null)
+      this.rollBreakthroughCommand()
       return
     }
     if (!app.useReroll()) {
@@ -532,13 +632,14 @@ Page({
         success: (res) => {
           if (res.confirm && res.content && res.content.trim()) {
             const cmd = this.createCustomCommand(res.content.trim())
-            this.setData({ selectedCommand: cmd, collected: false })
+            this._setSelectedCommand(cmd)
           }
         }
       })
       return
     }
-    this.setData({ selectedCommand: null }, () => this.rollCommand())
+    this._setSelectedCommand(null)
+    this.rollCommand()
   },
 
   createCustomCommand(title) {
@@ -550,7 +651,7 @@ Page({
       typeName: '自定义',
       typeColor: '#E07A5F',
       typeIcon: '/assets/icons/pin-color.svg',
-      illustration: '/assets/images/color-scene.webp',
+      illustration: '/packageBt/images/color-scene.webp',
       duration: 10,
       distance: '自定义',
       people: '1人',
@@ -562,7 +663,7 @@ Page({
 
   closeCommand(e) {
     if (e && e.stopPropagation) e.stopPropagation()
-    this.setData({ selectedCommand: null, collected: false })
+    this._setSelectedCommand(null)
     this.resetDiceFace()
     this.startAutoSwitch()
   },

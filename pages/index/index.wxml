@@ -40,6 +40,10 @@
             class="die-img"
             src="{{currentDiceFace[item.id]}}"
             mode="aspectFit"
+            binderror="onDiceImgError"
+            bindload="onDiceImgLoad"
+            data-dice-id="{{item.id}}"
+            data-dice-index="{{index}}"
           ></image>
         </view>
       </view>
@@ -255,6 +259,5 @@
     </view>
   </view>
 
-  <!-- 自定义 TabBar -->
-  <custom-tab-bar selected="{{0}}"></custom-tab-bar>
+  <!-- 自定义 TabBar 由框架自动注入，通过 getTabBar().setData() 控制显隐 -->
 </view>

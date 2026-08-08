@@ -6,10 +6,14 @@
   background: var(--bg-gradient);
 }
 
-.status-bar { flex-shrink: 0; background: transparent; }
+/* 地图页顶部状态栏与导航栏统一白色背景（不再透出页面蓝色渐变） */
+.map-page .status-bar { background: #ffffff; }
+
+/* 地图页导航栏：白色背景（与地图卡片融为一体，不再透出页面蓝底） */
 .map-page .nav-header {
-  background: transparent;
-  border-bottom: none;
+  background: #ffffff;
+  border-bottom: 1rpx solid rgba(91, 143, 185, 0.08);
+  margin-bottom: 0;
 }
 
 /* ===== 简洁主题区：标题与城市 pill 左右排列 ===== */
@@ -178,12 +182,13 @@
 }
 
 /* ===== 定位按钮 ===== */
+/* v21: summary-bar 顶部 = 288 + 60(高) + safe = 348rpx + safe，locate-btn 留 20rpx 间隙 */
 .map-locate-btn {
   position: absolute;
   right: 24rpx;
-  bottom: calc(140rpx + env(safe-area-inset-bottom, 0px) + 116rpx);
-  width: 88rpx;
-  height: 88rpx;
+  bottom: calc(368rpx + env(safe-area-inset-bottom, 34rpx));
+  width: 80rpx;
+  height: 80rpx;
   background-color: rgba(255, 255, 255, 0.96);
   border-radius: 50%;
   display: flex;
@@ -258,13 +263,14 @@
   border-radius: 2rpx;
 }
 
-/* ===== 添加/编辑出发点按钮 ===== */
+/* ===== 添加/编辑出发点按钮（加号）===== */
+/* v21: locate-btn 顶部 = 368 + 80(高) + safe = 448rpx + safe，home-btn 留 20rpx 间隙 */
 .map-home-btn {
   position: absolute;
   right: 24rpx;
-  bottom: calc(140rpx + env(safe-area-inset-bottom, 0px) + 220rpx);
-  width: 88rpx;
-  height: 88rpx;
+  bottom: calc(468rpx + env(safe-area-inset-bottom, 34rpx));
+  width: 80rpx;
+  height: 80rpx;
   background-color: rgba(255, 255, 255, 0.96);
   border-radius: 50%;
   display: flex;
@@ -273,6 +279,7 @@
   border: 1rpx solid var(--border-soft);
   box-shadow: 0 4rpx 16rpx rgba(45, 90, 123, 0.12);
   transition: transform 200ms var(--ease-standard), background 200ms var(--ease-standard);
+  z-index: 101;
 }
 
 .map-home-btn:active {
@@ -281,20 +288,22 @@
   box-shadow: 0 2rpx 8rpx rgba(45, 90, 123, 0.16);
 }
 
-/* ===== 底部统计条：悬浮胶囊卡片，紧贴TabBar上方 ===== */
+/* ===== 底部统计条：紧贴 TabBar 上方，与 TabBar 等宽 ===== */
+/* v21: 使用 calc + env(safe-area-inset-bottom) 适配不同设备，避免固定值在 iPhone 上与 TabBar 重叠 */
+/* TabBar 顶部 = 72rpx(bottom) + 96rpx(height) + safe = 168rpx + safe，stats-bar 留 20rpx 间隙 */
 .map-stats-bar {
   position: absolute;
   left: 32rpx;
   right: 32rpx;
-  bottom: calc(20rpx + env(safe-area-inset-bottom, 0px));
+  bottom: calc(188rpx + env(safe-area-inset-bottom, 34rpx));
   display: flex;
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
   background: rgba(255, 255, 255, 0.96);
   border: 1rpx solid var(--border-soft);
-  border-radius: var(--radius-xl);
-  padding: 20rpx 24rpx;
+  border-radius: 100rpx;
+  padding: 16rpx 32rpx;
   box-shadow: 0 8rpx 32rpx rgba(45, 90, 123, 0.12);
   backdrop-filter: blur(20rpx);
   -webkit-backdrop-filter: blur(20rpx);
@@ -502,25 +511,49 @@
   background: var(--brand);
 }
 
-/* ===== 城市关系总结条（位于统计条上方） ===== */
+/* ===== 城市关系总结条（位于统计条上方，互不重叠）===== */
+/* v21: stats-bar 顶部 = 188 + 80(高) + safe = 268rpx + safe，summary-bar 留 20rpx 间隙 */
 .map-summary-bar {
   position: absolute;
-  left: 48rpx;
-  right: 48rpx;
-  bottom: calc(148rpx + env(safe-area-inset-bottom, 0px));
-  padding: 14rpx 24rpx;
-  background: rgba(45, 90, 123, 0.82);
-  border-radius: var(--radius-md);
+  left: 32rpx;
+  right: 32rpx;
+  bottom: calc(288rpx + env(safe-area-inset-bottom, 34rpx));
+  padding: 12rpx 24rpx;
+  background: rgba(45, 90, 123, 0.85);
+  border-radius: 100rpx;
   backdrop-filter: blur(12rpx);
   -webkit-backdrop-filter: blur(12rpx);
   z-index: 99;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* 走马灯轨道：宽度 = 2 份文本 + 间隔，无限循环左移 */
+.summary-text-track {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  white-space: nowrap;
+  /* 关键：让 track 整体从右向左平移，2 份文本长度循环 */
+  animation: summaryMarquee 16s linear infinite;
+  will-change: transform;
+}
+
+/* 走马灯关键帧：0% 时 track 起点在屏幕外，100% 时向左移动 50%（恰好一份文本的距离） */
+@keyframes summaryMarquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 .summary-text {
+  display: inline-block;
+  flex-shrink: 0;
   font-size: 24rpx;
   color: #FFFFFF;
   line-height: 1.5;
-  text-align: center;
+  /* 两份文本之间留出 40rpx 间隙，避免视觉粘连 */
+  padding-right: 40rpx;
+  white-space: nowrap;
 }
 
 /* ===== 重返此地确认弹窗 ===== */

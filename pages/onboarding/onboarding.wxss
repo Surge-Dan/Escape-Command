@@ -27,7 +27,7 @@
   font-size: 32rpx;
   font-weight: 700;
   color: var(--ink);
-  letter-spacing: 2rpx;
+  letter-spacing: 0rpx;
   font-family: var(--serif);
 }
 
@@ -55,7 +55,7 @@
   font-size: 26rpx;
   color: var(--ink-soft);
   font-weight: 500;
-  letter-spacing: 1rpx;
+  letter-spacing: 0rpx;
 }
 
 /* swiper 占满剩余空间 */
@@ -106,7 +106,7 @@
   font-size: 64rpx;
   font-weight: 800;
   color: var(--ink);
-  letter-spacing: 4rpx;
+  letter-spacing: 0rpx;
   line-height: 1.2;
   font-family: var(--serif);
 }
@@ -116,7 +116,7 @@
   font-size: 30rpx;
   color: var(--brand-strong);
   font-weight: 600;
-  letter-spacing: 2rpx;
+  letter-spacing: 0rpx;
   font-family: var(--serif);
 }
 
@@ -133,7 +133,7 @@
   color: var(--ink-soft);
   line-height: 1.6;
   text-align: center;
-  letter-spacing: 0.3rpx;
+  letter-spacing: 0rpx;
 }
 
 /* ===== Screen 2: 6 模式介绍 ===== */
@@ -142,7 +142,7 @@
   font-weight: 700;
   color: var(--ink);
   margin-bottom: 48rpx;
-  letter-spacing: 2rpx;
+  letter-spacing: 0rpx;
   font-family: var(--serif);
   text-align: center;
 }
@@ -165,11 +165,17 @@
   background: var(--white);
   border: 2rpx solid var(--border-soft);
   box-shadow: var(--shadow-card);
-  min-height: 180rpx;
-  transition: transform 150ms var(--ease-standard), box-shadow 150ms var(--ease-standard);
+  min-height: 200rpx;
+  transition: all 220ms var(--ease-standard);
+  position: relative;
 }
 
-.onb-mode-card:active { transform: scale(0.97); box-shadow: var(--shadow-elevated); }
+.onb-mode-card:active {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--brand);
+  background: linear-gradient(135deg, var(--white) 0%, var(--brand-tint) 100%);
+}
 
 .onb-mode-icon {
   width: 72rpx;
@@ -190,7 +196,7 @@
   font-weight: 700;
   color: var(--ink);
   font-family: var(--serif);
-  letter-spacing: 0.5rpx;
+  letter-spacing: 0rpx;
 }
 
 .onb-mode-desc {
@@ -199,10 +205,10 @@
   color: var(--ink-soft);
   text-align: center;
   line-height: 1.5;
-  letter-spacing: 0.3rpx;
+  letter-spacing: 0rpx;
 }
 
-/* ===== Screen 3: 首次出逃指引 ===== */
+/* ===== Screen 3: 旧版首次出逃指引（已被偏好收集替代，保留兼容） ===== */
 .onb-guide-text {
   margin-top: 24rpx;
   font-size: 28rpx;
@@ -210,7 +216,7 @@
   line-height: 1.65;
   text-align: center;
   max-width: 480rpx;
-  letter-spacing: 0.5rpx;
+  letter-spacing: 0rpx;
 }
 
 .onb-mock-card {
@@ -252,13 +258,428 @@
   color: var(--ink);
   margin-top: 16rpx;
   font-family: var(--serif);
-  letter-spacing: 1rpx;
+  letter-spacing: 0rpx;
 }
 
 .onb-mock-sub {
   font-size: 24rpx;
   color: var(--ink-soft);
-  letter-spacing: 0.3rpx;
+  letter-spacing: 0rpx;
+}
+
+/* ===== v22: Screen 3 偏好收集页 ===== */
+.onb-pref-screen {
+  padding-top: 24rpx;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+  justify-content: flex-start;
+}
+
+.onb-screen-sub {
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  margin-top: -16rpx;
+  margin-bottom: 24rpx;
+  letter-spacing: 0rpx;
+  text-align: center;
+  font-family: var(--serif);
+}
+
+/* 步骤指示器 */
+.onb-pref-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32rpx;
+}
+
+.onb-pref-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+  opacity: 0.5;
+  transition: all 220ms ease;
+}
+
+.onb-pref-step.active { opacity: 1; }
+
+.onb-pref-step-num {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--canvas);
+  color: var(--ink-soft);
+  font-size: 28rpx;
+  font-weight: 700;
+  font-family: var(--serif);
+  border: 2rpx solid var(--border-soft);
+  transition: all 220ms ease;
+}
+
+.onb-pref-step.active .onb-pref-step-num {
+  background: var(--brand);
+  color: var(--white);
+  border-color: var(--brand);
+  box-shadow: 0 4rpx 12rpx rgba(91, 143, 185, 0.3);
+}
+
+.onb-pref-step-label {
+  font-size: 20rpx;
+  color: var(--ink-soft);
+  letter-spacing: 0rpx;
+}
+
+.onb-pref-step.active .onb-pref-step-label {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.onb-pref-step-line {
+  width: 60rpx;
+  height: 2rpx;
+  background: var(--border-soft);
+  margin: 0 12rpx 20rpx;
+  transition: background 220ms ease;
+}
+
+.onb-pref-step-line.active { background: var(--brand); }
+
+/* 面板：问题 + 选项 */
+.onb-pref-panel {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.onb-pref-question {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+  font-family: var(--serif);
+  letter-spacing: 0rpx;
+  margin-bottom: 8rpx;
+}
+
+.onb-pref-hint {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  text-align: center;
+  margin-bottom: 24rpx;
+  letter-spacing: 0rpx;
+}
+
+/* Step 1: 活动类型网格 */
+.onb-pref-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
+  padding: 0 8rpx;
+}
+
+.onb-pref-activity {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 16rpx 8rpx;
+  border-radius: 20rpx;
+  background: var(--white);
+  border: 2rpx solid var(--border-soft);
+  box-shadow: var(--shadow-card);
+  transition: all 220ms var(--ease-standard);
+}
+
+.onb-pref-activity:active {
+  transform: scale(0.95);
+}
+
+/* v23: hover-class 反馈 —— 微信小程序按压时短暂应用此样式 */
+.onb-pref-activity-hover {
+  transform: scale(0.95);
+  background: var(--brand-weak);
+  border-color: var(--brand);
+}
+
+.onb-pref-activity.selected {
+  border-color: var(--brand);
+  border-width: 4rpx;
+  background: linear-gradient(135deg, var(--brand-tint) 0%, var(--brand-weak) 100%);
+  box-shadow: 0 6rpx 20rpx rgba(91, 143, 185, 0.32);
+  transform: scale(1.04);
+}
+
+.onb-pref-activity-emoji {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+}
+
+.onb-pref-activity-name {
+  font-size: 22rpx;
+  color: var(--ink-soft);
+  text-align: center;
+  letter-spacing: 0rpx;
+}
+
+.onb-pref-activity.selected .onb-pref-activity-name {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.onb-pref-activity-check {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 700;
+  box-shadow: 0 2rpx 6rpx rgba(91, 143, 185, 0.3);
+}
+
+/* Step 2: 人数单选 */
+.onb-pref-people-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  padding: 0 8rpx;
+}
+
+.onb-pref-people {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 28rpx;
+  border-radius: 20rpx;
+  background: var(--white);
+  border: 2rpx solid var(--border-soft);
+  box-shadow: var(--shadow-card);
+  transition: all 220ms var(--ease-standard);
+}
+
+.onb-pref-people:active { transform: scale(0.98); }
+
+/* v23: hover-class 反馈 */
+.onb-pref-people-hover {
+  transform: scale(0.98);
+  background: var(--brand-weak);
+  border-color: var(--brand);
+}
+
+.onb-pref-people.selected {
+  border-color: var(--brand);
+  background: linear-gradient(135deg, var(--white) 0%, var(--brand-tint) 100%);
+  box-shadow: 0 4rpx 16rpx rgba(91, 143, 185, 0.2);
+}
+
+.onb-pref-people-radio {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--border-soft);
+  background: var(--canvas);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 200ms ease;
+}
+
+.onb-pref-people.selected .onb-pref-people-radio {
+  border-color: var(--brand);
+  background: var(--brand);
+}
+
+.onb-pref-people-radio-inner {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: var(--white);
+}
+
+.onb-pref-people-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.onb-pref-people-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0rpx;
+}
+
+.onb-pref-people.selected .onb-pref-people-name {
+  color: var(--brand-strong);
+}
+
+.onb-pref-people-desc {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  letter-spacing: 0rpx;
+}
+
+/* Step 3: 时长单选 */
+.onb-pref-duration-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  padding: 0 8rpx;
+}
+
+.onb-pref-duration {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 28rpx;
+  border-radius: 20rpx;
+  background: var(--white);
+  border: 2rpx solid var(--border-soft);
+  box-shadow: var(--shadow-card);
+  transition: all 220ms var(--ease-standard);
+}
+
+.onb-pref-duration:active { transform: scale(0.98); }
+
+/* v23: hover-class 反馈 */
+.onb-pref-duration-hover {
+  transform: scale(0.98);
+  background: var(--brand-weak);
+  border-color: var(--brand);
+}
+
+.onb-pref-duration.selected {
+  border-color: var(--brand);
+  border-width: 4rpx;
+  background: linear-gradient(135deg, var(--brand-tint) 0%, var(--brand-weak) 100%);
+  box-shadow: 0 6rpx 20rpx rgba(91, 143, 185, 0.32);
+}
+
+.onb-pref-duration-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.onb-pref-duration-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0rpx;
+}
+
+.onb-pref-duration.selected .onb-pref-duration-name {
+  color: var(--brand-strong);
+}
+
+.onb-pref-duration-desc {
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  letter-spacing: 0rpx;
+}
+
+.onb-pref-duration-check {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2rpx 6rpx rgba(91, 143, 185, 0.3);
+}
+
+/* 操作按钮 —— v24: 整体协调，按钮变长防换行 */
+.onb-pref-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 32rpx;
+  padding: 0 8rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.onb-pref-btn-prev {
+  flex: 0 0 180rpx;
+  height: 96rpx;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border: 2rpx solid var(--border-soft);
+  box-shadow: var(--shadow-card);
+  transition: all 180ms ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.onb-pref-btn-prev text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--ink-soft);
+  letter-spacing: 0rpx;
+  white-space: nowrap;
+}
+
+.onb-pref-btn-prev:active {
+  transform: scale(0.96);
+  background: var(--brand-weak);
+}
+
+.onb-pref-btn-next {
+  flex: 1;
+  min-width: 0;
+  height: 96rpx;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  box-shadow: var(--shadow-btn);
+  transition: all 200ms ease;
+  white-space: nowrap;
+  padding: 0 32rpx;
+  box-sizing: border-box;
+}
+
+.onb-pref-btn-next text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 0rpx;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.onb-pref-btn-next:active {
+  transform: scale(0.98);
+  opacity: 0.92;
 }
 
 /* ===== CTA 按钮（通用） ===== */
@@ -289,7 +710,7 @@
   font-size: 32rpx;
   font-weight: 600;
   color: var(--white);
-  letter-spacing: 2rpx;
+  letter-spacing: 0rpx;
 }
 
 /* ===== Screen 4: 隐私与安全说明 ===== */
@@ -342,7 +763,7 @@
   font-size: 28rpx;
   font-weight: 700;
   color: var(--ink);
-  letter-spacing: 1rpx;
+  letter-spacing: 0rpx;
   font-family: var(--serif);
 }
 
@@ -350,5 +771,250 @@
   font-size: 24rpx;
   color: var(--ink-soft);
   line-height: 1.65;
-  letter-spacing: 0.3rpx;
+  letter-spacing: 0rpx;
+}
+
+/* ===== Screen 2 调整：hint 提示 + 卡片可点击 ===== */
+.onb-screen-hint {
+  margin-top: -16rpx;
+  margin-bottom: 28rpx;
+  font-size: 24rpx;
+  color: var(--ink-faint);
+  letter-spacing: 0rpx;
+}
+
+.onb-mode-card-arrow {
+  margin-top: 10rpx;
+  font-size: 20rpx;
+  color: var(--brand);
+  font-weight: 500;
+  letter-spacing: 0rpx;
+  opacity: 0.75;
+  transition: opacity 150ms ease;
+}
+
+.onb-mode-card:active .onb-mode-card-arrow { opacity: 1; }
+
+/* ===== v22: 模式介绍弹窗 —— v26 改版：紧凑居中长方形卡片（小一圈，远离屏幕边缘） ===== */
+.onb-detail-mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(45, 90, 123, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 64rpx;
+  animation: onbDetailFadeIn 220ms ease-out;
+  box-sizing: border-box;
+}
+
+@keyframes onbDetailFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.onb-detail-sheet {
+  width: 100%;
+  max-width: 460rpx;
+  max-height: 60vh;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 20rpx 28rpx 24rpx;
+  box-shadow: 0 12rpx 40rpx rgba(45, 90, 123, 0.22);
+  animation: onbDetailIn 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+
+@keyframes onbDetailIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.onb-detail-handle {
+  display: none; /* 居中卡片不需要顶部 handle */
+}
+
+/* 头部 */
+.onb-detail-head {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+  margin-bottom: 14rpx;
+}
+
+.onb-detail-icon {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 2rpx rgba(91,143,185,0.06);
+}
+
+.onb-detail-icon image {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.onb-detail-head-text {
+  flex: 1;
+  min-width: 0;
+  padding-top: 2rpx;
+}
+
+.onb-detail-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 4rpx;
+  flex-wrap: wrap;
+}
+
+.onb-detail-name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: var(--serif);
+  letter-spacing: 0rpx;
+}
+
+.onb-detail-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 26rpx;
+  padding: 0 10rpx;
+  border-radius: 13rpx;
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-size: 18rpx;
+  font-weight: 600;
+  letter-spacing: 0rpx;
+}
+
+.onb-detail-summary {
+  font-size: 21rpx;
+  color: var(--ink-soft);
+  line-height: 1.4;
+  letter-spacing: 0rpx;
+}
+
+.onb-detail-close {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+  border-radius: 50%;
+  background: var(--canvas);
+  flex-shrink: 0;
+  transition: all 180ms ease;
+}
+
+.onb-detail-close:active {
+  transform: scale(0.92);
+  background: var(--brand-weak);
+}
+
+/* 关键信息：时长 / 人数 */
+.onb-detail-meta {
+  display: flex;
+  align-items: center;
+  background: var(--brand-weak);
+  border-radius: 14rpx;
+  padding: 12rpx 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.onb-detail-meta-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.onb-detail-meta-label {
+  font-size: 18rpx;
+  color: var(--ink-faint);
+  letter-spacing: 0rpx;
+}
+
+.onb-detail-meta-value {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: var(--serif);
+  letter-spacing: 0rpx;
+}
+
+.onb-detail-meta-divider {
+  width: 1rpx;
+  height: 32rpx;
+  background: var(--border-soft);
+  margin: 0 10rpx;
+}
+
+/* 区块标题 */
+.onb-detail-section {
+  margin-bottom: 12rpx;
+}
+
+.onb-detail-section-title {
+  display: block;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: var(--ink-soft);
+  letter-spacing: 0rpx;
+  margin-bottom: 6rpx;
+  text-transform: uppercase;
+  font-family: var(--serif);
+}
+
+/* 功能列表 */
+.onb-detail-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 10rpx;
+  padding: 4rpx 0;
+}
+
+.onb-detail-feature-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 8rpx;
+}
+
+.onb-detail-feature-text {
+  flex: 1;
+  font-size: 22rpx;
+  color: var(--ink);
+  line-height: 1.5;
+  letter-spacing: 0rpx;
+}
+
+/* 适合场景 */
+.onb-detail-scenario-box {
+  background: linear-gradient(135deg, var(--brand-tint) 0%, var(--brand-weak) 100%);
+  border-radius: 14rpx;
+  padding: 10rpx 14rpx;
+  border: 1rpx solid rgba(91, 143, 185, 0.1);
+}
+
+.onb-detail-scenario-text {
+  font-size: 22rpx;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  letter-spacing: 0rpx;
 }

@@ -27,7 +27,35 @@
         "type": "folder"
       },
       {
+        "value": "演示",
+        "type": "folder"
+      },
+      {
+        "value": "项目交接",
+        "type": "folder"
+      },
+      {
+        "value": "cloudfunctions",
+        "type": "folder"
+      },
+      {
         "value": "OPTIMIZATION-PROMPT.md",
+        "type": "file"
+      },
+      {
+        "value": "README.md",
+        "type": "file"
+      },
+      {
+        "value": "test_output.txt",
+        "type": "file"
+      },
+      {
+        "value": "*.md",
+        "type": "file"
+      },
+      {
+        "value": "*.txt",
         "type": "file"
       },
       {
@@ -93,7 +121,7 @@
   },
   "compileType": "miniprogram",
   "libVersion": "2.33.0",
-  "appid": "wx195a4e0e46caa5d4",
+  "appid": "wx9917324651f1c264",
   "projectname": "escape-command",
   "cloudfunctionRoot": "cloudfunctions/",
   "condition": {},

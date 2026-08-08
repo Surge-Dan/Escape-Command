@@ -46,7 +46,7 @@ App({
     onboarded: false,
     escapeName: '',
     escapeCode: '',
-    avatarUrl: '/assets/images/avatar.webp',
+    avatarUrl: '/assets/avatar-default.webp',
     continuousDays: 0,
     lastCompleteDate: '',
     userPreferences: { mood: {}, type: {}, recent: [] },
@@ -62,7 +62,10 @@ App({
     breakthroughReRollCount: 5,
     breakthroughPool: [],
     // B4 记忆回收：30 天前记录回访提醒（null 表示无提醒）
-    memoryRevisit: null
+    memoryRevisit: null,
+    // v25: 思源宋体加载状态
+    serifFontLoaded: false,
+    serifFontFamily: ''
   },
 
   onLaunch() {
@@ -73,8 +76,67 @@ App({
     this.checkLocation()
     this.checkDateReset()
     this.checkContinuousDays()
+    // 预加载分包：首页引用的 packageDice 3D 骰子图、packageBt 场景图
+    // 必须预加载才能在主包页面正常显示分包内的 image 资源
+    this.preloadSubpackages()
     // v4: 清理过期 AI 场景插画缓存
     try { aiImage.clearExpiredCache() } catch (e) { console.warn('[app] AI 缓存清理失败：', e) }
+    // v23: 真正加载思源宋体（解决 Android 上 fallback 到无衬线字体的"花体字"问题）
+    this.loadSerifFont()
+  },
+
+  // v25: 用 wx.loadFontFace 加载思源宋体（本地子集字体，零网络依赖）
+  // 根因修复：scopes 参数在部分基础库版本上导致加载失败，移除后纯 global 模式更稳定
+  // 覆盖字符：出逃指令地图我编辑资料设置帮助关于成就徽章统计时间线年度回顾心情城市足迹搭子等
+  // 未覆盖字符自动降级到系统 serif（iOS: Songti SC / STSong；Android: serif fallback）
+  loadSerifFont() {
+    if (typeof wx.loadFontFace !== 'function') return
+    if (this.globalData.serifFontLoaded) return  // 已加载成功，不重复
+
+    const notify = (ok, family) => {
+      this.globalData.serifFontLoaded = ok
+      this.globalData.serifFontFamily = ok ? family : ''
+    }
+
+    wx.loadFontFace({
+      family: 'SourceHanSerifBold',
+      source: 'url("/assets/fonts/noto-serif-sc-bold-titles.woff2")',
+      global: true,
+      success: () => {
+        console.log('[app] SourceHanSerifBold 本地子集加载成功（global）')
+        notify(true, 'SourceHanSerifBold')
+      },
+      fail: (e) => {
+        console.warn('[app] global 字体加载失败，尝试页面级加载', e)
+        notify(false, '')
+        // 降级：延迟 500ms 重试一次（页面级，不设 global）
+        setTimeout(() => {
+          wx.loadFontFace({
+            family: 'SourceHanSerifBold',
+            source: 'url("/assets/fonts/noto-serif-sc-bold-titles.woff2")',
+            success: () => {
+              console.log('[app] SourceHanSerifBold 页面级加载成功')
+              notify(true, 'SourceHanSerifBold')
+            },
+            fail: (e2) => {
+              console.warn('[app] 字体加载彻底失败，降级到系统 serif', e2)
+            }
+          })
+        }, 500)
+      }
+    })
+  },
+
+  // 预加载首屏依赖的分包资源
+  // image 标签引用分包内资源时必须预加载分包，否则首屏会显示空白
+  preloadSubpackages() {
+    if (typeof wx.loadSubpackage !== 'function') return
+    // 骰子图片分包（首页3个3D骰子、骰子面缩放图等）
+    wx.loadSubpackage({ root: 'packageDice' }).then(() => {
+      console.log('[app] packageDice 预加载完成')
+    }).catch((e) => {
+      console.warn('[app] packageDice 预加载失败：', e)
+    })
   },
 
   // group-create-01: 云开发初始化
@@ -179,7 +241,7 @@ App({
       gd.lastCompleteDate = wx.getStorageSync('lastCompleteDate') || ''
       gd.escapeName = wx.getStorageSync('escapeName') || this.generateEscapeName()
       gd.escapeCode = wx.getStorageSync('escapeCode') || '给城市留一点空白'
-      gd.avatarUrl = wx.getStorageSync('avatarUrl') || '/assets/images/avatar.webp'
+      gd.avatarUrl = wx.getStorageSync('avatarUrl') || '/assets/avatar-default.webp'
       gd.onboarded = wx.getStorageSync('onboarded') || false
       gd.userPreferences = wx.getStorageSync('userPreferences') || gd.userPreferences
       gd.breakthroughProfile = wx.getStorageSync('breakthroughProfile') || null
@@ -267,7 +329,7 @@ App({
     try {
       if (typeof require.async === 'function') {
         // 官方分包异步化方案（基础库 2.27.1+，当前 libVersion 2.33.0 支持）
-        require.async('data/breakthrough-commands.js').then((data) => {
+        require.async('packageBt/data/breakthrough-commands.js').then((data) => {
           this._applyBreakthroughData(data)
         }).catch((e) => {
           console.error('[app] 异步加载破圈指令池失败', e)

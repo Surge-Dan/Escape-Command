@@ -78,7 +78,7 @@
         <text class="section-title h3">路线预览</text>
         <view class="route-card solid-card">
           <view class="route-illus">
-            <image class="route-bg" src="/assets/images/map-bg.webp" mode="aspectFill"></image>
+            <image class="route-bg" src="/packageBt/images/map-bg.webp" mode="aspectFill"></image>
             <view class="route-pin start">
               <view class="pin-dot"></view>
               <text class="pin-label">出发</text>

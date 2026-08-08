@@ -29,7 +29,7 @@
         <text class="onb-subtitle">给城市一个随机出口</text>
         <view class="onb-desc">
           <text class="onb-desc-line">不是逃避，是换一种方式在场</text>
-          <text class="onb-desc-line">给自己 15 分钟</text>
+          <text class="onb-desc-line">给自己15分钟</text>
           <text class="onb-desc-line">让算法替你做一个决定</text>
         </view>
         <view class="onb-cta" bindtap="goNext">
@@ -38,39 +38,150 @@
       </view>
     </swiper-item>
 
-    <!-- Screen 2: 6 种模式介绍 -->
+    <!-- Screen 2: 3 种模式介绍（点击卡片弹出详情） -->
     <swiper-item class="onb-screen">
       <view class="onb-screen-content">
-        <text class="onb-screen-title">6 种出逃模式</text>
+        <text class="onb-screen-title">3 种出逃模式</text>
+        <text class="onb-screen-hint">点击任意卡片了解详情</text>
         <view class="onb-mode-grid">
-          <view wx:for="{{modeList}}" wx:key="id" class="onb-mode-card">
+          <view
+            wx:for="{{modeList}}"
+            wx:key="id"
+            class="onb-mode-card"
+            data-mode-id="{{item.id}}"
+            catchtap="onModeCardTap"
+          >
             <view class="onb-mode-icon" style="background: {{item.color}}1A;">
               <image src="{{item.icon}}" mode="aspectFit"></image>
             </view>
             <text class="onb-mode-name">{{item.name}}</text>
             <text class="onb-mode-desc">{{item.desc}}</text>
+            <view class="onb-mode-card-arrow">
+              <text>查看详情 ›</text>
+            </view>
           </view>
         </view>
-        <view class="onb-cta" bindtap="goNext">
+        <view class="onb-cta" catchtap="goNext">
           <text>了解完啦</text>
         </view>
       </view>
     </swiper-item>
 
-    <!-- Screen 3: 首次出逃指引 -->
+    <!-- Screen 3: 偏好收集 —— 3 步表单（活动类型 / 人数 / 时长） -->
     <swiper-item class="onb-screen">
-      <view class="onb-screen-content">
-        <text class="onb-screen-title">第一次出逃</text>
-        <text class="onb-guide-text">点击中间的卡片，开始你的第一次出逃</text>
-        <view class="onb-mock-card">
-          <view class="onb-mock-card-inner">
-            <image class="onb-mock-icon" src="/assets/icons/dice-5-brand-strong.svg" mode="aspectFit"></image>
-            <text class="onb-mock-text">点击卡片</text>
-            <text class="onb-mock-sub">生成你的出逃指令</text>
+      <view class="onb-screen-content onb-pref-screen">
+        <text class="onb-screen-title">聊聊你的出逃偏好</text>
+        <text class="onb-screen-sub">用 30 秒告诉我们，我们好为你定制</text>
+
+        <!-- 步骤指示器 -->
+        <view class="onb-pref-stepper">
+          <view class="onb-pref-step {{prefStep >= 1 ? 'active' : ''}}">
+            <view class="onb-pref-step-num">1</view>
+            <text class="onb-pref-step-label">活动</text>
+          </view>
+          <view class="onb-pref-step-line {{prefStep >= 2 ? 'active' : ''}}"></view>
+          <view class="onb-pref-step {{prefStep >= 2 ? 'active' : ''}}">
+            <view class="onb-pref-step-num">2</view>
+            <text class="onb-pref-step-label">人数</text>
+          </view>
+          <view class="onb-pref-step-line {{prefStep >= 3 ? 'active' : ''}}"></view>
+          <view class="onb-pref-step {{prefStep >= 3 ? 'active' : ''}}">
+            <view class="onb-pref-step-num">3</view>
+            <text class="onb-pref-step-label">时长</text>
           </view>
         </view>
-        <view class="onb-cta" bindtap="goNext">
-          <text>下一步</text>
+
+        <!-- Step 1: 活动类型（多选） -->
+        <view wx:if="{{prefStep === 1}}" class="onb-pref-panel">
+          <text class="onb-pref-question">你喜欢什么样的外出活动？</text>
+          <text class="onb-pref-hint">可多选,至少1个</text>
+          <view class="onb-pref-activity-grid">
+            <view
+              wx:for="{{activityOptions}}"
+              wx:key="id"
+              class="onb-pref-activity {{selectedActivities.indexOf(item.id) >= 0 ? 'selected' : ''}}"
+              data-id="{{item.id}}"
+              data-index="{{index}}"
+              hover-class="onb-pref-activity-hover"
+              hover-stay-time="120"
+              catchtap="onToggleActivity"
+            >
+              <view class="onb-pref-activity-emoji" style="background: {{item.color}}1A;">
+                <text>{{item.icon}}</text>
+              </view>
+              <text class="onb-pref-activity-name">{{item.name}}</text>
+              <view
+                class="onb-pref-activity-check"
+                wx:if="{{selectedActivities.indexOf(item.id) >= 0}}"
+              >
+                <text>✓</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- Step 2: 出行人数（单选） -->
+        <view wx:if="{{prefStep === 2}}" class="onb-pref-panel">
+          <text class="onb-pref-question">通常和谁一起出逃？</text>
+          <text class="onb-pref-hint">单选，会影响任务推荐</text>
+          <view class="onb-pref-people-list">
+            <view
+              wx:for="{{peopleOptions}}"
+              wx:key="id"
+              class="onb-pref-people {{selectedPeople === item.id ? 'selected' : ''}}"
+              data-id="{{item.id}}"
+              hover-class="onb-pref-people-hover"
+              hover-stay-time="120"
+              catchtap="onSelectPeople"
+            >
+              <view class="onb-pref-people-radio">
+                <view class="onb-pref-people-radio-inner" wx:if="{{selectedPeople === item.id}}"></view>
+              </view>
+              <view class="onb-pref-people-text">
+                <text class="onb-pref-people-name">{{item.name}}</text>
+                <text class="onb-pref-people-desc">{{item.desc}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- Step 3: 时长偏好（单选） -->
+        <view wx:if="{{prefStep === 3}}" class="onb-pref-panel">
+          <text class="onb-pref-question">一般能花多长时间？</text>
+          <text class="onb-pref-hint">单选，我们帮你筛选合适任务</text>
+          <view class="onb-pref-duration-list">
+            <view
+              wx:for="{{durationOptions}}"
+              wx:key="id"
+              class="onb-pref-duration {{selectedDuration === item.id ? 'selected' : ''}}"
+              data-id="{{item.id}}"
+              hover-class="onb-pref-duration-hover"
+              hover-stay-time="120"
+              catchtap="onSelectDuration"
+            >
+              <view class="onb-pref-duration-text">
+                <text class="onb-pref-duration-name">{{item.name}}</text>
+                <text class="onb-pref-duration-desc">{{item.desc}}</text>
+              </view>
+              <view class="onb-pref-duration-check" wx:if="{{selectedDuration === item.id}}">
+                <text>✓</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 操作按钮 -->
+        <view class="onb-pref-actions">
+          <view
+            wx:if="{{prefStep > 1}}"
+            class="onb-pref-btn-prev"
+            catchtap="onPrefPrev"
+          >
+            <text>上一步</text>
+          </view>
+          <view class="onb-pref-btn-next" catchtap="onPrefNext">
+            <text>{{prefStep === 3 ? '完成' : '下一步'}}</text>
+          </view>
         </view>
       </view>
     </swiper-item>
@@ -124,4 +235,58 @@
     </swiper-item>
 
   </swiper>
+
+  <!-- ===== v22: 模式介绍弹窗 ===== -->
+  <view wx:if="{{modeDetailVisible && currentModeDetail}}" class="onb-detail-mask" catchtap="onModeDetailClose">
+    <view class="onb-detail-sheet" catchtap="noop">
+      <view class="onb-detail-handle"></view>
+
+      <!-- 头部：图标 + 名称 + 标签 -->
+      <view class="onb-detail-head">
+        <view class="onb-detail-icon" style="background: {{currentModeDetail.color}}1A;">
+          <image src="{{currentModeDetail.icon}}" mode="aspectFit"></image>
+        </view>
+        <view class="onb-detail-head-text">
+          <view class="onb-detail-title-row">
+            <text class="onb-detail-name">{{currentModeDetail.name}}</text>
+            <view class="onb-detail-tag" wx:if="{{currentModeDetail.detail.tag}}">
+              <text>{{currentModeDetail.detail.tag}}</text>
+            </view>
+          </view>
+          <text class="onb-detail-summary">{{currentModeDetail.detail.summary}}</text>
+        </view>
+        <view class="onb-detail-close" catchtap="onModeDetailClose">✕</view>
+      </view>
+
+      <!-- 关键信息：时长 / 人数 -->
+      <view class="onb-detail-meta">
+        <view class="onb-detail-meta-item">
+          <text class="onb-detail-meta-label">⏱ 时长</text>
+          <text class="onb-detail-meta-value">{{currentModeDetail.detail.duration}}</text>
+        </view>
+        <view class="onb-detail-meta-divider"></view>
+        <view class="onb-detail-meta-item">
+          <text class="onb-detail-meta-label">👥 人数</text>
+          <text class="onb-detail-meta-value">{{currentModeDetail.detail.people}}</text>
+        </view>
+      </view>
+
+      <!-- 功能列表 -->
+      <view class="onb-detail-section">
+        <text class="onb-detail-section-title">核心功能</text>
+        <view wx:for="{{currentModeDetail.detail.features}}" wx:key="*this" class="onb-detail-feature">
+          <text class="onb-detail-feature-dot" style="background: {{currentModeDetail.color}};"></text>
+          <text class="onb-detail-feature-text">{{item}}</text>
+        </view>
+      </view>
+
+      <!-- 适合场景 -->
+      <view class="onb-detail-section">
+        <text class="onb-detail-section-title">适合场景</text>
+        <view class="onb-detail-scenario-box">
+          <text class="onb-detail-scenario-text">{{currentModeDetail.detail.scenarios}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>

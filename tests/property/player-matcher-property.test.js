@@ -138,7 +138,7 @@ function randPlayer(rng) {
   return {
     openId: randOpenId(rng),
     nickname: randNickname(rng),
-    avatar: rng() < 0.2 ? '' : '/assets/images/avatar.webp',
+    avatar: rng() < 0.2 ? '' : '/packageBt/images/avatar.webp',
     interests: randInterests(rng),
     district: randDistrict(rng),
     bio: rng() < 0.3 ? '' : randNickname(rng)

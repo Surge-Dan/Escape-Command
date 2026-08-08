@@ -65,7 +65,7 @@ function mkRealPlayer(openId, nickname, opts) {
   return Object.assign({
     openId: openId,
     nickname: nickname,
-    avatar: '/assets/images/avatar.webp',
+    avatar: '/packageBt/images/avatar.webp',
     interests: ['food'],
     district: '天河区',
     bio: '测试玩家'
@@ -76,7 +76,7 @@ function mkMockPlayer(openId, nickname) {
   return {
     openId: openId,
     nickname: nickname,
-    avatar: '/assets/images/avatar.webp',
+    avatar: '/packageBt/images/avatar.webp',
     interests: ['culture'],
     district: '越秀区',
     bio: 'Mock 玩家'

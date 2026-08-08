@@ -26,7 +26,7 @@
   box-sizing: border-box;
 }
 
-/* 标题 */
+/* 标题 —— 严格按 v2 设计：思源宋体 Bold 衬线 */
 .hero-title {
   font-size: 72rpx;
   font-weight: 700;
@@ -528,18 +528,22 @@
   color: #9BB8CC;
 }
 
-.bottom-spacer { 
-  height: calc(140rpx + env(safe-area-inset-bottom)); 
+.bottom-spacer {
+  height: calc(140rpx + env(safe-area-inset-bottom));
 }
 
 /* ===== 指令详情卡（遮罩+卡片） ===== */
+/* 关键修复：弹窗用 absolute + bottom 强制避让 TabBar，不用 flex + margin-bottom（不稳） */
+/* TabBar 占位计算：bottom 72rpx + safe-area 34rpx + 高度 100rpx + 1rpx border = 207rpx，留 240rpx 安全 */
 .cmd-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(45, 90, 123, 0.5);
   z-index: 999;
-  display: flex;
-  align-items: flex-end;
+  pointer-events: auto;
   animation: cmdMaskIn 200ms ease-out;
 }
 
@@ -548,10 +552,22 @@
   to { opacity: 1; }
 }
 
+/* 弹层用 fixed 定位，确保相对视口而非滚动容器 */
+/* v17: TabBar 弹出时已隐藏，cmd-sheet 贴底显示 + max-height 留 80rpx 安全余量 */
 .cmd-sheet {
-  width: 100%;
-  max-height: 85vh;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: calc(100vh - 80rpx);
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
   animation: cmdSheetUp 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 -8rpx 32rpx rgba(45, 90, 123, 0.15);
+  z-index: 1001;
 }
 
 @keyframes cmdSheetUp {
@@ -563,10 +579,13 @@
   position: relative;
   background: #fff;
   border-radius: 32rpx 32rpx 0 0;
-  padding: 28rpx;
-  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
-  max-height: 85vh;
-  overflow-y: auto;
+  /* v17: 贴底显示时，padding-bottom 必须兜底 34rpx（无安全区设备也能呼吸） */
+  padding: 28rpx 28rpx calc(40rpx + env(safe-area-inset-bottom, 34rpx));
+  flex: 1;
+  min-height: 0;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
 }
 
 .cmd-close {
@@ -685,7 +704,10 @@
 
 .cmd-image-bg {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -814,14 +836,17 @@
   letter-spacing: 0.5rpx;
 }
 
-/* ===== 同频骰子入口选择弹层 ===== */
+/* ===== 出逃方式弹窗（同频骰子入口选择弹层）===== */
+/* 弹窗遮罩：fixed 全屏 */
 .dice-sheet-mask {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(45, 90, 123, 0.5);
   z-index: 1000;
-  display: flex;
-  align-items: flex-end;
+  pointer-events: auto;
   animation: maskIn 200ms ease-out;
 }
 
@@ -830,13 +855,23 @@
   to { opacity: 1; }
 }
 
+/* 弹层用 fixed 定位，确保相对视口 */
+/* v16: TabBar 弹出时已隐藏，弹窗直接贴底，只需避让安全区 */
 .dice-sheet-panel {
-  width: 100%;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: calc(100vh - 80rpx);
   background: #fff;
   border-radius: 32rpx 32rpx 0 0;
-  padding: 16rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
+  padding: 16rpx 32rpx calc(40rpx + env(safe-area-inset-bottom, 34rpx));
   box-shadow: 0 -8rpx 32rpx rgba(45, 90, 123, 0.15);
   animation: sheetUp 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+  z-index: 1001;
 }
 
 @keyframes sheetUp {

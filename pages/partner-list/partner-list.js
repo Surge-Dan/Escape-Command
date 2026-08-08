@@ -1,4 +1,4 @@
-const app = getApp()
+﻿const app = getApp()
 
 const MODE_COLORS = {
   smart: '#5CBF9E',
@@ -9,7 +9,7 @@ const MODE_COLORS = {
   rainy: '#7EC8F5'
 }
 
-const DEFAULT_AVATAR = '/assets/images/avatar.webp'
+const DEFAULT_AVATAR = '/assets/avatar-default.webp'
 
 // globalData.partnerRecords 为空时使用的兜底 mock
 const MOCK_PARTNERS = [

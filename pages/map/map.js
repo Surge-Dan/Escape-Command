@@ -1,4 +1,4 @@
-﻿const app = getApp()
+const app = getApp()
 const { getTypeMeta, MOODS } = require('../../utils/constants.js')
 const markerBuilder = require('../../utils/map-marker-builder.js')
 const revisitHelper = require('../../utils/revisit-helper.js')
@@ -118,14 +118,23 @@ Page({
   // 空方法：供 catchtap="noop" 拦截冒泡
   noop() {},
 
+  // 通过框架自动注入的 TabBar 实例控制显隐
+  _setTabbarHidden(hidden) {
+    const tabBar = typeof this.getTabBar === 'function' ? this.getTabBar() : null
+    if (tabBar) tabBar.setData({ tabbarHidden: hidden })
+  },
+
   onLoad() {
     const sys = app.globalData.systemInfo || wx.getSystemInfoSync()
     const nav = app.getNavMetrics ? app.getNavMetrics() : {}
     const statusBarHeight = nav.statusBarHeight || app.globalData.statusBarHeight || sys.statusBarHeight || 20
-    const navHeightPx = 80 * (sys.windowWidth / 750)
-    const themeHeightPx = 136 * (sys.windowWidth / 750)
+    // v15 修复：nav-header = height 80rpx + margin-bottom 16rpx = 96rpx（原计算漏了 16rpx margin）
+    const navHeightPx = (80 + 16) * (sys.windowWidth / 750)
+    // map-theme 实际高度：padding 28*2 + title 36*1.3 + gap 4 + sub 24*1.4 ≈ 142rpx
+    const themeHeightPx = 142 * (sys.windowWidth / 750)
     const safeAreaBottom = sys.safeArea ? (sys.screenHeight - sys.safeArea.bottom) : 0
-    const tabbarHeightPx = 100 * (sys.windowWidth / 750) + safeAreaBottom
+    // TabBar 占位：bottom 72rpx + 高 96rpx = 168rpx，加 safeAreaBottom
+    const tabbarHeightPx = (72 + 96) * (sys.windowWidth / 750) + safeAreaBottom
     const mapHeight = sys.windowHeight - statusBarHeight - navHeightPx - themeHeightPx - tabbarHeightPx
     const homeRaw = wx.getStorageSync('homePoint') || app.globalData.homePoint || app.globalData.location || null
     this.setData({
@@ -148,7 +157,7 @@ Page({
     this.refresh()
     this.locateIfAvailable()
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 1 })
+      this.getTabBar().setData({ selected: 1, tabbarHidden: false })
     }
   },
 
@@ -540,11 +549,13 @@ Page({
     }
     const summary = revisitHelper.buildRevisitSummary(record)
     this.setData({ revisitPopup: summary })
+    this._setTabbarHidden(true)
   },
 
   closeRevisitPopup() {
     if (this.data.revisitPopup) {
       this.setData({ revisitPopup: null })
+      this._setTabbarHidden(false)
     }
   },
 
@@ -555,12 +566,14 @@ Page({
     const record = (this.markerRecords || []).find(r => r && r.id === popup.id)
     if (!record || !revisitHelper.canRevisit(record)) {
       this.setData({ revisitPopup: null })
+      this._setTabbarHidden(false)
       wx.showToast({ title: '无法生成重返任务', icon: 'none' })
       return
     }
     const cmd = revisitHelper.buildRevisitCommand(record, { nowTs: Date.now() })
     if (!cmd) {
       this.setData({ revisitPopup: null })
+      this._setTabbarHidden(false)
       wx.showToast({ title: '生成失败，请重试', icon: 'none' })
       return
     }
@@ -572,6 +585,7 @@ Page({
       tracker.track('revisit_place', { fromRecordId: record.id, type: cmd.type })
     } catch (e) { /* tracker 加载失败不阻塞 */ }
     this.setData({ revisitPopup: null, popupRecord: null })
+    this._setTabbarHidden(false)
     wx.navigateTo({ url: '/pages/executing/executing?revisit=1' })
   },
 
@@ -641,6 +655,7 @@ Page({
             isGroupAgg: true
           }
         })
+        this._setTabbarHidden(true)
       }
       return
     }
@@ -648,12 +663,14 @@ Page({
     const record = (this.markerRecords || [])[markerId]
     if (record) {
       this.setData({ popupRecord: this.formatPopup(record) })
+      this._setTabbarHidden(true)
     }
   },
 
   closePopup() {
     if (this.data.popupRecord) {
       this.setData({ popupRecord: null })
+      this._setTabbarHidden(false)
     }
   },
 

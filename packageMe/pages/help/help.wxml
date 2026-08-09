@@ -12,6 +12,20 @@
   <scroll-view scroll-y class="page-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 72rpx);">
     <view class="help-body">
 
+      <!-- 启动页入口 -->
+      <view class="onboarding-entry solid-card" bindtap="replayOnboarding">
+        <view class="onboarding-ico" style="background: #9B7BB81A;">
+          <image src="/assets/icons/dice-5-brand-strong.svg" mode="aspectFit"></image>
+        </view>
+        <view class="onboarding-text">
+          <text class="onboarding-title">启动页 / 新手引导</text>
+          <text class="onboarding-desc">重新体验出逃模式与玩法介绍</text>
+        </view>
+        <view class="onboarding-arrow">
+          <image src="/assets/icons/chevron-right-faint.svg" mode="aspectFit"></image>
+        </view>
+      </view>
+
       <!-- 新手引导 -->
       <view class="section-label">新手引导</view>
       <view class="accordion solid-card">

@@ -176,7 +176,7 @@
               data-id="{{item.id}}"
             >
               <view class="top9-polaroid" style="transform: rotate({{item.rotation}}deg);">
-                <image class="top9-photo" src="{{item.photo}}" mode="aspectFill"></image>
+                <image class="top9-photo" src="{{item.photo}}" mode="aspectFill" binderror="onImgError" data-list="top9" data-index="{{index}}" data-key="photo" data-fallback="/assets/icons/empty-collection.svg"></image>
                 <view class="top9-tape" style="background: {{item.typeColor}}33;"></view>
               </view>
             </view>

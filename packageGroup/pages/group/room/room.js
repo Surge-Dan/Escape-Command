@@ -1,4 +1,4 @@
-﻿const app = getApp()
+const app = getApp()
 const roomStore = require('../../../utils/group-room-store.js')
 const hallStore = require('../../../utils/task-hall-store.js')
 const chatStore = require('../../../utils/chat-store.js')
@@ -117,20 +117,17 @@ Page({
   },
 
   // ===== C-P3 联动：房间完成后回写 hall task 状态为 finished =====
-  syncHallTaskFinished() {
+  syncHallTaskStarted() {
     const taskId = this.data.taskId
     if (!taskId) return
     try {
-      // dice match 路径任务可能还停留在 ready，先推进到 started 再 finished
+      // dice match 路径任务可能还停留在 ready，推进到 started（剧本已生成，出逃开始）
       const detail = hallStore.getTaskDetail(taskId)
-      if (detail && detail.ok && detail.task) {
-        if (detail.task.status === 'ready') {
-          hallStore.updateTaskStatus(taskId, 'started')
-        }
+      if (detail && detail.ok && detail.task && detail.task.status === 'ready') {
+        hallStore.updateTaskStatus(taskId, 'started')
       }
-      hallStore.updateTaskStatus(taskId, 'finished')
     } catch (e) {
-      console.warn('[room] 回写 hall task 状态失败', e)
+      console.warn('[room] 回写 hall task started 失败', e)
     }
   },
 
@@ -775,8 +772,9 @@ Page({
       if (result.ok) {
         this.applyRoom(result.room)
         try { wx.vibrateShort({ type: 'heavy' }) } catch (e) {}
-        // C-P3 联动：房间 finished 后回写 hall task 状态
-        this.syncHallTaskFinished()
+        // C-P3 联动：剧本生成后 task 推进到 started（diceMatch 路径可能还停在 ready）
+        // 注意：不在此处标 finished，task finished 应在 escape-record 完成所有步骤后回写
+        this.syncHallTaskStarted()
       } else {
         wx.showToast({ title: '生成失败', icon: 'none' })
       }
@@ -804,7 +802,9 @@ Page({
       app.globalData.currentGroupScript = {
         script: this.data.script,
         room: this.data.room,
-        steps: []
+        steps: [],
+        // 透传 taskId，供 escape-record 完成出逃后回写 hall task finished
+        taskId: this.data.taskId || ''
       }
     } catch (e) {}
     wx.redirectTo({

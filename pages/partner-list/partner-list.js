@@ -1,4 +1,5 @@
 ﻿const app = getApp()
+const imageFallback = require('../../utils/image-fallback.js')
 
 const MODE_COLORS = {
   smart: '#5CBF9E',
@@ -70,6 +71,8 @@ Page({
   },
 
   goBack() { wx.navigateBack({ delta: 1 }) },
+
+  onImgError(e) { imageFallback.handle(e, this) },
 
   tapPartner(e) {
     const name = e.currentTarget.dataset.name

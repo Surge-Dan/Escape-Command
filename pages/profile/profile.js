@@ -109,49 +109,57 @@ Page({
     const gd = app.globalData
     const records = gd.records || []
     const badges = gd.badges || []
-    const now = new Date()
 
     // 城市覆盖（按经纬度粗略聚合）
     const citySet = new Set()
     // 累计距离
     let totalDistance = 0
-    // 本月出逃次数
+    // 本月出逃次数（按东八区年月判定，与 app.getTodayStr 时区策略一致）
+    const bjNow = new Date(Date.now() + 8 * 3600 * 1000)
+    const bjYear = bjNow.getUTCFullYear()
+    const bjMonth = bjNow.getUTCMonth() + 1
     let monthCount = 0
-    // 连续天数
+    // 出逃日期集合（用 r.date 字符串，YYYY-MM-DD，避免 timestamp 时区漂移）
     const daySet = new Set()
 
     records.forEach(r => {
+      if (!r) return
       if (r.location && r.location.latitude) {
         citySet.add(Math.round(r.location.latitude * 10) + ',' + Math.round(r.location.longitude * 10))
       }
       if (r.distance) totalDistance += Number(r.distance) || 0
-      if (r.timestamp) {
-        const d = new Date(r.timestamp)
-        daySet.add(d.toDateString())
-        if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) monthCount++
+      // 优先用 r.date 字符串（YYYY-MM-DD），兜底从 timestamp 解析
+      let dateStr = ''
+      if (typeof r.date === 'string' && r.date) {
+        dateStr = r.date
+      } else if (typeof r.timestamp === 'number' && Number.isFinite(r.timestamp)) {
+        const d = new Date(r.timestamp + 8 * 3600 * 1000)
+        dateStr = d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0')
+      }
+      if (dateStr) {
+        daySet.add(dateStr)
+        const parts = dateStr.split('-')
+        if (parts.length === 3 && Number(parts[0]) === bjYear && Number(parts[1]) === bjMonth) {
+          monthCount++
+        }
       }
     })
 
-    // 计算连续天数
+    // 计算最长连续天数：从排序后的唯一日期序列中找最长连续段
     const sortedDays = Array.from(daySet).sort()
-    let continuousDays = 0
-    if (sortedDays.length > 0) {
-      continuousDays = 1
-      for (let i = sortedDays.length - 1; i > 0; i--) {
-        const cur = new Date(sortedDays[i])
-        const prev = new Date(sortedDays[i - 1])
-        const diff = (cur - prev) / (1000 * 60 * 60 * 24)
-        if (diff <= 1) continuousDays++
-        else break
+    let maxStreak = 0
+    let curStreak = 0
+    let prevTime = null
+    for (let i = 0; i < sortedDays.length; i++) {
+      const t = new Date(sortedDays[i] + 'T00:00:00+08:00').getTime()
+      if (isNaN(t)) continue
+      if (prevTime !== null && (t - prevTime) === 86400000) {
+        curStreak++
+      } else {
+        curStreak = 1
       }
-      // 检查今天是否在记录中
-      const today = new Date().toDateString()
-      const yesterday = new Date(now.getTime() - 86400000).toDateString()
-      if (sortedDays.indexOf(today) === -1 && sortedDays.indexOf(yesterday) === -1) {
-        continuousDays = 0
-      } else if (sortedDays.indexOf(today) === -1 && sortedDays.indexOf(yesterday) >= 0) {
-        // 昨天有记录，今天没有，连续从昨天算
-      }
+      if (curStreak > maxStreak) maxStreak = curStreak
+      prevTime = t
     }
 
     this.setData({
@@ -162,7 +170,7 @@ Page({
       stats: [
         { label: '累计出逃', value: String(records.length), unit: '次' },
         { label: '本月', value: String(monthCount), unit: '次' },
-        { label: '最长连续', value: String(continuousDays), unit: '天' },
+        { label: '最长连续', value: String(maxStreak), unit: '天' },
         { label: '城市覆盖', value: String(citySet.size), unit: '个' }
       ],
       version: gd.version || 'v3.0'

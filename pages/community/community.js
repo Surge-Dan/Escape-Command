@@ -1,6 +1,7 @@
-﻿const app = getApp()
+const app = getApp()
 const community = require('../../data/community.js')
 const { normalizeType, getTypeMeta } = require('../../utils/constants.js')  // 保留在主包 utils 中
+const imageFallback = require('../../utils/image-fallback.js')
 
 Page({
   data: {
@@ -143,5 +144,7 @@ Page({
 
   goBack() {
     wx.navigateBack({ delta: 1 })
-  }
+  },
+
+  onImgError(e) { imageFallback.handle(e, this) }
 })

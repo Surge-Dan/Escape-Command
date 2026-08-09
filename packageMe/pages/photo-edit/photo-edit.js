@@ -1,4 +1,5 @@
 const app = getApp()
+const imageFallback = require('../../../utils/image-fallback.js')
 
 // 6 种滤镜：css 字符串供预览实时生效，tint 用于缩略图底色。
 const FILTERS = [
@@ -38,6 +39,8 @@ Page({
   },
 
   goBack() { wx.navigateBack({ delta: 1 }) },
+
+  onImgError(e) { imageFallback.handle(e, this) },
 
   selectFilter(e) {
     const id = e.currentTarget.dataset.id

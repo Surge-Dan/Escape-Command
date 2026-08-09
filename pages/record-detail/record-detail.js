@@ -1,6 +1,7 @@
 const app = getApp()
 const { MOODS, MODE_LIST, getTypeMeta } = require('../../utils/constants.js')
 const recordBuilder = require('../../utils/record-builder.js')
+const imageFallback = require('../../utils/image-fallback.js')
 
 Page({
   data: {
@@ -93,6 +94,8 @@ Page({
   },
 
   goBack() { wx.navigateBack({ delta: 1 }) },
+
+  onImgError(e) { imageFallback.handle(e, this) },
 
   // v6: 收藏切换，持久化到记录
   toggleFavorite() {

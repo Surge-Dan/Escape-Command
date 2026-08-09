@@ -1,4 +1,4 @@
-﻿const app = getApp()
+const app = getApp()
 const themes = require('../../data/themes.js')
 
 Page({
@@ -157,7 +157,7 @@ Page({
   showAbout() {
     wx.showModal({
       title: '关于出逃指令',
-      content: '版本 3.0.0\n\n给周末一个出口\n\n用随机的小冒险，填满城市里的空白时光。',
+      content: '版本 2.4.0\n\n给周末一个出口\n\n用随机的小冒险，填满城市里的空白时光。',
       showCancel: false,
       confirmText: '知道了'
     })

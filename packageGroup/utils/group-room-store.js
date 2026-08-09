@@ -193,19 +193,36 @@ function createRoom(topic, maxMembers, options) {
 
   const now = Date.now()
   const openId = getHostOpenId()
+  // 初始成员列表：host 在首位，task 透传的其他成员追加为非 host
+  // 修复 task→room 成员断层：满员 task 创建 room 后，其他成员被遗弃导致同频出逃卡死
+  const members = [{
+    openId,
+    nickname: '发起人',
+    joinedAt: now,
+    isHost: true,
+    preference: null,
+    votes: { time: null, budget: null, style: null }
+  }]
+  const initialMembers = Array.isArray(opts.members) ? opts.members : []
+  for (let k = 0; k < initialMembers.length; k++) {
+    const m = initialMembers[k]
+    if (!m || !m.openId || m.openId === openId) continue // 跳过 host 自身与非法项
+    if (members.some(x => x.openId === m.openId)) continue // 去重
+    members.push({
+      openId: m.openId,
+      nickname: m.nickname || '出逃者',
+      joinedAt: m.joinedAt || now,
+      isHost: false,
+      preference: null,
+      votes: { time: null, budget: null, style: null }
+    })
+  }
   const room = {
     roomId,
     topic: t,
     maxMembers,
     hostOpenId: openId,
-    members: [{
-      openId,
-      nickname: '发起人',
-      joinedAt: now,
-      isHost: true,
-      preference: null,
-      votes: { time: null, budget: null, style: null }
-    }],
+    members,
     status: ROOM_STATUS.WAITING,
     script: null,
     createdAt: now,

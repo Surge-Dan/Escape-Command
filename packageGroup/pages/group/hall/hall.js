@@ -1,4 +1,4 @@
-﻿// pages/group/hall/hall.js
+// pages/group/hall/hall.js
 // C-P3 任务大厅主页
 //
 // 职责：
@@ -78,6 +78,14 @@ Page({
     this.loadTasks()
     // D5: fire-and-forget 注册玩家档案到云端（便于其他玩家匹配到真实玩家）
     this.registerPlayerToCloud()
+  },
+
+  // onShow 刷新任务列表：从 detail/room 返回时同步状态变化（navigateBack 不触发 onLoad）
+  onShow() {
+    if (this._loaded) {
+      try { this.loadTasks() } catch (e) { console.warn('[hall] onShow loadTasks 失败', e) }
+    }
+    this._loaded = true
   },
 
   // D5: 注册玩家档案到云端（非阻塞，失败静默降级到 mock）
@@ -259,7 +267,7 @@ Page({
       // C-P3 联动：满员（ready）且尚未关联房间 → 自动创建房间并关联
       if (result.task.status === 'ready' && !roomId) {
         try {
-          const roomResult = roomStore.createRoom(result.task.topic, result.task.maxMembers, { visibility: 'public' })
+          const roomResult = roomStore.createRoom(result.task.topic, result.task.maxMembers, { visibility: 'public', members: members })
           if (roomResult && roomResult.ok && roomResult.roomId) {
             roomId = roomResult.roomId
             try { hallStore.linkRoom(result.task.taskId, roomId) } catch (e) {

@@ -25,7 +25,7 @@
         <view class="podium-medal silver">
           <text class="medal-num">2</text>
         </view>
-        <image class="podium-avatar" src="{{podium.second.avatar}}" mode="aspectFit"></image>
+        <image class="podium-avatar" src="{{podium.second.avatar}}" mode="aspectFit" binderror="onImgError" data-path="podium.second.avatar" data-fallback="/assets/avatar-default.webp"></image>
         <text class="podium-name">{{podium.second.name}}</text>
         <text class="podium-count">{{podium.second.count}} 次</text>
         <view class="podium-bar bar-second"></view>
@@ -37,7 +37,7 @@
         <view class="podium-medal gold">
           <text class="medal-num">1</text>
         </view>
-        <image class="podium-avatar avatar-first" src="{{podium.first.avatar}}" mode="aspectFit"></image>
+        <image class="podium-avatar avatar-first" src="{{podium.first.avatar}}" mode="aspectFit" binderror="onImgError" data-path="podium.first.avatar" data-fallback="/assets/avatar-default.webp"></image>
         <text class="podium-name">{{podium.first.name}}</text>
         <text class="podium-count">{{podium.first.count}} 次</text>
         <view class="podium-bar bar-first"></view>
@@ -48,7 +48,7 @@
         <view class="podium-medal bronze">
           <text class="medal-num">3</text>
         </view>
-        <image class="podium-avatar" src="{{podium.third.avatar}}" mode="aspectFit"></image>
+        <image class="podium-avatar" src="{{podium.third.avatar}}" mode="aspectFit" binderror="onImgError" data-path="podium.third.avatar" data-fallback="/assets/avatar-default.webp"></image>
         <text class="podium-name">{{podium.third.name}}</text>
         <text class="podium-count">{{podium.third.count}} 次</text>
         <view class="podium-bar bar-third"></view>
@@ -61,7 +61,7 @@
         <view class="rank-no">
           <text class="rank-no-text">{{item.rank}}</text>
         </view>
-        <image class="rank-avatar" src="{{item.avatar}}" mode="aspectFit"></image>
+        <image class="rank-avatar" src="{{item.avatar}}" mode="aspectFit" binderror="onImgError" data-list="rest" data-index="{{index}}" data-key="avatar" data-fallback="/assets/avatar-default.webp"></image>
         <view class="rank-info">
           <view class="rank-name-row">
             <text class="rank-name">{{item.name}}</text>

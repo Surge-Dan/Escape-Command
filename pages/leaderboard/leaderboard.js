@@ -1,4 +1,5 @@
 ﻿const app = getApp()
+const imageFallback = require('../../utils/image-fallback.js')
 
 const NAME_PREFIXES = ['周末', '迷路的', '踢影子的', '漫步的', '摘云的', '追风的', '捡落叶的', '清晨的', '黄昏的', '夜行的', '雨后的', '午后的']
 const NAME_SUFFIXES = ['漫游者', '散步家', '观察员', '记录人', '探险家', '闲逛者', '拾光人', '追风人']
@@ -108,6 +109,8 @@ Page({
   },
 
   goBack() { wx.navigateBack({ delta: 1 }) },
+
+  onImgError(e) { imageFallback.handle(e, this) },
 
   switchTab(e) {
     const id = e.currentTarget.dataset.id

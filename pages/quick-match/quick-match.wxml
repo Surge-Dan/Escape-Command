@@ -98,7 +98,7 @@
         <view wx:else class="qm-partners-grid">
           <view class="qm-partner-item" wx:for="{{partnersDisplay}}" wx:key="openId" wx:for-item="p" data-index="{{index}}" catchtap="onPartnerTap">
             <view class="qm-partner-avatar-wrap">
-              <image src="{{p.avatar}}" mode="aspectFill" class="qm-partner-avatar"></image>
+              <image src="{{p.avatar}}" mode="aspectFill" class="qm-partner-avatar" binderror="onImgError" data-list="partnersDisplay" data-index="{{index}}" data-key="avatar" data-fallback="/assets/avatar-default.webp"></image>
               <view wx:if="{{p.isReal}}" class="qm-partner-real-badge">真</view>
             </view>
             <view class="qm-partner-name">{{p.nickname}}</view>

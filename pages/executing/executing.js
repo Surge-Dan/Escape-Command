@@ -8,6 +8,7 @@ const safetyTip = require('../../utils/safety-tip.js')
 const safetyHelper = require('../../utils/safety-helper.js')
 // 到达确认工具（B2：阶段感设计/隐藏任务解锁）
 const arrivalHelper = require('../../utils/arrival-helper.js')
+const imageFallback = require('../../utils/image-fallback.js')
 
 // 每步的实用小贴士（兜底，cmd 自带 steps.details 时优先用 cmd 的）。
 const STEP_HINTS = [
@@ -150,10 +151,23 @@ Page({
     this.stopTimer()
   },
 
-  // 切后台/锁屏时保存进度（onHide 在 onUnload 之前触发，覆盖切应用/锁屏场景）
+  // 切后台/锁屏时保存进度并停计时器（避免后台 setInterval 持续 setData 浪费性能）
   onHide() {
     const cmd = app.globalData.currentCommand
     if (cmd && cmd.executionProgress) app.saveCurrentCommand()
+    this.stopTimer()
+  },
+
+  // 回前台：校验 currentCommand 是否还在，避免从 record 页返回后停留在已完成的执行页
+  onShow() {
+    const cmd = app.globalData.currentCommand
+    if (!cmd) {
+      // currentCommand 已被 completeCommand/abandonCommand 清空，跳回首页避免状态错乱
+      wx.switchTab({ url: '/pages/index/index' })
+      return
+    }
+    // 恢复计时器（onHide 已停止）
+    this.startTimer()
   },
 
   applyNavMetrics() {
@@ -201,6 +215,8 @@ Page({
     app.abandonCommand()
     wx.switchTab({ url: '/pages/index/index' })
   },
+
+  onImgError(e) { imageFallback.handle(e, this) },
 
   // ===== B1 安全合规：紧急退出 =====
   onEmergencyExit() {

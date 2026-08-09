@@ -152,7 +152,7 @@
 <cover-view wx:if="{{popupRecord.dateText}}" class="popup-date">{{popupRecord.dateText}}{{popupRecord.moodText ? ' · ' + popupRecord.moodText : ''}}</cover-view>
 
         <!-- 缩略图（同频聚合无图时不展示） -->
-        <cover-image wx:if="{{popupRecord.photoThumb}}" class="popup-thumb" src="{{popupRecord.photoThumb}}" mode="aspectFill"></cover-image>
+        <cover-image wx:if="{{popupRecord.photoThumb}}" class="popup-thumb" src="{{popupRecord.photoThumb}}" mode="aspectFill" binderror="onImgError" data-path="popupRecord.photoThumb" data-fallback="/assets/icons/empty-collection.svg"></cover-image>
 
         <!-- 信息行：搭子 / 时长 / 心情 / 天气 -->
         <cover-view class="popup-meta">

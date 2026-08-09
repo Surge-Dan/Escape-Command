@@ -1,5 +1,6 @@
-﻿const app = getApp()
+const app = getApp()
 const { MOODS, TYPE_META } = require('../../utils/constants.js')
+const imageFallback = require('../../utils/image-fallback.js')
 
 const MOOD_EMOJI = { happy: '😊', calm: '😌', surprise: '😲', heal: '🥰', fun: '😄' }
 const TYPE_KEYS = ['color', 'walk', 'sense', 'collect', 'food', 'culture']
@@ -285,5 +286,7 @@ Page({
 
   goBack() {
     wx.navigateBack({ delta: 1 })
-  }
+  },
+
+  onImgError(e) { imageFallback.handle(e, this) }
 })

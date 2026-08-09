@@ -49,7 +49,7 @@
 
         <!-- 作者行 -->
         <view class="feed-author">
-          <image class="author-avatar" src="{{item.authorAvatar}}" mode="aspectFill"></image>
+          <image class="author-avatar" src="{{item.authorAvatar}}" mode="aspectFill" binderror="onImgError" data-list="feed" data-index="{{index}}" data-key="authorAvatar" data-fallback="/assets/avatar-default.webp"></image>
           <view class="author-info">
             <text class="author-name">{{item.author}}</text>
             <text class="author-meta">{{item.createdAt}}</text>

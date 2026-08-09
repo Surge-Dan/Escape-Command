@@ -94,36 +94,65 @@ App({
     if (typeof wx.loadFontFace !== 'function') return
     if (this.globalData.serifFontLoaded) return  // 已加载成功，不重复
 
+    const FONT_BOLD = '/assets/fonts/noto-serif-sc-bold-titles.woff2'
+    const FONT_REG = '/assets/fonts/noto-serif-sc-bold-subset.woff2'
+
     const notify = (ok, family) => {
       this.globalData.serifFontLoaded = ok
       this.globalData.serifFontFamily = ok ? family : ''
     }
 
+    // Bold 字体：用于标题（global: true 全局生效）
     wx.loadFontFace({
       family: 'SourceHanSerifBold',
-      source: 'url("/assets/fonts/noto-serif-sc-bold-titles.woff2")',
+      source: FONT_BOLD,
       global: true,
       success: () => {
-        console.log('[app] SourceHanSerifBold 本地子集加载成功（global）')
+        console.log('[app] SourceHanSerifBold 加载成功（global）')
         notify(true, 'SourceHanSerifBold')
       },
       fail: (e) => {
-        console.warn('[app] global 字体加载失败，尝试页面级加载', e)
-        notify(false, '')
+        console.warn('[app] Bold 字体 global 加载失败，尝试页面级', e)
         // 降级：延迟 500ms 重试一次（页面级，不设 global）
         setTimeout(() => {
           wx.loadFontFace({
             family: 'SourceHanSerifBold',
-            source: 'url("/assets/fonts/noto-serif-sc-bold-titles.woff2")',
+            source: FONT_BOLD,
             success: () => {
               console.log('[app] SourceHanSerifBold 页面级加载成功')
               notify(true, 'SourceHanSerifBold')
             },
             fail: (e2) => {
-              console.warn('[app] 字体加载彻底失败，降级到系统 serif', e2)
+              console.warn('[app] Bold 字体加载彻底失败，降级到系统 serif', e2)
+              notify(false, '')
             }
           })
         }, 500)
+      }
+    })
+
+    // Regular 字体：用于正文（global: true 全局生效）
+    wx.loadFontFace({
+      family: 'SourceHanSerif',
+      source: FONT_REG,
+      global: true,
+      success: () => {
+        console.log('[app] SourceHanSerif 加载成功（global）')
+      },
+      fail: (e) => {
+        console.warn('[app] Regular 字体 global 加载失败，尝试页面级', e)
+        setTimeout(() => {
+          wx.loadFontFace({
+            family: 'SourceHanSerif',
+            source: FONT_REG,
+            success: () => {
+              console.log('[app] SourceHanSerif 页面级加载成功')
+            },
+            fail: (e2) => {
+              console.warn('[app] Regular 字体加载彻底失败', e2)
+            }
+          })
+        }, 800)
       }
     })
   },
@@ -137,6 +166,12 @@ App({
       console.log('[app] packageDice 预加载完成')
     }).catch((e) => {
       console.warn('[app] packageDice 预加载失败：', e)
+    })
+    // 破圈分包（25张场景图 + 画像/证书页），避免首次进入破圈页白屏
+    wx.loadSubpackage({ root: 'packageBt' }).then(() => {
+      console.log('[app] packageBt 预加载完成')
+    }).catch((e) => {
+      console.warn('[app] packageBt 预加载失败：', e)
     })
   },
 
@@ -231,7 +266,7 @@ App({
   loadLocalData() {
     try {
       const gd = this.globalData
-      gd.records = wx.getStorageSync('records') || []
+      gd.records = this._migrateRecords(wx.getStorageSync('records') || [])
       gd.completedCommandIds = wx.getStorageSync('completedCommandIds') || []
       gd.badges = wx.getStorageSync('badges') || []
       gd.collectedCommands = wx.getStorageSync('collectedCommands') || []
@@ -266,6 +301,36 @@ App({
     try { wx.setStorageSync(key, data) } catch (e) { console.error('保存本地数据失败', key, e) }
   },
 
+  // 旧版本 records 字段迁移：补 commandType/timestamp/mode/double 等字段
+  // 老用户从 v1.x 升级时 records 可能缺字段，导致 badge-engine 模式徽章/类型徽章失效
+  _migrateRecords(list) {
+    if (!Array.isArray(list)) return []
+    let dirty = false
+    const out = list.map(r => {
+      if (!r || typeof r !== 'object') return null
+      const fixed = Object.assign({}, r)
+      // commandType：旧版用 type 字段，补齐到 commandType
+      if (!fixed.commandType) {
+        fixed.commandType = (typeof fixed.type === 'string' && fixed.type) ? fixed.type : 'custom'
+        dirty = true
+      }
+      // timestamp：旧版无此字段，从 date 解析兜底
+      if (typeof fixed.timestamp !== 'number' || !Number.isFinite(fixed.timestamp)) {
+        const t = fixed.date ? new Date(fixed.date + 'T00:00:00+08:00').getTime() : Date.now()
+        fixed.timestamp = isNaN(t) ? Date.now() : t
+        dirty = true
+      }
+      // mode/double：旧版无此字段，无法恢复，给默认值避免 undefined
+      if (fixed.mode === undefined) { fixed.mode = ''; dirty = true }
+      if (fixed.double === undefined) { fixed.double = false; dirty = true }
+      return fixed
+    }).filter(Boolean)
+    if (dirty) {
+      try { wx.setStorageSync('records', out) } catch (e) {}
+    }
+    return out
+  },
+
   saveAll() {
     const gd = this.globalData
     this.saveToLocal('records', gd.records)
@@ -284,6 +349,7 @@ App({
     this.saveToLocal('onboarded', gd.onboarded)
     this.saveToLocal('userPreferences', gd.userPreferences)
     this.saveToLocal('breakthroughProfile', gd.breakthroughProfile)
+    this.saveToLocal('partnerRecords', gd.partnerRecords)
   },
 
   saveCurrentCommand() {
@@ -334,24 +400,25 @@ App({
           this._applyBreakthroughData(data)
         }).catch((e) => {
           console.error('[app] 异步加载破圈指令池失败', e)
-          this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] })
+          this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] }, true)
         })
       } else {
         // 降级：低版本基础库不支持 require.async，空池兜底（破圈骰子会提示"今天先休息一下"）
         console.warn('[app] 当前基础库不支持 require.async，破圈指令池为空')
-        this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] })
+        this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] }, true)
       }
     } catch (e) {
       console.error('[app] 加载破圈指令池异常', e)
-      this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] })
+      this._applyBreakthroughData({ BREAKTHROUGH_COMMANDS: [] }, true)
     }
   },
 
   // 内部：把原始数据归一化后写入 globalData，并触发所有挂起回调
-  _applyBreakthroughData(data) {
+  _applyBreakthroughData(data, failed) {
     const raw = (data && data.BREAKTHROUGH_COMMANDS) || []
     this.globalData.breakthroughPool = raw.map(cmd => this.normalizeCommand(cmd))
-    this._breakthroughPoolLoaded = true
+    // 失败时不标记已加载，允许下次重试（避免破圈骰子永久空池）
+    if (!failed) this._breakthroughPoolLoaded = true
     this._btLoading = false
     const cbs = this._btCbs || []
     this._btCbs = []
@@ -561,11 +628,14 @@ App({
   scanNearbyPOI() {
     // External POI keys can be added later; local defaults keep command matching useful offline.
     this.globalData.nearbyPOI = { market: true, cafe: true, park: true, bookstore: true, alley: true, lake: false, convenience: true }
+    // 与成功路径数据契约对齐：降级时 nearbyPOIList 为空数组，避免下游读 undefined 崩溃
+    this.globalData.nearbyPOIList = []
   },
 
   getTodayStr() {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    // 统一用东八区（北京时间）取日期，避免海外用户本地时区导致连续打卡/重置错乱
+    const now = new Date(Date.now() + 8 * 3600 * 1000)
+    return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`
   },
 
   getCurrentHour() {
@@ -689,9 +759,10 @@ App({
     const today = this.getTodayStr()
     const last = this.globalData.lastCompleteDate
     if (!last) return
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`
+    // 昨日按东八区计算，与 getTodayStr 时区策略一致
+    const yesterday = new Date(Date.now() + 8 * 3600 * 1000)
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1)
+    const yesterdayStr = `${yesterday.getUTCFullYear()}-${String(yesterday.getUTCMonth() + 1).padStart(2, '0')}-${String(yesterday.getUTCDate()).padStart(2, '0')}`
     if (last !== yesterdayStr && last !== today) this.globalData.continuousDays = 0
   },
 
@@ -748,6 +819,9 @@ App({
     if (result.explanation) cmd.explanation = result.explanation
     // B-12 标记 fallback（供前端区分「兜底推荐」与「正常推荐」）
     cmd.isFallback = !!result.fallback
+    // 透传 roll 模式（micro/walk/night/rainy/sync）到 currentCommand → record，
+    // 供 badge-engine 模式徽章判定（micro_master/night_master/rainy_master 等）
+    if (mode) cmd.mode = mode
     this.rememberLastType(cmd.type)
     return cmd
   },
@@ -757,8 +831,15 @@ App({
   // 修复：原 Henry 版 candidates 为空时调 this.getFallbackCommands() 会返回微逃指令，
   // 破圈骰子可能摇出微逃任务，改为回退到破圈全池 pool
   rollBreakthroughCommand(cb) {
+    // 未完成画像时不摇，由前端引导跳画像页（避免无画像优先推荐 + 业务规则模糊）
+    if (!this.hasBreakthroughProfile()) {
+      if (typeof cb === 'function') cb(null)
+      return
+    }
     this.ensureBreakthroughPool((pool) => {
       const selected = this._pickBreakthrough(pool)
+      // 透传 mode='breakthrough' 到 currentCommand → record，供 badge-engine 判定
+      if (selected) selected.mode = 'breakthrough'
       if (selected) this.rememberLastType(selected.type)
       if (typeof cb === 'function') cb(selected)
     })
@@ -884,9 +965,17 @@ App({
     })
 
     this.globalData.records.unshift(record)
+    // records 裁剪上限避免 storage 超限（单 key 1MB / 总 10MB），保留最近 500 条
+    if (this.globalData.records.length > 500) {
+      this.globalData.records = this.globalData.records.slice(0, 500)
+    }
     if (!this.globalData.completedCommandIds.includes(cmd.id)) this.globalData.completedCommandIds.push(cmd.id)
     this.updateContinuousDays()
     this.updatePreferences(record)
+    // 同频出逃：从 record.members 反向聚合 partnerRecords（社交徽章 social_master 依赖）
+    if (record.isGroup === true && Array.isArray(record.members)) {
+      this._aggregatePartnerRecords(record.members, record)
+    }
     this.checkBadges()
     this.globalData.currentCommand = null
     this.globalData.commandStatus = 'idle'
@@ -895,12 +984,40 @@ App({
     return record
   },
 
+  // 同频出逃完成后，把成员（排除自己）聚合到 partnerRecords
+  // 按 openId/nickname 去重，累加 count，更新 lastDate/favMode
+  _aggregatePartnerRecords(members, record) {
+    try {
+      const gd = this.globalData
+      const list = Array.isArray(gd.partnerRecords) ? gd.partnerRecords.slice() : []
+      const me = gd.escapeName || ''
+      members.forEach(m => {
+        if (!m) return
+        const name = (typeof m === 'object') ? (m.nickname || m.name || '') : String(m)
+        if (!name || name === me) return
+        const key = (m.openId) ? 'oid_' + m.openId : 'name_' + name
+        let entry = list.find(p => p && p._key === key)
+        if (!entry) {
+          entry = { _key: key, nickname: name, openId: m.openId || '', count: 0, lastDate: '', favMode: '' }
+          list.push(entry)
+        }
+        entry.count = (entry.count || 0) + 1
+        entry.lastDate = record.date || ''
+        if (record.mode) entry.favMode = record.mode
+      })
+      gd.partnerRecords = list
+    } catch (e) {
+      console.warn('[app] partnerRecords 聚合失败', e)
+    }
+  },
+
   updateContinuousDays() {
     const today = this.getTodayStr()
     if (this.globalData.lastCompleteDate === today) return
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`
+    // 昨日按东八区计算，与 getTodayStr 时区策略一致
+    const y = new Date(Date.now() + 8 * 3600 * 1000)
+    y.setUTCDate(y.getUTCDate() - 1)
+    const yStr = `${y.getUTCFullYear()}-${String(y.getUTCMonth() + 1).padStart(2, '0')}-${String(y.getUTCDate()).padStart(2, '0')}`
     this.globalData.continuousDays = this.globalData.lastCompleteDate === yStr ? this.globalData.continuousDays + 1 : 1
     this.globalData.lastCompleteDate = today
   },

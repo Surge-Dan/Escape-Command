@@ -3,6 +3,7 @@ const { getTypeMeta, MOODS } = require('../../utils/constants.js')
 const markerBuilder = require('../../utils/map-marker-builder.js')
 const revisitHelper = require('../../utils/revisit-helper.js')
 const summaryBuilder = require('../../utils/summary-builder.js')
+const imageFallback = require('../../utils/image-fallback.js')
 
 // v4: 顶部模式 tab —— 三类：普通地图 / 卫星地图 / 路线模式
 const MAP_TABS = [
@@ -118,6 +119,9 @@ Page({
   // 空方法：供 catchtap="noop" 拦截冒泡
   noop() {},
 
+  // 图片加载失败兜底
+  onImgError(e) { imageFallback.handle(e, this) },
+
   // 通过框架自动注入的 TabBar 实例控制显隐
   _setTabbarHidden(hidden) {
     const tabBar = typeof this.getTabBar === 'function' ? this.getTabBar() : null
@@ -154,6 +158,9 @@ Page({
 
   onShow() {
     this.setData({ theme: app.globalData.theme || 'default' })
+    // 清除切后台前可能残留的弹窗，避免 TabBar 覆盖弹窗底部
+    if (this.data.popupRecord) this.setData({ popupRecord: null })
+    if (this.data.revisitPopup) this.setData({ revisitPopup: null })
     this.refresh()
     this.locateIfAvailable()
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {

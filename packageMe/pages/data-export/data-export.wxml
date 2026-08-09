@@ -60,7 +60,7 @@
               class="mini-polaroid"
               style="transform: rotate({{item.rotation}}deg);"
             >
-              <image class="mp-photo" src="{{item.thumb}}" mode="aspectFill"></image>
+              <image class="mp-photo" src="{{item.thumb}}" mode="aspectFill" binderror="onImgError" data-list="recent" data-index="{{index}}" data-key="thumb" data-fallback="/assets/icons/empty-collection.svg"></image>
               <text class="mp-cap">{{item.date}}</text>
             </view>
           </view>

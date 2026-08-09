@@ -52,7 +52,7 @@
         <view class="rank-num" wx:else>
           <text class="rank-num-text">{{item.rank}}</text>
         </view>
-        <image class="partner-avatar" src="{{item.avatar}}" mode="aspectFit"></image>
+        <image class="partner-avatar" src="{{item.avatar}}" mode="aspectFit" binderror="onImgError" data-list="partners" data-index="{{index}}" data-key="avatar" data-fallback="/assets/avatar-default.webp"></image>
         <view class="partner-info">
           <view class="partner-name-row">
             <text class="partner-name">{{item.name}}</text>

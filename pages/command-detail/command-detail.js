@@ -1,5 +1,6 @@
-﻿const app = getApp()
+const app = getApp()
 const aiImage = require('../../utils/ai-image.js')
+const imageFallback = require('../../utils/image-fallback.js')
 
 // 每步的实用小贴士（兜底，cmd 自带 steps.details 时优先用 cmd 的）。
 const STEP_HINTS = [
@@ -88,6 +89,8 @@ Page({
   },
 
   goBack() { wx.navigateBack({ delta: 1 }) },
+
+  onImgError(e) { imageFallback.handle(e, this) },
 
   toggleStep(e) {
     const idx = e.currentTarget.dataset.index

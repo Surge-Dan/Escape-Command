@@ -77,6 +77,7 @@
         <view
           wx:for="{{dateGroups}}"
           wx:for-item="group"
+          wx:for-index="gIdx"
           wx:key="date"
           class="date-group"
         >
@@ -111,7 +112,7 @@
                 style="transform: rotate({{record.rotationStr}});"
               >
                 <block wx:if="{{record.coverPhoto}}">
-                  <image class="polaroid-photo" src="{{record.coverPhoto}}" mode="aspectFill"></image>
+                  <image class="polaroid-photo" src="{{record.coverPhoto}}" mode="aspectFill" binderror="onImgError" data-path="dateGroups[{{gIdx}}].records[{{index}}].coverPhoto" data-fallback="/assets/icons/empty-collection.svg"></image>
                 </block>
                 <block wx:else>
                   <view class="polaroid-placeholder" style="background: {{record.typeColor}}1A;">

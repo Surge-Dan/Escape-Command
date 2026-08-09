@@ -20,7 +20,7 @@
     <view wx:if="{{!notFound}}" class="edit-body">
       <!-- 照片预览区：实时应用滤镜 + 贴纸叠加 -->
       <view class="preview-area">
-        <image class="preview-photo" src="{{photo}}" mode="aspectFill" style="filter: {{selectedCss}};"></image>
+        <image class="preview-photo" src="{{photo}}" mode="aspectFill" style="filter: {{selectedCss}};" binderror="onImgError" data-field="photo" data-fallback="/assets/icons/empty-collection.svg"></image>
         <view wx:for="{{placed}}" wx:key="id" class="placed-sticker" style="left: {{item.x}}%; top: {{item.y}}%;" data-id="{{item.id}}" catchtap="removeSticker">
           <text>{{item.emoji}}</text>
         </view>
@@ -34,7 +34,7 @@
           <view class="filter-list">
             <view wx:for="{{filters}}" wx:key="id" class="filter-thumb {{filterIndex === index ? 'on' : ''}}" data-id="{{item.id}}" bindtap="selectFilter">
               <view class="thumb-img-wrap" style="background: {{item.tint}};">
-                <image class="thumb-img" src="{{photo}}" mode="aspectFill" style="filter: {{item.css}};"></image>
+                <image class="thumb-img" src="{{photo}}" mode="aspectFill" style="filter: {{item.css}};" binderror="onImgError" data-field="photo" data-fallback="/assets/icons/empty-collection.svg"></image>
               </view>
               <text class="thumb-name">{{item.name}}</text>
             </view>

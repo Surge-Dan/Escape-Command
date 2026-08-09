@@ -192,6 +192,70 @@
   line-height: 1.5;
 }
 
+/* ===== 启动页入口卡片 ===== */
+.onboarding-entry {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 32rpx;
+  transition: transform 150ms var(--ease-standard);
+}
+
+.onboarding-entry:active {
+  transform: scale(0.98);
+}
+
+.onboarding-ico {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.onboarding-ico image {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.onboarding-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.onboarding-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+  font-family: var(--serif);
+}
+
+.onboarding-desc {
+  font-size: 24rpx;
+  color: var(--ink-faint);
+  line-height: 1.4;
+}
+
+.onboarding-arrow {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding-arrow image {
+  width: 32rpx;
+  height: 32rpx;
+}
+
 /* ===== 反馈按钮 ===== */
 .feedback-btn {
   display: flex;

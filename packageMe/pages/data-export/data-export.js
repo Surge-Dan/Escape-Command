@@ -1,5 +1,6 @@
 const app = getApp()
 const { getTypeMeta, BADGES } = require('../../../../utils/constants.js')
+const imageFallback = require('../../../../utils/image-fallback.js')
 
 Page({
   data: {
@@ -336,5 +337,7 @@ Page({
 
   goBack() {
     wx.navigateBack({ delta: 1 })
-  }
+  },
+
+  onImgError(e) { imageFallback.handle(e, this) }
 })

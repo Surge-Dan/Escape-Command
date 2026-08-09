@@ -11,6 +11,7 @@
 const app = getApp()
 const quickMatch = require('../../utils/quick-match-engine.js')
 const tracker = require('../../utils/tracker.js')
+const imageFallback = require('../../utils/image-fallback.js')
 
 Page({
   data: {
@@ -259,5 +260,7 @@ Page({
       icon: 'none',
       duration: 1500
     })
-  }
+  },
+
+  onImgError(e) { imageFallback.handle(e, this) }
 })

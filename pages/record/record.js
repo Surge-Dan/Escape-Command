@@ -1,5 +1,6 @@
-﻿﻿﻿const app = getApp()
+﻿﻿const app = getApp()
 const { MOODS } = require('../../utils/constants.js')
+const imageFallback = require('../../utils/image-fallback.js')
 
 // v3: 6 滤镜本地定义（不修改 utils/constants.js）。css 字段直接作用于照片预览。
 const FILTERS = [
@@ -80,6 +81,8 @@ Page({
   goBack() {
     wx.navigateBack()
   },
+
+  onImgError(e) { imageFallback.handle(e, this) },
 
   // v3: 支持最多 9 张照片
   addPhoto() {

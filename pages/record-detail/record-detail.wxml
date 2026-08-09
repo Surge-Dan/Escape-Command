@@ -21,7 +21,7 @@
       <!-- 拍立得大卡：照片 + 感受 + 日期/天气 -->
       <view class="polaroid-card filter-{{record.filter}}" style="transform: rotate({{record.rotation || -1.5}}deg);">
         <view class="polaroid-photo-area">
-          <image wx:if="{{photo}}" class="polaroid-photo" src="{{photo}}" mode="aspectFill"></image>
+          <image wx:if="{{photo}}" class="polaroid-photo" src="{{photo}}" mode="aspectFill" binderror="onImgError" data-field="photo" data-fallback="/assets/icons/empty-collection.svg"></image>
           <view wx:else class="photo-placeholder">
             <image class="placeholder-ico" src="/assets/icons/empty-collection.svg" mode="aspectFit"></image>
             <text class="placeholder-text">这张没有照片</text>

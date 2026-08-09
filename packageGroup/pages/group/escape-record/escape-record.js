@@ -4,6 +4,7 @@
 
 const app = getApp()
 const roomStore = require('../../../utils/group-room-store.js')
+const hallStore = require('../../../utils/task-hall-store.js')
 // execution-progress.js 是主包文件（executing 页也用），分包通过相对路径退到主包根 require
 // 修复：原 '../../../utils/execution-progress.js' 指向 packageSync/utils/（无此文件）导致 require 失败页面白屏
 const executionProgress = require('../../../utils/execution-progress.js')
@@ -180,6 +181,20 @@ Page({
     const script = this.data.script || {}
     const startTime = this.data.startTime || Date.now()
     const cg = app.globalData.currentGroupScript
+    // 从 task.poi 取坐标注入 currentCommand.location，确保同频记录在地图页有标记
+    let loc = null
+    const taskId = (cg && cg.taskId) || ''
+    if (taskId) {
+      try {
+        const detail = hallStore.getTaskDetail(taskId)
+        if (detail && detail.ok && detail.task && detail.task.poi) {
+          const poi = detail.task.poi
+          if (typeof poi.latitude === 'number' && typeof poi.longitude === 'number') {
+            loc = { latitude: poi.latitude, longitude: poi.longitude, name: poi.name || '' }
+          }
+        }
+      } catch (e) { console.warn('[escape-record] 取 task poi 失败', e) }
+    }
     // 构造 currentCommand：同频扩展字段挂在 cmd 上，completeCommand 自动注入到 record
     // 与普通出逃走同一 record 页入口，确保 globalData.records / 连续天数 / 徽章 / 偏好 / 地图联动一致
     app.globalData.currentCommand = {
@@ -187,10 +202,13 @@ Page({
       title: script.title || '同频出逃',
       content: script.title || '同频出逃',
       type: 'sync',
+      mode: 'sync',
       typeColor: '#5CBF9E',
       duration: Math.max(1, Math.round((Date.now() - startTime) / 60000)),
       startTime: startTime,
       photos: [],
+      // location 从 task.poi 注入，completeCommand 会兜底到 globalData.location
+      location: loc,
       // 同频扩展字段（record 页 onSave 调 completeCommand 时自动注入）
       isGroup: true,
       groupId: this.data.roomId,
@@ -200,6 +218,16 @@ Page({
       executionProgress: (cg && cg.executionProgress) || null
     }
     app.globalData.commandStatus = 'executing'
+    // 回写 hall task finished：所有出逃步骤已完成（record 页仅做拍照打卡，不影响任务完成语义）
+    if (taskId) {
+      try {
+        const detail = hallStore.getTaskDetail(taskId)
+        if (detail && detail.ok && detail.task && detail.task.status !== 'finished') {
+          if (detail.task.status === 'ready') hallStore.updateTaskStatus(taskId, 'started')
+          hallStore.updateTaskStatus(taskId, 'finished')
+        }
+      } catch (e) { console.warn('[escape-record] 回写 task finished 失败', e) }
+    }
     // 清空同频临时数据（record 页不依赖 currentGroupScript，冷启动也不再续做）
     try { app.globalData.currentGroupScript = null } catch (e) {}
     try { wx.removeStorageSync('currentGroupScript') } catch (e) {}

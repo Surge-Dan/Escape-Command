@@ -1,5 +1,6 @@
 const app = getApp()
 const { MODE_LIST, SHEET_MODES, HOME_DICE_LIST, getTypeMeta } = require('../../utils/constants.js')
+const imageFallback = require('../../utils/image-fallback.js')
 
 Page({
   data: {
@@ -136,6 +137,9 @@ Page({
     }
   },
 
+  // 通用图片加载失败兜底
+  onImgError(e) { imageFallback.handle(e, this) },
+
   // 骰子图片加载失败时降级到分包路径
   onDiceImgError(e) {
     const diceId = e.currentTarget?.dataset?.diceId
@@ -248,15 +252,17 @@ Page({
     if (this._redirecting) return
     this.applyNavMetrics()
     this.setData({ theme: app.globalData.theme || 'default' })
+    // 清除切后台前可能残留的弹窗，避免 TabBar 覆盖弹窗底部（_setXxx 内部会联动 tabbarHidden）
+    if (this.data.showDiceSheet) this._setDiceSheetVisible(false)
+    if (this.data.selectedCommand && !app.globalData.currentCommand) {
+      this._setSelectedCommand(null)
+    }
     this.refreshState()
     this.loadEscapeRecords()
     this.loadDailyRecommend()
     // 字体重试：onShow 时检查全局字体是否已加载，未加载则页面级重试
     if (!app.globalData.serifFontLoaded) this.loadFontFace()
     if (typeof this.getTabBar === 'function' && this.getTabBar()) this.getTabBar().setData({ selected: 0, tabbarHidden: false })
-    if (this.data.selectedCommand && !app.globalData.currentCommand) {
-      this._setSelectedCommand(null)
-    }
     this.resetDiceFace()
     this.startAutoSwitch()
   },
@@ -570,6 +576,22 @@ Page({
 
   rollBreakthroughCommand() {
     if (this.data.rolling || this.data.selectedCommand || this.data.isBreakthroughRolling) return
+    // 前置校验：必须先完成破圈画像
+    if (!app.hasBreakthroughProfile || !app.hasBreakthroughProfile()) {
+      wx.showModal({
+        title: '需要先填写破圈画像',
+        content: '破圈骰子会根据你的画像匹配任务，先花 1 分钟填写一下吧。',
+        confirmText: '去填写',
+        cancelText: '取消',
+        confirmColor: '#9B7BB8',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({ url: '/packageBt/pages/breakthrough-profile/breakthrough-profile' })
+          }
+        }
+      })
+      return
+    }
     if (this.data.breakthroughRemainCount <= 0) {
       wx.showToast({ title: '今日破圈次数已用完，明天再来', icon: 'none', duration: 2000 })
       return

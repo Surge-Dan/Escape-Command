@@ -1,4 +1,4 @@
-﻿const app = getApp()
+const app = getApp()
 const BADGES = require('../../data/badges.js')
 
 // 每个徽章的诗意故事（2-3 段）
@@ -221,8 +221,8 @@ Page({
       case 'rainy':       return { current: records.filter(r => r.weather && r.weather.condition === 'rainy').length }
       case 'micro':       return { current: records.filter(r => r.duration && r.duration <= 15).length }
       case 'walk':        return { current: records.filter(r => r.commandType === 'walk').length }
-      case 'double':      return { current: records.filter(r => r.commandType === 'walk').length } // 双人出逃记录近似
-      case 'social':      return { current: 0 } // 社交邀请数据未持久化，无法准确统计
+      case 'double':      return { current: records.filter(r => r.double === true || r.isGroup === true || r.mode === 'double').length } // 双人/同频出逃记录
+      case 'social':      return { current: (app.globalData.partnerRecords || []).length } // 同频搭子数
       case 'collect':     return { current: (app.globalData.collectedCommands || []).length }
       case 'locations': {
         const set = new Set(records.filter(r => r.location).map(r => `${Math.round(r.location.latitude * 100) / 100},${Math.round(r.location.longitude * 100) / 100}`))

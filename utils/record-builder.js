@@ -80,11 +80,18 @@ function buildRecord(cmd, recordData, ctx) {
   // 留痕 steps：executionProgress 存在时升级为 [{text, completedAt}]，否则 null
   var tracedSteps = buildTracedSteps(rd)
   var record = {
-    id: 'r_' + now,
+    // id 加随机后缀避免 1ms 内并发/双击撞 id（下游 find/去重/memory-revisit 依赖 id 唯一）
+    id: 'r_' + now + '_' + Math.random().toString(36).slice(2, 8),
     commandId: c.id || '',
     commandTitle: title,
     commandContent: c.content || title,
     commandType: typeof c.type === 'string' && c.type ? c.type : 'custom',
+    // mode/double 供 badge-engine 模式徽章判定（micro_master/walk_master/double_master/night_master/rainy_master）
+    // mode 来自 rollCommand 的入参（roll 模式），与 commandType（主题类型）是两个维度
+    mode: typeof c.mode === 'string' ? c.mode : '',
+    double: !!(c.double || c.social),
+    // timestamp 供 profile/时间线按时间戳排序与计算最长连续天数
+    timestamp: now,
     typeColor: c.typeColor || '#5CBF9E',
     duration: duration,
     photos: Array.isArray(rd.photos) ? rd.photos.slice(0, 9) : [],

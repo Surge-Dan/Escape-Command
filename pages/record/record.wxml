@@ -46,7 +46,7 @@
         <scroll-view scroll-x class="photo-strip" enhanced show-scrollbar="{{false}}">
           <view class="photo-strip-list">
             <view wx:for="{{photos}}" wx:key="*this" class="photo-strip-thumb {{mainPhoto === index ? 'active' : ''}}" data-index="{{index}}" bindtap="selectMainPhoto">
-              <image src="{{item}}" mode="aspectFill"></image>
+              <image src="{{item}}" mode="aspectFill" binderror="onImgError" data-list="photos" data-index="{{index}}" data-fallback="/assets/icons/empty-collection.svg"></image>
               <view class="photo-strip-remove" catchtap="removePhoto" data-index="{{index}}">×</view>
             </view>
             <view wx:if="{{photos.length < 9}}" class="photo-strip-add" bindtap="addPhoto">

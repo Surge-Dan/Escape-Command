@@ -182,7 +182,7 @@
           <view class="cmd-image-bg">
             <image class="cmd-image-icon" src="{{selectedCommand.typeIcon}}" mode="aspectFit"></image>
           </view>
-          <image class="cmd-image" src="{{selectedCommand.illustration}}" mode="aspectFill"></image>
+          <image class="cmd-image" src="{{selectedCommand.illustration}}" mode="aspectFill" binderror="onImgError" data-path="selectedCommand.illustration" data-fallback="/assets/icons/empty-collection.svg"></image>
         </view>
 
         <view class="cmd-meta">

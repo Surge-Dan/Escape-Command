@@ -79,6 +79,14 @@ Page({
     this.loadTask()
   },
 
+  // onShow 刷新任务详情：从 room 返回时同步状态变化（navigateBack 不触发 onLoad）
+  onShow() {
+    if (this._loaded && this.data.taskId) {
+      try { this.loadTask() } catch (e) { console.warn('[detail] onShow loadTask 失败', e) }
+    }
+    this._loaded = true
+  },
+
   // ===== 导航栏度量（与 hall.js / create.js 一致）=====
   applyNavMetrics() {
     const nav = app.getNavMetrics ? app.getNavMetrics() : {}
@@ -243,10 +251,10 @@ Page({
       return
     }
 
-    // 1. 创建房间（公开，便于搭子后续加入）
+    // 1. 创建房间（公开，便于搭子后续加入；透传 task 成员，避免满员后 room 只剩 host）
     let roomResult
     try {
-      roomResult = roomStore.createRoom(task.topic, task.maxMembers, { visibility: 'public' })
+      roomResult = roomStore.createRoom(task.topic, task.maxMembers, { visibility: 'public', members: members })
     } catch (e) {
       console.warn('[detail] createRoom 异常', e)
       wx.showToast({ title: '创建房间失败', icon: 'none' })

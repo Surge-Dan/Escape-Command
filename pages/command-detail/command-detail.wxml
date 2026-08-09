@@ -35,7 +35,7 @@
         <view class="cmd-image-bg" style="background: linear-gradient(135deg, {{command.typeColor}}40, {{command.typeColor}}10);">
           <image class="cmd-image-icon" src="{{command.typeIcon}}" mode="aspectFit"></image>
         </view>
-        <image wx:if="{{sceneUrl}}" class="scene-img" src="{{sceneUrl}}" mode="aspectFill"></image>
+        <image wx:if="{{sceneUrl}}" class="scene-img" src="{{sceneUrl}}" mode="aspectFill" binderror="onImgError" data-field="sceneUrl" data-fallback="/assets/icons/empty-collection.svg"></image>
         <view wx:if="{{sceneGenerating}}" class="scene-loading-mask">
           <view class="scene-loading-dot"></view>
           <view class="scene-loading-dot delay1"></view>

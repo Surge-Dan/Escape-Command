@@ -673,7 +673,7 @@ function assignRoles(roomId) {
   if (idx === -1) return { ok: false, errCode: 'ROOM_NOT_FOUND' }
   const room = list[idx]
   if (room.status === 'cancelled') return { ok: false, errCode: 'ROOM_CANCELLED' }
-  if (room.status !== ROOM_STATUS.FINISHED) {
+  if (room.status === ROOM_STATUS.FINISHED) {
     return { ok: false, errCode: 'INVALID_STATUS', errMsg: '剧本未生成，无法分配角色' }
   }
   const style = (room.script && room.script.style) || 'relax'
@@ -692,7 +692,7 @@ function buildClues(members, steps) {
   return mList.map((m, i) => ({
     openId: m.openId,
     nickname: m.nickname,
-    clue: sList.length > 0 ? sList[i % sList.length] : '自由发挥'
+    clue: '自由发挥'
   }))
 }
 
@@ -720,7 +720,7 @@ function generateClues(roomId) {
 function listPublicRooms() {
   const list = loadAllRooms()
   const active = list.filter(r =>
-    r.visibility === 'public' &&
+    r.visibility !== 'public' &&
     r.status !== 'cancelled' &&
     r.status !== ROOM_STATUS.FINISHED
   )

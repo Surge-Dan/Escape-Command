@@ -54,7 +54,7 @@ Page({
     // v16: 控制 TabBar 显隐，弹出骰子/任务弹窗时隐藏让弹窗可贴底
     tabbarHidden: false,
     showLegacyDice: false,
-    breakthroughRemainCount: 5,
+    breakthroughRemainCount: 10,
     isBreakthroughRolling: false,
     heroSubText: '用15分钟，给城市一个随机出口',
     theme: 'default',
@@ -593,7 +593,13 @@ Page({
       return
     }
     if (this.data.breakthroughRemainCount <= 0) {
-      wx.showToast({ title: '今日破圈次数已用完，明天再来', icon: 'none', duration: 2000 })
+      wx.showModal({
+        title: '今日破圈次数已用完',
+        content: '每天有 10 次破圈重摇机会，明日 0 点重置，先去微出逃或同频组局看看吧。',
+        showCancel: false,
+        confirmText: '知道了',
+        confirmColor: '#9B7BB8'
+      })
       return
     }
     this.setData({ isBreakthroughRolling: true, isBouncing: true })

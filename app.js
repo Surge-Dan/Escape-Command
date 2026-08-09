@@ -59,7 +59,7 @@ App({
     cloudReady: false,
     // Henry: 破圈骰子状态（画像/每日次数/指令池）
     breakthroughProfile: null,
-    breakthroughReRollCount: 5,
+    breakthroughReRollCount: 10,
     breakthroughPool: [],
     // B4 记忆回收：30 天前记录回访提醒（null 表示无提醒）
     memoryRevisit: null,
@@ -647,9 +647,9 @@ App({
     const savedDate = wx.getStorageSync('lastResetDate')
     if (savedDate !== today) {
       this.globalData.reRollCount = 3
-      this.globalData.breakthroughReRollCount = 5
+      this.globalData.breakthroughReRollCount = 10
       this.saveToLocal('reRollData', { date: today, count: 3 })
-      this.saveToLocal('breakthroughReRollData', { date: today, count: 5 })
+      this.saveToLocal('breakthroughReRollData', { date: today, count: 10 })
       this.saveToLocal('lastResetDate', today)
     } else {
       // 从持久化恢复破圈次数
@@ -657,7 +657,7 @@ App({
       if (btData && btData.date === today) {
         this.globalData.breakthroughReRollCount = btData.count
       } else {
-        this.globalData.breakthroughReRollCount = 5
+        this.globalData.breakthroughReRollCount = 10
       }
     }
   },

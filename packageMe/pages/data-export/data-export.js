@@ -1,6 +1,6 @@
 const app = getApp()
-const { getTypeMeta, BADGES } = require('../../../../utils/constants.js')
-const imageFallback = require('../../../../utils/image-fallback.js')
+const { getTypeMeta, BADGES } = require('../../../utils/constants.js')
+const imageFallback = require('../../../utils/image-fallback.js')
 
 Page({
   data: {

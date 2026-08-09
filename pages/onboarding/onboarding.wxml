@@ -99,7 +99,7 @@
             <view
               wx:for="{{activityOptions}}"
               wx:key="id"
-              class="onb-pref-activity {{selectedActivities.indexOf(item.id) >= 0 ? 'selected' : ''}}"
+              class="onb-pref-activity {{selectedActivityMap[item.id] ? 'selected' : ''}}"
               data-id="{{item.id}}"
               data-index="{{index}}"
               hover-class="onb-pref-activity-hover"
@@ -112,7 +112,7 @@
               <text class="onb-pref-activity-name">{{item.name}}</text>
               <view
                 class="onb-pref-activity-check"
-                wx:if="{{selectedActivities.indexOf(item.id) >= 0}}"
+                wx:if="{{selectedActivityMap[item.id]}}"
               >
                 <text>✓</text>
               </view>

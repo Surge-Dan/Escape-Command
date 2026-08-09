@@ -373,6 +373,19 @@
   height: calc(var(--tabbar-floating-height) + var(--tabbar-bottom-gap) + var(--safe-bottom) + 16rpx);
 }
 
+.version-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24rpx 0 40rpx;
+}
+
+.version-text {
+  font-size: 24rpx;
+  color: var(--ink-faint);
+  letter-spacing: 2rpx;
+}
+
 .tabbar-placeholder {
   height: calc(var(--tabbar-floating-height) + var(--tabbar-bottom-gap) + var(--safe-bottom));
 }

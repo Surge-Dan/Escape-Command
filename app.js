@@ -65,7 +65,8 @@ App({
     memoryRevisit: null,
     // v25: 思源宋体加载状态
     serifFontLoaded: false,
-    serifFontFamily: ''
+    serifFontFamily: '',
+    version: 'v2.4.0'
   },
 
   onLaunch() {

@@ -7,6 +7,7 @@ Page({
     capsuleTop: 26,
     navHeaderStyle: '',
     fontLoaded: false,
+    fontRegLoaded: false,
     selectedMode: 'smart',
     sheetModes: SHEET_MODES,
     currentModeMeta: SHEET_MODES[0],
@@ -202,6 +203,7 @@ Page({
       wx.loadFontFace({
         family: 'SourceHanSerifBold',
         source: 'url("/assets/fonts/noto-serif-sc-bold-titles.woff2")',
+        global: true,
         success: () => {
           console.log('[index] SourceHanSerifBold 页面级加载成功')
           app.globalData.serifFontLoaded = true
@@ -212,6 +214,14 @@ Page({
           console.warn('[index] 页面级字体加载失败，降级到系统 serif', e)
           this.setData({ fontLoaded: true })
         }
+      })
+      // 同时加载常规字重
+      wx.loadFontFace({
+        family: 'SourceHanSerif',
+        source: 'url("/assets/fonts/noto-serif-sc-bold-subset.woff2")',
+        global: true,
+        success: () => { this.setData({ fontRegLoaded: true }) },
+        fail: () => { this.setData({ fontRegLoaded: false }) }
       })
     } else {
       this.setData({ fontLoaded: true })
@@ -734,6 +744,13 @@ Page({
     const weather = app.globalData.weather || {}
     const isRainy = /雨/.test(weather.description || '')
     const isHot = (weather.temperature || 25) > 30
+
+    // 用户偏好影响推荐
+    const prefs = app.globalData.userPreferences || {}
+    const prefDuration = prefs.duration || 0
+    const prefPeople = prefs.people || 0
+    const prefActivities = prefs.activities || []
+
     let scored = pool.map(cmd => {
       let score = Math.random() * 5
       const dur = Number(cmd.duration) || 15
@@ -742,6 +759,21 @@ Page({
       if (isAfternoon && dur >= 30) score += 2
       if (isRainy && cmd.type === 'micro') score += 3
       if (isHot && cmd.type === 'micro') score += 2
+      // 用户时长偏好匹配加分
+      if (prefDuration > 0) {
+        if (prefDuration <= 15 && dur <= 15) score += 4
+        else if (prefDuration <= 30 && dur <= 30) score += 3
+        else if (prefDuration <= 60 && dur >= 30 && dur <= 60) score += 3
+        else if (prefDuration >= 60 && dur >= 60) score += 3
+      }
+      // 用户活动偏好匹配加分
+      if (prefActivities.length > 0 && cmd.type) {
+        const typeToActivity = { color: ['walk','food','art'], walk: ['walk','park'], food: ['food','cafe'], culture: ['culture','book'], sense: ['art','night'], collect: ['art','book'] }
+        const matched = typeToActivity[cmd.type] || []
+        for (let i = 0; i < matched.length; i++) {
+          if (prefActivities.indexOf(matched[i]) >= 0) { score += 3; break }
+        }
+      }
       if (pickedIds.indexOf(cmd.id) >= 0) score += 10
       return { cmd, score }
     })

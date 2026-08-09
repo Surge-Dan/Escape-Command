@@ -42,9 +42,10 @@ Page({
     peopleOptions: PEOPLE_OPTIONS,
     durationOptions: DURATION_OPTIONS,
     selectedActivities: [],
+    selectedActivityMap: {},
     selectedPeople: null,
     selectedDuration: null,
-    prefStep: 1  // 1: 活动类型 2: 人数 3: 时长
+    prefStep: 1
   },
 
   onLoad() {
@@ -58,6 +59,7 @@ Page({
       // v24: 显式重置偏好为未选状态，确保每次进入引导页都从空白开始
       // （防止 previous session 的状态污染或 localStorage 残留干扰）
       selectedActivities: [],
+      selectedActivityMap: {},
       selectedPeople: null,
       selectedDuration: null,
       prefStep: 1
@@ -172,6 +174,12 @@ Page({
     this.finishOnboarding()
   },
 
+  _buildSelectedMap(ids) {
+    const map = {}
+    ;(ids || []).forEach(id => { map[id] = true })
+    return map
+  },
+
   // v22: 偏好收集 —— 活动类型多选（v23 增强：容错 + 调试日志）
   onToggleActivity(e) {
     const id = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.id) || ''
@@ -182,7 +190,7 @@ Page({
     const cur = this.data.selectedActivities || []
     const idx = cur.indexOf(id)
     const next = idx === -1 ? [...cur, id] : cur.filter(x => x !== id)
-    this.setData({ selectedActivities: next })
+    this.setData({ selectedActivities: next, selectedActivityMap: this._buildSelectedMap(next) })
     console.log('[onboarding] 活动类型切换:', id, '→ 当前已选:', next)
   },
 

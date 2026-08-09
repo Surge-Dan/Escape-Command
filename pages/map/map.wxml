@@ -110,7 +110,17 @@
       </cover-view>
     </cover-view>
 
-    <!-- 底部统计条 -->
+    <!-- 空状态 -->
+    <cover-view wx:if="{{totalCount === 0}}" class="map-empty">
+      <cover-image class="empty-illust" src="/assets/icons/empty-map.svg"></cover-image>
+      <cover-view wx:if="{{!hasLocation}}" class="empty-text">开启定位，查看你的出逃地图</cover-view>
+      <cover-view wx:else class="empty-text">还没有出逃记忆</cover-view>
+      <cover-view wx:if="{{!hasLocation}}" class="empty-sub">授权定位后，会显示你周边的出逃足迹</cover-view>
+      <cover-view wx:else class="empty-sub">完成第一次出逃，这里会留下你的足迹</cover-view>
+      <cover-view class="empty-cta" catchtap="goEscape">去出逃</cover-view>
+    </cover-view>
+
+    <!-- 底部统计条 —— TabBar 上方 -->
     <cover-view class="map-stats-bar">
       <cover-view class="stat-item">
         <cover-view class="stat-num">{{totalCount}}</cover-view>
@@ -128,16 +138,6 @@
         <cover-view class="stat-num">{{cityCount}}</cover-view>
         <cover-view class="stat-label">城市</cover-view>
       </cover-view>
-    </cover-view>
-
-    <!-- 空状态 -->
-    <cover-view wx:if="{{totalCount === 0}}" class="map-empty">
-      <cover-image class="empty-illust" src="/assets/icons/empty-map.svg"></cover-image>
-      <cover-view wx:if="{{!hasLocation}}" class="empty-text">开启定位，查看你的出逃地图</cover-view>
-      <cover-view wx:else class="empty-text">还没有出逃记忆</cover-view>
-      <cover-view wx:if="{{!hasLocation}}" class="empty-sub">授权定位后，会显示你周边的出逃足迹</cover-view>
-      <cover-view wx:else class="empty-sub">完成第一次出逃，这里会留下你的足迹</cover-view>
-      <cover-view class="empty-cta" catchtap="goEscape">去出逃</cover-view>
     </cover-view>
 
     <!-- 标记弹窗（C-12 富化：出逃模式 / 搭子 / 时长 / 心情 / 天气 / 缩略图） -->
@@ -183,14 +183,6 @@
         <cover-view wx:if="{{!popupRecord.isGroupAgg}}" class="popup-cta" catchtap="goRecordDetailFromMap">
           <cover-view class="popup-cta-text">查看完整记录 ›</cover-view>
         </cover-view>
-      </cover-view>
-    </cover-view>
-
-    <!-- B4-B: 城市关系总结条（本月）—— 走马灯自动滚动 -->
-    <cover-view wx:if="{{citySummary}}" class="map-summary-bar">
-      <cover-view class="summary-text-track">
-        <cover-view class="summary-text">{{citySummary.summary}}</cover-view>
-        <cover-view class="summary-text">{{citySummary.summary}}</cover-view>
       </cover-view>
     </cover-view>
 

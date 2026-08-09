@@ -32,7 +32,7 @@
   font-weight: 700;
   color: #2D5A7B;
   letter-spacing: 8rpx;
-  font-family: 'SourceHanSerifBold', "Source Han Serif SC", "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  font-family: var(--serif);
   margin-bottom: 24rpx;
   text-shadow: 0 2rpx 8rpx rgba(45, 90, 123, 0.1);
 }
@@ -70,6 +70,7 @@
   font-size: 32rpx;
   color: #4A7A9E;
   font-weight: 500;
+  font-family: var(--serif);
 }
 
 .greeting-emphasis {
@@ -77,12 +78,14 @@
   font-weight: 700;
   color: #2D5A7B;
   margin: 0 4rpx;
+  font-family: var(--serif);
 }
 
 .greeting-suffix {
   font-size: 32rpx;
   color: #4A7A9E;
   font-weight: 500;
+  font-family: var(--serif);
 }
 
 .hero-sub {

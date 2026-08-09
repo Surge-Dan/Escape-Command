@@ -1,5 +1,24 @@
 /* ===== 出逃指令 v3.0 全局设计系统 · 浅雾蓝主题 ===== */
 /* 设计基准：pages/index/index（首页已锁定，以下Token全部从首页精确提取） */
+
+/* @font-face: 思源宋体 Bold —— 本地 woff2 加载 */
+@font-face {
+  font-family: 'SourceHanSerifBold';
+  src: url('/assets/fonts/noto-serif-sc-bold-titles.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* @font-face: 思源宋体 Regular —— 本地 woff2 加载 */
+@font-face {
+  font-family: 'SourceHanSerif';
+  src: url('/assets/fonts/noto-serif-sc-bold-subset.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 page {
   /* ===== 品牌主色 ===== */
   --brand: #5B8FB9;
@@ -70,7 +89,7 @@ page {
   --radius-pill: 100rpx;
 
   /* ===== 字体 ===== */
-  --serif: 'SourceHanSerifBold', "Source Han Serif SC", "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --serif: 'SourceHanSerifBold', 'SourceHanSerif', "Source Han Serif SC", "Noto Serif SC", "Songti SC", "STSong", "SimSun", "FangSong", serif;
   --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
   --ink-italic: #5B8FB9;
 

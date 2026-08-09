@@ -291,11 +291,12 @@
 /* ===== 底部统计条：紧贴 TabBar 上方，与 TabBar 等宽 ===== */
 /* v21: 使用 calc + env(safe-area-inset-bottom) 适配不同设备，避免固定值在 iPhone 上与 TabBar 重叠 */
 /* TabBar 顶部 = 72rpx(bottom) + 96rpx(height) + safe = 168rpx + safe，stats-bar 留 20rpx 间隙 */
+/* 底部统计条 —— TabBar 上方 16rpx 处 */
 .map-stats-bar {
   position: absolute;
   left: 32rpx;
   right: 32rpx;
-  bottom: calc(188rpx + env(safe-area-inset-bottom, 34rpx));
+  bottom: calc(112rpx + env(safe-area-inset-bottom, 34rpx) + 16rpx);
   display: flex;
   flex-direction: row;
   justify-content: space-around;

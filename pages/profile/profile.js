@@ -109,15 +109,50 @@ Page({
     const gd = app.globalData
     const records = gd.records || []
     const badges = gd.badges || []
+    const now = new Date()
 
     // 城市覆盖（按经纬度粗略聚合）
     const citySet = new Set()
+    // 累计距离
+    let totalDistance = 0
+    // 本月出逃次数
+    let monthCount = 0
+    // 连续天数
+    const daySet = new Set()
+
     records.forEach(r => {
       if (r.location && r.location.latitude) {
-        // 粗粒度：0.1 度 ≈ 11km，作为城市级别近似
         citySet.add(Math.round(r.location.latitude * 10) + ',' + Math.round(r.location.longitude * 10))
       }
+      if (r.distance) totalDistance += Number(r.distance) || 0
+      if (r.timestamp) {
+        const d = new Date(r.timestamp)
+        daySet.add(d.toDateString())
+        if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) monthCount++
+      }
     })
+
+    // 计算连续天数
+    const sortedDays = Array.from(daySet).sort()
+    let continuousDays = 0
+    if (sortedDays.length > 0) {
+      continuousDays = 1
+      for (let i = sortedDays.length - 1; i > 0; i--) {
+        const cur = new Date(sortedDays[i])
+        const prev = new Date(sortedDays[i - 1])
+        const diff = (cur - prev) / (1000 * 60 * 60 * 24)
+        if (diff <= 1) continuousDays++
+        else break
+      }
+      // 检查今天是否在记录中
+      const today = new Date().toDateString()
+      const yesterday = new Date(now.getTime() - 86400000).toDateString()
+      if (sortedDays.indexOf(today) === -1 && sortedDays.indexOf(yesterday) === -1) {
+        continuousDays = 0
+      } else if (sortedDays.indexOf(today) === -1 && sortedDays.indexOf(yesterday) >= 0) {
+        // 昨天有记录，今天没有，连续从昨天算
+      }
+    }
 
     this.setData({
       userName: gd.escapeName || '出逃者',
@@ -126,10 +161,11 @@ Page({
       isMember: !!(gd.memberStatus && gd.memberStatus.isMember),
       stats: [
         { label: '累计出逃', value: String(records.length), unit: '次' },
-        { label: '最长连续', value: String(gd.continuousDays || 0), unit: '天' },
-        { label: '解锁徽章', value: String(badges.length), unit: '枚' },
+        { label: '本月', value: String(monthCount), unit: '次' },
+        { label: '最长连续', value: String(continuousDays), unit: '天' },
         { label: '城市覆盖', value: String(citySet.size), unit: '个' }
-      ]
+      ],
+      version: gd.version || 'v3.0'
     })
   },
 
@@ -181,7 +217,7 @@ Page({
   },
 
   goMember() {
-    wx.navigateTo({ url: '/packageMe/pages/member/member' })
+    wx.showToast({ title: '会员功能开发中，请耐心等待~', icon: 'none', duration: 2000 })
   },
 
   onShareAppMessage() {

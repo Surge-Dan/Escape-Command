@@ -84,6 +84,11 @@
       </view>
 
       <view class="bottom-spacer"></view>
+
+      <!-- 版本信息 -->
+      <view class="version-info">
+        <text class="version-text">出逃指令 {{version}}</text>
+      </view>
     </view>
   </scroll-view>
 

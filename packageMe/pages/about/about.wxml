@@ -41,11 +41,15 @@
         </view>
         <view class="bullet-row">
           <text class="bullet-dot">·</text>
-          <text class="bullet-text">位置信息：定位仅用于推荐附近的出逃指令和记录足迹坐标，可在设置中切换「模糊定位」或随时关闭。</text>
+          <text class="bullet-text">位置信息：定位仅用于推荐附近的出逃指令和记录足迹坐标，可在设置中切换「模糊定位」或随时关闭。不会用于后台持续追踪。</text>
         </view>
         <view class="bullet-row">
           <text class="bullet-dot">·</text>
-          <text class="bullet-text">天气数据：通过和风天气 API 仅查询当前天气用于指令匹配，不存储任何天气历史数据。</text>
+          <text class="bullet-text">天气数据：通过和风天气 API 仅查询当前天气用于指令匹配，不存储任何天气历史数据，不与你的身份关联。</text>
+        </view>
+        <view class="bullet-row">
+          <text class="bullet-dot">·</text>
+          <text class="bullet-text">分享与同频：当你主动邀请朋友一起出逃或分享记录时，相关信息会通过微信消息传递给被邀请人，这是你主动触发的功能。</text>
         </view>
         <view class="bullet-row">
           <text class="bullet-dot">·</text>
